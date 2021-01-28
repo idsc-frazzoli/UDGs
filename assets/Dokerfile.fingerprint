@@ -1,0 +1,7 @@
+# for software engineering fingerprint
+
+FROM idscfrazz/gokart-core:foxy
+
+COPY FORCES_PRO_Fingerprinter_docker_linux_x86_64 /tmp/FORCES_PRO_Fingerprinter_docker_linux_x86_64
+
+CMD ["bash", "-c", "cd /tmp && ./FORCES_PRO_Fingerprinter_docker_linux_x86_64"]
