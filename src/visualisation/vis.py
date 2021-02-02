@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 from vehicle import gokart_pool
 from vehicle.structures import GokartName, GokartParams
 from PIL import Image
-
+from numpy import asarray
 from .utils import get_steering_angles
 
 
@@ -31,7 +31,11 @@ class Visualization:
     def plot_map(self, fig: Optional[Figure] = None) -> Figure:
         if fig is None:
             fig = go.Figure()
-        img = Image.fromarray(self.track.background * 255).convert("RGBA")
+        if self.track.background.shape[-1] == 4:
+            data2 = asarray(self.track.background * 255)
+            img = Image.fromarray(data2.astype(np.uint8))
+        else:
+            img = Image.fromarray(self.track.background * 255).convert("RGBA")
 
         # Constants
         img_width = img.width
@@ -139,8 +143,8 @@ class Visualization:
         wheel_pos = np.row_stack([wheel_pos, np.ones(wheel_pos.shape[1])])
         wheel_pos_gk = pose @ wheel_pos
         delta_11, delta_12 = get_steering_angles(beta)
-        wheel_pose_11 = SE2_from_xytheta([wheel_pos_gk[0, 0], wheel_pos_gk[1, 0], psi+delta_11])
-        wheel_pose_12 = SE2_from_xytheta([wheel_pos_gk[0, 1], wheel_pos_gk[1, 1], psi+delta_12])
+        wheel_pose_11 = SE2_from_xytheta([wheel_pos_gk[0, 0], wheel_pos_gk[1, 0], psi + delta_11])
+        wheel_pose_12 = SE2_from_xytheta([wheel_pos_gk[0, 1], wheel_pos_gk[1, 1], psi + delta_12])
         wheel_pose_21 = SE2_from_xytheta([wheel_pos_gk[0, 2], wheel_pos_gk[1, 2], psi])
         wheel_pose_22 = SE2_from_xytheta([wheel_pos_gk[0, 3], wheel_pos_gk[1, 3], psi])
         front_wheel = self.gokarts[gk_name].front_tires.geometry.get_outline()

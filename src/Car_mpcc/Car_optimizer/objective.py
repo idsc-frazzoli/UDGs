@@ -2,7 +2,6 @@ from bspline.bspline import *
 from .car_util import *
 from casadi import *
 
-
 def objective_car(z, p):
     """
     Computes the objective for the solver

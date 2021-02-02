@@ -11,7 +11,7 @@ from Car_mpcc.Car_optimizer.car_util import set_p_car, casadiGetMaxAcc
 from tracks import Track
 from tracks.utils import spline_progress_from_pose
 
-from tracks.zoo import winti_001
+from tracks.zoo import winti_001, straightLineR2L
 from vehicle import gokart_pool, KITT
 
 
@@ -28,7 +28,7 @@ class SimData:
 
 
 def sim_car_model(
-        model, solver, sim_length: int = 200, seed: int = 1, track: Track = winti_001
+        model, solver, sim_length: int = 200, seed: int = 1, track: Track = straightLineR2L
 ) -> SimData:
     """
 
@@ -56,7 +56,7 @@ def sim_car_model(
     solver_time = np.zeros(sim_length)
 
     # Set initial condition
-    init_from_progress = False
+    init_from_progress = True
     spline_start_idx = 0
     if init_from_progress:
         init_progress = 0.0

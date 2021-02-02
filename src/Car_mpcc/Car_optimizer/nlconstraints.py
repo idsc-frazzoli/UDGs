@@ -31,7 +31,6 @@ def nlconst_car(z, p):
     error = centerPos - wantedpos
     laterror = mtimes(sidewards.T, error)
 
-    # v1 = z[params.s_idx.ab] - casadiGetSmoothMaxAcc(z[params.s_idx.vx])
     v1 = laterror - r - slack
     v2 = -laterror - r - slack
 
