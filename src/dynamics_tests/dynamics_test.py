@@ -1,7 +1,7 @@
-from gokartmpcc.Car_Model import dynamics_HC
+from gokartmpcc.human_constraints import dynamics_HC
 from dynamics.dynamics import kitt_dynamics
 from vehicle import gokart_pool, KITT
-from gokartmpcc.Car_Model.driver_config import behaviors_zoo
+from gokartmpcc.human_constraints.driver_config import behaviors_zoo
 
 
 def test_dynamics():

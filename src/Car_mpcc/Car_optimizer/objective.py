@@ -25,19 +25,19 @@ def objective_car(z, p):
     """
 
     points = getPointsFromParameters(p, params.n_param, params.n_bspline_points)
+    # print(points)
     radii = getRadiiFromParameters(p, params.n_param, params.n_bspline_points)
-    targetSpeed=p[params.p_idx.targetSpeed]
-    maxSpeed = p[params.p_idx.maxSpeed]
-
-    pLag = p[params.p_idx.pLag]
-    pLat = p[params.p_idx.pLat]
-    pLeftLane = p[params.p_idx.pLeftLane]
-    pDotBeta = p[params.p_idx.pDotBeta]
+    # print(radii)
+    vmax = p[params.p_idx.ps]
+    maxxacc = p[params.p_idx.pax]
+    steeringreg = p[params.p_idx.pbeta]
+    plag = p[params.p_idx.plag]
+    plat = p[params.p_idx.plat]
+    pprog = p[params.p_idx.pprog]
     pab = p[params.p_idx.pab]
-    pSpeedCostA = p[params.p_idx.pSpeedCostA]
-    pSpeedCostB = p[params.p_idx.pSpeedCostB]
-    pSpeedCostM = p[params.p_idx.pSpeedCostM]
-    pSlack = p[params.p_idx.pSlack]
+    pspeedcost = p[params.p_idx.pspeedcost]
+    pslack = p[params.p_idx.pslack]
+    ptv = p[params.p_idx.ptv]
 
     # get the fancy spline
     # l = gk_geometry.l
@@ -52,25 +52,24 @@ def objective_car(z, p):
 
     realPos = vertcat(z[params.s_idx.x], z[params.s_idx.y])
     centerPos = realPos
-
+    # wantedpos = np.array([[splx, sply]])
     wantedpos = vertcat(splx, sply)
-    wantedpos_CL = vertcat(splx, sply) + r/2 * sidewards
-
+    wantedpos_CL = vertcat(splx, sply) + r/2*sidewards
+    # todo clarify what is this cost function
     error = centerPos - wantedpos
     error_CL = centerPos - wantedpos_CL
     lagerror = mtimes(forward.T, error)
     laterror = mtimes(sidewards.T, error)
     laterror_CL = mtimes(sidewards.T, error_CL)
-
-    speedcostA = speedPunisher(z[params.s_idx.v], targetSpeed) * pSpeedCostA
-    speedcostB = speedPunisherB(z[params.s_idx.v], targetSpeed) * pSpeedCostB
-    speedcostM = speedPunisher(z[params.s_idx.v], maxSpeed) * pSpeedCostM
-
+    speedcostA = speedPunisher(z[params.s_idx.vx], vmax) * pspeedcost
+    speedcostB = fmin(z[params.s_idx.vx] - vmax, 0) ** 2 * pspeedcost# ~max(v-vmax,0);
+    speedcostM = fmax(z[params.s_idx.vx] - vmax+1, 0) ** 2 * pspeedcost
     slack = z[params.i_idx.slack]
-    lagcost = pLag * lagerror ** 2
-    leftLaneCost = pLeftLane * latErrorPunisher(laterror)
-    latcostCL = pLat * laterror_CL
-
+    # tv = z[params.i_idx.tv]
+    lagcost = plag * lagerror ** 2
+    leftLaneCost = plat * fmin(laterror, 0) ** 2
+    latcostCL = plat * laterror_CL ** 2
+    prog = -pprog * z[params.i_idx.ds]
     regAB = z[params.i_idx.dAb] ** 2 * pab
-    regBeta = z[params.i_idx.dBeta] ** 2 * pDotBeta
-    return lagcost + leftLaneCost + latcostCL + regAB + regBeta + speedcostA + speedcostB + speedcostM + pSlack * slack
+    regBeta=  z[params.i_idx.dBeta] ** 2 * steeringreg
+    return lagcost + leftLaneCost + latcostCL + regAB + regBeta + speedcostA + speedcostB + speedcostM + pslack * slack

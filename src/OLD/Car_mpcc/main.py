@@ -1,9 +1,9 @@
 import argparse
 import forcespro
 
-from Car_mpcc.Car_optimizer.sim import sim_human_constraint_model
-from Car_mpcc.Car_optimizer.sim_report import make_report
-from Car_optimizer.generate_model import generate_human_constraints_model
+from Car_mpcc.Car_Model.sim import sim_car_model
+from Car_mpcc.Car_Model.sim_report import make_report
+from Car_Model.generate_model import generate_car_model
 from tracks import winti_002
 
 
@@ -27,8 +27,8 @@ def _parse_args():
 
 def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: bool = False):
     if mpc_model == "human-constraints":
-        model, solver = generate_human_constraints_model(generate_solver, to_deploy)
-        sim_data = sim_human_constraint_model(model, solver, sim_length=200, track=winti_002)
+        model, solver = generate_car_model(generate_solver, to_deploy)
+        sim_data = sim_car_model(model, solver, sim_length=10, track=winti_002)
         make_report(sim_data)
     else:
         raise ValueError(f'The requested model "{mpc_model}" is not recognized.')
