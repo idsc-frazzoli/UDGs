@@ -33,7 +33,7 @@ class Visualization:
             fig = go.Figure()
         if self.track.background.shape[-1] == 4:
             data2 = asarray(self.track.background * 255)
-            img = Image.fromarray(data2.astype(np.uint8))
+            img = Image.fromarray(data2.astype(np.uint8), mode='RGBA')
         else:
             img = Image.fromarray(self.track.background * 255).convert("RGBA")
 
