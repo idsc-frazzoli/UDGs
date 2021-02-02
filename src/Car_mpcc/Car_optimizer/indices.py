@@ -20,7 +20,7 @@ class IdxInput(IntEnum):
     """desired change of acceleration"""
     dBeta = 1
     """rate of change steering angle"""
-    ds = 2
+    dots = 2
     """Derivative of the progress along the track"""
     slack = 3
     """TODO"""
@@ -76,7 +76,7 @@ class VarDesc:
 var_descriptions = {  # todo check units
     IdxInput.dAb: VarDesc('Change of acc', 'm/s^3'),
     IdxInput.dBeta: VarDesc('Steering rate', 'rad/s'),
-    IdxInput.ds: VarDesc('Progress derivative', '-'),
+    IdxInput.dots: VarDesc('Progress derivative', '-'),
     IdxInput.slack: VarDesc('Slack', '-'),
     IdxState.x: VarDesc('x-position', 'm'),
     IdxState.y: VarDesc('y-position', 'm'),

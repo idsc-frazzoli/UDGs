@@ -145,7 +145,7 @@ def laterrorPunisher(laterror,cc):
     :param cc:
     :return:
     """
-    x = fmin(laterror - cc, 0)
+    x = fmin(laterror, 0)
     return x ** 2
 
 def set_p_car(

@@ -4,7 +4,7 @@ import numpy as np
 
 from . import params
 from .objective import objective_car
-from .nlconstraints import nlconst_car
+from .nlconstraints import nlconst_car, nlconst_carN
 from forcespro import nlp, CodeOptions
 
 __all__=["generate_car_model"]
@@ -39,41 +39,45 @@ def generate_car_model(generate_solver: bool, to_deploy: bool):
     model.E = np.concatenate([np.zeros((params.n_states, params.n_inputs)), np.eye(params.n_states)], axis=1)
 
     # inequality constraints
-    model.nh = 3  # Number of inequality constraints
+    model.nh = 2  # Number of inequality constraints
     model.ineq = nlconst_car
-    model.hu = np.array([0, 0, 0])  # upper bound for nonlinear constraints
-    model.hl = np.array(
-        [-np.inf, -np.inf, -np.inf]
-    )  # lower bound for nonlinear constraints
+    model.hu = np.array([0, 0])  # upper bound for nonlinear constraints
+    model.hl = np.array([-np.inf, -np.inf])  # lower bound for nonlinear constraints
+
+    # Terminal State Constraints
+    model.nhN = 3  # Number of inequality constraints
+    model.ineqN = nlconst_carN
+    model.huN = np.array([0, 0, 0])  # upper bound for nonlinear constraints
+    model.hlN = np.array([-np.inf, -np.inf, -np.inf])  # lower bound for nonlinear constraints
 
     for i in range(params.N):
         model.objective[i] = objective_car
 
     model.xinitidx = range(params.n_inputs, params.n_var)
 
-    # Equality  constraints
+    # Equality constraints
     model.ub = np.ones(params.n_var) * np.inf
     model.lb = -np.ones(params.n_var) * np.inf
 
-    # delta  path  progress
-    model.ub[params.i_idx.ds] = 5
-    model.lb[params.i_idx.ds] = -1
+    # delta path progress
+    model.ub[params.i_idx.dots] = 5
+    model.lb[params.i_idx.dots] = -1
 
-    # Forward force  lower bound
+    # Forward force lower bound
+    model.lb[params.i_idx.dAb] = -10
+    model.ub[params.i_idx.dAb] = 10
+
+    # Forward force lower bound
     model.lb[params.s_idx.ab] = -np.inf
-
-    # Torque  vectoring
-    # model.ub[params.i_idx.tv] = 1.7
-    # model.lb[params.i_idx.tv] = -1.7
-
+    model.ub[params.s_idx.ab] = 2
     # slack limit
     model.lb[params.i_idx.slack] = 0
 
-    # Speed  lower  bound
+    # Speed lower bound
     model.lb[params.s_idx.vx] = 0
     model.ub[params.s_idx.vx] = 20
 
-    # Steering  Angle  Bounds
+    # Steering Angle Bounds
     model.ub[params.s_idx.beta] = 0.95
     model.lb[params.s_idx.beta] = -0.95
 

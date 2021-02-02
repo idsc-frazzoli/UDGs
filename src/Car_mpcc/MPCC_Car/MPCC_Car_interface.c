@@ -58,15 +58,15 @@ extern void MPCC_Car_casadi2forces(MPCC_Car_float *x,        /* primal vars     
 	
 
 	/* Allocate working arrays for CasADi */
-	MPCC_Car_float w[513];
+	MPCC_Car_float w[1044];
 	
     /* temporary storage for casadi sparse output */
     MPCC_Car_float this_f;
     MPCC_Car_float nabla_f_sparse[7];
     MPCC_Car_float h_sparse[3];
-    MPCC_Car_float nabla_h_sparse[10];
+    MPCC_Car_float nabla_h_sparse[9];
     MPCC_Car_float c_sparse[9];
-    MPCC_Car_float nabla_c_sparse[31];
+    MPCC_Car_float nabla_c_sparse[42];
             
     
     /* pointers to row and column info for 
