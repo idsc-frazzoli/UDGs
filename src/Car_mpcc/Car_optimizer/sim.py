@@ -27,7 +27,7 @@ class SimData:
     solver_time: np.ndarray
 
 
-def sim_human_constraint_model(
+def sim_car_model(
         model, solver, sim_length: int = 200, seed: int = 1, track: Track = winti_001
 ) -> SimData:
     """
@@ -40,11 +40,11 @@ def sim_human_constraint_model(
     :return:
     """
     # Load some parameters
-    front_pacejka = gokart_pool[KITT].front_tires.pacejka
-    rear_pacejka = gokart_pool[KITT].rear_tires.pacejka
-
-    steering_column = gokart_pool[KITT].steering
-    behavior = behaviors_zoo["beginner"].config
+    # front_pacejka = gokart_pool[KITT].front_tires.pacejka
+    # rear_pacejka = gokart_pool[KITT].rear_tires.pacejka
+    #
+    # steering_column = gokart_pool[KITT].steering
+    behavior = behaviors_zoo["Config1"].config
     n_states = params.n_states
     n_inputs = params.n_inputs
     x_idx = params.s_idx
@@ -108,26 +108,24 @@ def sim_human_constraint_model(
         problem["xinit"] = x[:, k]
         # Set runtime parameters (the only really changing between stages are the next control points of the spline)
         p_vector = set_p_car(
-            maxspeed=behavior.max_speed,
-            xmaxacc=behavior.max_acc,
-            steeringreg=behavior.steering_reg,
-            specificmoi=behavior.specificmoi,
-            FB=front_pacejka.B,
-            FC=front_pacejka.C,
-            FD=front_pacejka.D,
-            RB=rear_pacejka.B,
-            RC=rear_pacejka.C,
-            RD=rear_pacejka.D,
-            b_steer=steering_column.b_steer,
-            k_steer=steering_column.k_steer,
-            J_steer=steering_column.J_steer,
+            maxspeed=behavior.maxspeed,
+            targetspeed=behavior.targetspeed,
+            optcost1=behavior.optcost1,
+            optcost2=behavior.optcost2,
+            Xobstacle=behavior.Xobstacle,
+            Yobstacle=behavior.Yobstacle,
+            targetprog=behavior.targetprog,
+            pspeedcostA=behavior.pspeedcostA,
+            pspeedcostB=behavior.pspeedcostB,
+            pspeedcostM=behavior.pspeedcostM,
             plag=behavior.plag,
             plat=behavior.plat,
-            pprog=behavior.pprog,
+            pLeftLane=behavior.pLeftLane,
             pab=behavior.pab,
-            pspeedcost=behavior.pspeedcost,
+            pdotbeta=behavior.pdotbeta,
+            carLength=behavior.carLength,
+            distance=behavior.distance,
             pslack=behavior.pslack,
-            ptv=behavior.ptv,
             points=next_spline_points[:, :, k],
         )  # fixme check order here
         problem["all_parameters"] = np.tile(p_vector, (model.N,))

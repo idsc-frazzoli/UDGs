@@ -1,17 +1,17 @@
 import numpy
 import ctypes
 
-name = "MPCCgokart"
+name = "MPCC_Car"
 requires_callback = True
-lib = "lib/MPCCgokart.dll"
-lib_static = "lib/MPCCgokart_static.lib"
-c_header = "include/MPCCgokart.h"
+lib = "lib/MPCC_Car.dll"
+lib_static = "lib/MPCC_Car_static.lib"
+c_header = "include/MPCC_Car.h"
 
 # Parameter             | Type    | Scalar type      | Ctypes type    | Numpy type   | Shape     | Len
 params = \
 [("xinit"               , "dense" , ""               , ctypes.c_double, numpy.float64, (  8,   1),    8),
  ("x0"                  , "dense" , ""               , ctypes.c_double, numpy.float64, (372,   1),  372),
- ("all_parameters"      , "dense" , ""               , ctypes.c_double, numpy.float64, (2015,   1), 2015)]
+ ("all_parameters"      , "dense" , ""               , ctypes.c_double, numpy.float64, (1953,   1), 1953)]
 
 # Output                | Type    | Scalar type      | Ctypes type    | Numpy type   | Shape     | Len
 outputs = \

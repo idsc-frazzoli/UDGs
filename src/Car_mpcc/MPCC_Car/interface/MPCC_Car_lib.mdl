@@ -1,5 +1,5 @@
 Model {
-  Name			  "MPCCgokart"
+  Name			  "MPCC_Car"
   Version		  8.0
   MdlSubVersion		  0
   GraphicalInterface {
@@ -60,13 +60,13 @@ Model {
       }
     }
   }
-  Created		  "2/2/2021 9:08:12 AM"
+  Created		  "2/2/2021 10:36:32 AM"
   Creator		  "embotech AG"
   UpdateHistory		  "UpdateHistoryNever"
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "embotech AG"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "2/2/2021 9:08:12 AM"
+  LastModifiedDate	  "2/2/2021 10:36:32 AM"
   RTWModifiedTimeStamp	  315310195
   ModelVersionFormat	  "1.%<AutoIncrement:2>"
   ConfigurationManager	  "None"
@@ -747,7 +747,7 @@ Model {
     }
   }
   System {
-    Name		    "MPCCgokart"
+    Name		    "MPCC_Car"
     Location		    [385, 84, 1201, 623]
     Open		    on
     ModelBrowserVisibility  on
@@ -765,21 +765,21 @@ Model {
     SIDHighWatermark	    "1"
     Block {
       BlockType		      S-Function
-      Name		      "MPCCgokart"
+      Name		      "MPCC_Car"
       SID		      "1"
       Ports		      [3, 1]
       Position		      [170, 99, 650, 180]
       ZOrder		      1
-      FunctionName	      "MPCCgokart_simulinkBlock"
-	  SFunctionModules	      "MPCCgokart MPCCgokart_simulinkBlock"
+      FunctionName	      "MPCC_Car_simulinkBlock"
+	  SFunctionModules	      "MPCC_Car MPCC_Car_simulinkBlock"
       EnableBusSupport	      off
       Object {
 	$PropName		"MaskObject"
 	$ObjectID		19
 	$ClassName		"Simulink.Mask"
-	Type			"MPCCgokart_simulinkBlock"
-	Description		" ---- Simulink block encapsulating your customized solver MPCCgokart ---- \n\n"
-				"MPCCgokart : A fast customized optimization solver.\n"
+	Type			"MPCC_Car_simulinkBlock"
+	Description		" ---- Simulink block encapsulating your customized solver MPCC_Car ---- \n\n"
+				"MPCC_Car : A fast customized optimization solver.\n"
 "\n"
 "Copyright (C) 2013-2020 EMBOTECH AG [info@embotech.com]. All rights reserved.\n"
 "\n"
@@ -801,12 +801,12 @@ Model {
 "jurisdiction in case of any dispute.\n"
 "\n"
 
-	Help			"MPCCgokart_simulinkBlock provides an easy Simulink interface for simulating your customized solver.  \n"
-	"\nOUTPUTS = MPCCgokart(INPUTS) solves an optimization problem where:\n\n"
+	Help			"MPCC_Car_simulinkBlock provides an easy Simulink interface for simulating your customized solver.  \n"
+	"\nOUTPUTS = MPCC_Car(INPUTS) solves an optimization problem where:\n\n"
 	"INPUTS:\n"
 	" - xinit - column vector of length 8\n "
 " - x0 - column vector of length 372\n "
-" - all_parameters - column vector of length 2015\n "
+" - all_parameters - column vector of length 1953\n "
 
 	"\nOUTPUTS:\n"
 	" - all_var - column vector of length 372\n "
@@ -817,7 +817,7 @@ Model {
 "port_label('input', 2, 'x0') \n  "
 "port_label('input', 3, 'all_parameters') \n  "
 "port_label('output', 1, 'all_var') \n "
-"if( exist('FORCES_PRO_Logo.jpg','file') ), image(imread('FORCES_PRO_Logo.jpg'),'center','on'); elseif( exist(['interface',filesep,'FORCES_PRO_Logo.jpg'],'file') ), image(imread(['interface',filesep,'FORCES_PRO_Logo.jpg']),'center','on'); elseif( exist(['MPCCgokart',filesep,'interface',filesep,'FORCES_PRO_Logo.jpg'],'file') ), image(imread(['MPCCgokart',filesep,'interface',filesep,'FORCES_PRO_Logo.jpg']),'center','on'); end \n "
+"if( exist('FORCES_PRO_Logo.jpg','file') ), image(imread('FORCES_PRO_Logo.jpg'),'center','on'); elseif( exist(['interface',filesep,'FORCES_PRO_Logo.jpg'],'file') ), image(imread(['interface',filesep,'FORCES_PRO_Logo.jpg']),'center','on'); elseif( exist(['MPCC_Car',filesep,'interface',filesep,'FORCES_PRO_Logo.jpg'],'file') ), image(imread(['MPCC_Car',filesep,'interface',filesep,'FORCES_PRO_Logo.jpg']),'center','on'); end \n "
 
       }
     }

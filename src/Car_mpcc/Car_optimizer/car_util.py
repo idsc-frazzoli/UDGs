@@ -118,7 +118,7 @@ def casadiGetMaxAcc(x):
     return acc
 
 
-def speedPunisher(v, vmax):
+def speedPunisherA(v, vmax):
     """
 
     :param v:
@@ -128,50 +128,65 @@ def speedPunisher(v, vmax):
     x = fmax(v - vmax, 0)
     return x ** 2
 
+def speedPunisherB(v, vmax):
+    """
+
+    :param v:
+    :param vmax:
+    :return:
+    """
+    x = fmin(v - vmax, 0)
+    return x ** 2
+
+def laterrorPunisher(laterror,cc):
+    """
+
+    :param laterror:
+    :param cc:
+    :return:
+    """
+    x = fmin(laterror - cc, 0)
+    return x ** 2
 
 def set_p_car(
     maxspeed,
-    xmaxacc,
-    steeringreg,
-    specificmoi,
-    FB,
-    FC,
-    FD,
-    RB,
-    RC,
-    RD,
-    b_steer,
-    k_steer,
-    J_steer,
+    targetspeed,
+    optcost1,
+    optcost2,
+    Xobstacle,
+    Yobstacle,
+    targetprog,
+    pspeedcostA,
+    pspeedcostB,
+    pspeedcostM,
     plag,
     plat,
-    pprog,
+    pLeftLane,
     pab,
-    pspeedcost,
+    pdotbeta,
     pslack,
-    ptv,
+    distance,
+    carLength,
     points,
 ):
     p = np.zeros((params.n_param + 3 * params.n_bspline_points))
-    p[params.p_idx.ps] = maxspeed
-    p[params.p_idx.pax] = xmaxacc
-    p[params.p_idx.pbeta] = steeringreg
-    p[params.p_idx.pmoi] = specificmoi
-    p[params.p_idx.pacFB] = FB
-    p[params.p_idx.pacFC] = FC
-    p[params.p_idx.pacFD] = FD
-    p[params.p_idx.pacRB] = RB
-    p[params.p_idx.pacRC] = RC
-    p[params.p_idx.pacRD] = RD
-    p[params.p_idx.steerStiff] = b_steer
-    p[params.p_idx.steerDamp] = k_steer
-    p[params.p_idx.steerInertia] = J_steer
+    p[params.p_idx.maxspeed] = maxspeed
+    p[params.p_idx.targetspeed] = targetspeed
+    p[params.p_idx.optcost1] = optcost1
+    p[params.p_idx.optcost2] = optcost2
+    p[params.p_idx.Xobstacle] = Xobstacle
+    p[params.p_idx.Yobstacle] = Yobstacle
+    p[params.p_idx.targetprog] = targetprog
+    p[params.p_idx.pspeedcostA] = pspeedcostA
+    p[params.p_idx.pspeedcostB] = pspeedcostB
+    p[params.p_idx.pspeedcostM] = pspeedcostM
     p[params.p_idx.plag] = plag
     p[params.p_idx.plat] = plat
-    p[params.p_idx.pprog] = pprog
+    p[params.p_idx.pLeftLane] = pLeftLane
     p[params.p_idx.pab] = pab
-    p[params.p_idx.pspeedcost] = pspeedcost
+    p[params.p_idx.pdotbeta] = pdotbeta
     p[params.p_idx.pslack] = pslack
-    p[params.p_idx.ptv] = ptv
-    p[params.n_param : params.n_param + 3 * params.n_bspline_points] = points.flatten(order="f")
+    p[params.p_idx.distance] = distance
+    p[params.p_idx.carLength] = carLength
+    p[params.n_param: params.n_param + 3 * params.n_bspline_points] = points.flatten(order="f")
     return p

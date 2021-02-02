@@ -5,7 +5,7 @@ from .indices import IdxState, IdxInput, IdxParams
 
 
 @dataclass(frozen=True)
-class HumanConstraintsParams:
+class CarParams:
     N: int = 31
     """The mpc horizon """
     s_idx: IntEnum = IdxState

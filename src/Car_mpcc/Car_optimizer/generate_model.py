@@ -7,9 +7,9 @@ from .objective import objective_car
 from .nlconstraints import nlconst_car
 from forcespro import nlp, CodeOptions
 
-__all__=["generate_human_constraints_model"]
+__all__=["generate_car_model"]
 
-def generate_human_constraints_model(generate_solver: bool, to_deploy: bool):
+def generate_car_model(generate_solver: bool, to_deploy: bool):
     """
     This model assumes:
         - a state given by ...
@@ -17,7 +17,7 @@ def generate_human_constraints_model(generate_solver: bool, to_deploy: bool):
 
     :return:
     """
-    solver_name: str = "MPCCgokart"
+    solver_name: str = "MPCC_Car"
     model = nlp.SymbolicModel(params.N)
     model.nvar = params.n_var
     model.neq = params.n_states
@@ -71,6 +71,7 @@ def generate_human_constraints_model(generate_solver: bool, to_deploy: bool):
 
     # Speed  lower  bound
     model.lb[params.s_idx.vx] = 0
+    model.ub[params.s_idx.vx] = 20
 
     # Steering  Angle  Bounds
     model.ub[params.s_idx.beta] = 0.95

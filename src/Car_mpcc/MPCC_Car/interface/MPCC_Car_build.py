@@ -1,4 +1,4 @@
-#MPCCgokart : A fast customized optimization solver.
+#MPCC_Car : A fast customized optimization solver.
 #
 #Copyright (C) 2013-2020 EMBOTECH AG [info@embotech.com]. All rights reserved.
 #
@@ -30,22 +30,22 @@ import sys
 import distutils
 
 # determine source file
-sourcefile = os.path.join(os.getcwd(),"MPCCgokart","src","MPCCgokart"+".c")
+sourcefile = os.path.join(os.getcwd(),"MPCC_Car","src","MPCC_Car"+".c")
 
 # determine lib file
 if sys.platform.startswith('win'):
-	libfile = os.path.join(os.getcwd(),"MPCCgokart","lib","MPCCgokart"+".lib")
+	libfile = os.path.join(os.getcwd(),"MPCC_Car","lib","MPCC_Car"+".lib")
 else:
-	libfile = os.path.join(os.getcwd(),"MPCCgokart","lib","MPCCgokart"+".so")	
+	libfile = os.path.join(os.getcwd(),"MPCC_Car","lib","MPCC_Car"+".so")	
 
 # create lib dir if it does not exist yet
-if not os.path.exists(os.path.join(os.getcwd(),"MPCCgokart","lib")):
-	os.makedirs(os.path.join(os.getcwd(),"MPCCgokart","lib"))
+if not os.path.exists(os.path.join(os.getcwd(),"MPCC_Car","lib")):
+	os.makedirs(os.path.join(os.getcwd(),"MPCC_Car","lib"))
 								
 
 				
 # compile into object file
-objdir = os.path.join(os.getcwd(),"MPCCgokart","obj")
+objdir = os.path.join(os.getcwd(),"MPCC_Car","obj")
 if isinstance(c,distutils.unixccompiler.UnixCCompiler):
 	#objects = c.compile([sourcefile], output_dir=objdir, extra_preargs=['-O3','-fPIC','-fopenmp','-mavx'])
 	objects = c.compile([sourcefile], output_dir=objdir, extra_preargs=['-O3','-fPIC','-mavx'])
@@ -56,7 +56,7 @@ else:
 
 				
 # create libraries
-libdir = os.path.join(os.getcwd(),"MPCCgokart","lib")
-exportsymbols = ["%s_solve" % "MPCCgokart"]
-c.create_static_lib(objects, "MPCCgokart", output_dir=libdir)
-c.link_shared_lib(objects, "MPCCgokart", output_dir=libdir, export_symbols=exportsymbols)
+libdir = os.path.join(os.getcwd(),"MPCC_Car","lib")
+exportsymbols = ["%s_solve" % "MPCC_Car"]
+c.create_static_lib(objects, "MPCC_Car", output_dir=libdir)
+c.link_shared_lib(objects, "MPCC_Car", output_dir=libdir, export_symbols=exportsymbols)

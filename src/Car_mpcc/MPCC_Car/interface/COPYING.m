@@ -1,4 +1,4 @@
-% MPCCgokart : A fast customized optimization solver.
+% MPCC_Car : A fast customized optimization solver.
 % 
 % Copyright (C) 2013-2020 EMBOTECH AG [info@embotech.com]. All rights reserved.
 % 

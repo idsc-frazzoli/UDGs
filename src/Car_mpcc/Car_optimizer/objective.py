@@ -28,16 +28,17 @@ def objective_car(z, p):
     # print(points)
     radii = getRadiiFromParameters(p, params.n_param, params.n_bspline_points)
     # print(radii)
-    vmax = p[params.p_idx.ps]
-    maxxacc = p[params.p_idx.pax]
-    steeringreg = p[params.p_idx.pbeta]
+    maxspeed = p[params.p_idx.maxspeed]
+    targetspeed = p[params.p_idx.targetspeed]
+    pdotbeta = p[params.p_idx.pdotbeta]
     plag = p[params.p_idx.plag]
     plat = p[params.p_idx.plat]
-    pprog = p[params.p_idx.pprog]
+    pLeftLane = p[params.p_idx.pLeftLane]
     pab = p[params.p_idx.pab]
-    pspeedcost = p[params.p_idx.pspeedcost]
+    pspeedcostA = p[params.p_idx.pspeedcostA]
+    pspeedcostB = p[params.p_idx.pspeedcostB]
+    pspeedcostM = p[params.p_idx.pspeedcostM]
     pslack = p[params.p_idx.pslack]
-    ptv = p[params.p_idx.ptv]
 
     # get the fancy spline
     # l = gk_geometry.l
@@ -61,15 +62,13 @@ def objective_car(z, p):
     lagerror = mtimes(forward.T, error)
     laterror = mtimes(sidewards.T, error)
     laterror_CL = mtimes(sidewards.T, error_CL)
-    speedcostA = speedPunisher(z[params.s_idx.vx], vmax) * pspeedcost
-    speedcostB = fmin(z[params.s_idx.vx] - vmax, 0) ** 2 * pspeedcost# ~max(v-vmax,0);
-    speedcostM = fmax(z[params.s_idx.vx] - vmax+1, 0) ** 2 * pspeedcost
+    speedcostA = speedPunisherA(z[params.s_idx.vx], targetspeed) * pspeedcostA
+    speedcostB = speedPunisherB(z[params.s_idx.vx], targetspeed) * pspeedcostB
+    speedcostM = speedPunisherA(z[params.s_idx.vx], maxspeed) * pspeedcostM
     slack = z[params.i_idx.slack]
-    # tv = z[params.i_idx.tv]
     lagcost = plag * lagerror ** 2
-    leftLaneCost = plat * fmin(laterror, 0) ** 2
+    leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
     latcostCL = plat * laterror_CL ** 2
-    prog = -pprog * z[params.i_idx.ds]
     regAB = z[params.i_idx.dAb] ** 2 * pab
-    regBeta=  z[params.i_idx.dBeta] ** 2 * steeringreg
+    regBeta=  z[params.i_idx.dBeta] ** 2 * pdotbeta
     return lagcost + leftLaneCost + latcostCL + regAB + regBeta + speedcostA + speedcostB + speedcostM + pslack * slack

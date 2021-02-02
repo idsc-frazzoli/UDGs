@@ -1,5 +1,5 @@
 /*
-MPCCgokart : A fast customized optimization solver.
+MPCC_Car : A fast customized optimization solver.
 
 Copyright (C) 2013-2020 EMBOTECH AG [info@embotech.com]. All rights reserved.
 
@@ -24,7 +24,7 @@ jurisdiction in case of any dispute.
 
 #include "mex.h"
 #include "math.h"
-#include "../include/MPCCgokart.h"
+#include "../include/MPCC_Car.h"
 #ifndef SOLVER_STDIO_H
 #define SOLVER_STDIO_H
 #include <stdio.h>
@@ -66,14 +66,14 @@ void copyMValueToC_double(double * src, double * dest)
 
 
 
-extern void (MPCCgokart_float *x, MPCCgokart_float *y, MPCCgokart_float *l, MPCCgokart_float *p, MPCCgokart_float *f, MPCCgokart_float *nabla_f, MPCCgokart_float *c, MPCCgokart_float *nabla_c, MPCCgokart_float *h, MPCCgokart_float *nabla_h, MPCCgokart_float *hess, solver_int32_default stage, solver_int32_default iteration, solver_int32_default threadID);
-MPCCgokart_extfunc pt2function_MPCCgokart = &;
+extern void (MPCC_Car_float *x, MPCC_Car_float *y, MPCC_Car_float *l, MPCC_Car_float *p, MPCC_Car_float *f, MPCC_Car_float *nabla_f, MPCC_Car_float *c, MPCC_Car_float *nabla_c, MPCC_Car_float *h, MPCC_Car_float *nabla_h, MPCC_Car_float *hess, solver_int32_default stage, solver_int32_default iteration, solver_int32_default threadID);
+MPCC_Car_extfunc pt2function_MPCC_Car = &;
 
 
 /* Some memory for mex-function */
-static MPCCgokart_params params;
-static MPCCgokart_output output;
-static MPCCgokart_info info;
+static MPCC_Car_params params;
+static MPCC_Car_output output;
+static MPCC_Car_info info;
 
 /* THE mex-function */
 void mexFunction( solver_int32_default nlhs, mxArray *plhs[], solver_int32_default nrhs, const mxArray *prhs[] )  
@@ -95,11 +95,11 @@ void mexFunction( solver_int32_default nlhs, mxArray *plhs[], solver_int32_defau
 	/* Check for proper number of arguments */
     if (nrhs != 1) 
 	{
-        mexErrMsgTxt("This function requires exactly 1 input: PARAMS struct.\nType 'help MPCCgokart_mex' for details.");
+        mexErrMsgTxt("This function requires exactly 1 input: PARAMS struct.\nType 'help MPCC_Car_mex' for details.");
     }    
 	if (nlhs > 3) 
 	{
-        mexErrMsgTxt("This function returns at most 3 outputs.\nType 'help MPCCgokart_mex' for details.");
+        mexErrMsgTxt("This function returns at most 3 outputs.\nType 'help MPCC_Car_mex' for details.");
     }
 
 	/* Check whether params is actually a structure */
@@ -159,19 +159,19 @@ void mexFunction( solver_int32_default nlhs, mxArray *plhs[], solver_int32_defau
     {
     mexErrMsgTxt("PARAMS.all_parameters must be a double.");
     }
-    if( mxGetM(par) != 2015 || mxGetN(par) != 1 ) 
+    if( mxGetM(par) != 1953 || mxGetN(par) != 1 ) 
 	{
-    mexErrMsgTxt("PARAMS.all_parameters must be of size [2015 x 1]");
+    mexErrMsgTxt("PARAMS.all_parameters must be of size [1953 x 1]");
     }
 #endif	 
 	if ( (mxGetN(par) != 0) && (mxGetM(par) != 0) )
 	{
-		copyMArrayToC_double(mxGetPr(par), params.all_parameters,2015);
+		copyMArrayToC_double(mxGetPr(par), params.all_parameters,1953);
 
 	}
 
 
-	#if SET_PRINTLEVEL_MPCCgokart > 0
+	#if SET_PRINTLEVEL_MPCC_Car > 0
 		/* Prepare file for printfs */
         fp = fopen("stdout_temp","w+");
 		if( fp == NULL ) 
@@ -182,9 +182,9 @@ void mexFunction( solver_int32_default nlhs, mxArray *plhs[], solver_int32_defau
 	#endif
 
 	/* call solver */
-	exitflag = MPCCgokart_solve(&params, &output, &info, fp, pt2function_MPCCgokart);
+	exitflag = MPCC_Car_solve(&params, &output, &info, fp, pt2function_MPCC_Car);
 	
-	#if SET_PRINTLEVEL_MPCCgokart > 0
+	#if SET_PRINTLEVEL_MPCC_Car > 0
 		/* Read contents of printfs printed to file */
 		rewind(fp);
 		while( (i = fgetc(fp)) != EOF ) 

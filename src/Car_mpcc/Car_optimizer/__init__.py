@@ -1,3 +1,3 @@
-from Car_mpcc.Car_optimizer.parameters import HumanConstraintsParams
+from Car_mpcc.Car_optimizer.parameters import CarParams
 
-params = HumanConstraintsParams()
+params = CarParams()

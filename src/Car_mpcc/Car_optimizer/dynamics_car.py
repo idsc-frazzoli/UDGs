@@ -44,7 +44,7 @@ def dynamics_car(x, u, p):
         dx = np.zeros(params.n_states)
     else:  # fixme not sure what this was for
         dx = SX.zeros(params.n_states, 1)
-    lc = 2.5
+    lc = p[params.p_idx.carLength]
     # rot_mat = rotmat(theta)
     # lv = np.array([[vx], [vy]])
     # gv = mtimes(rot_mat, lv)

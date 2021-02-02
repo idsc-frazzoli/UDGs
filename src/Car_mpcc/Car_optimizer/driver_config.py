@@ -8,29 +8,42 @@ __all__ = ["DriverConfig", "BehaviorSpec", "behaviors_zoo"]
 
 @dataclass(frozen=True, unsafe_hash=True)
 class DriverConfig:
-    max_speed: float
-    """max ?longitudinal? speed in [m/s]"""
-    max_acc: float
-    """max longitudinal acc in [m/s^-1]"""
-    steering_reg: float
-    """"""
-    specificmoi: float
-    """"""
+    maxspeed: float
+    """max longitudinal speed in [m/s]"""
+    targetspeed: float
+    """target longitudinal speed in [m/s]"""
+    optcost1: float
+    """optimal cost of first optimization"""
+    optcost2: float
+    """optimal cost of second optimization"""
+    Xobstacle: float
+    """X position of the obstacle"""
+    Yobstacle: float
+    """Y position of the obstacle"""
+    targetprog: float
+    """target progress at the end of the prediction horizon"""
+    pspeedcostA: float
+    """weight penalizing speed Above reference"""
+    pspeedcostB: float
+    """weight penalizing speed Below reference"""
+    pspeedcostM: float
+    """weight penalizing speed above SpeedLimit"""
     plag: float
-    """"""
+    """weight penalizing lag error"""
     plat: float
-    """"""
-    pprog: float
-    """"""
+    """weight penalizing lat error w.r.t center of the lane"""
+    pLeftLane: float
+    """weight penalizing going towards the other lane"""
     pab: float
-    """"""
-    pspeedcost: float
-    """"""
+    """weight penalizing variations in accelerations"""
+    pdotbeta: float
+    """weight penalizing variations in steering angle"""
     pslack: float
-    """"""
-    ptv: float
-    """"""
-
+    """weight penalizing going out of the track"""
+    distance: float
+    """max distance allowed"""
+    carLength: float
+    """carLength"""
 
 @dataclass(frozen=True, unsafe_hash=True)
 class BehaviorSpec:
@@ -40,101 +53,30 @@ class BehaviorSpec:
 
 
 _cautious = DriverConfig(
-    max_speed=5,
-    max_acc=5,
-    steering_reg=0.02,
-    specificmoi=0.3,
-    plag=1,
-    plat=0.03,
-    pprog=0.15,
-    pab=0.001,
-    pspeedcost=0.04,
-    pslack=10,
-    ptv=0.01,
-)
-cautious_spec = BehaviorSpec(desc="Beginner mode", config=_cautious)
-
-_medium = DriverConfig(
-    max_speed=7,
-    max_acc=3,
-    steering_reg=0.02,
-    specificmoi=0.3,
-    plag=1,
-    plat=0.01,
-    pprog=0.15,
-    pab=0.0006,
-    pspeedcost=0.04,
-    pslack=8,
-    ptv=0.005,
-)
-medium_spec = BehaviorSpec(desc="", config=_medium)
-_aggressive = DriverConfig(
-    max_speed=10,
-    max_acc=5,
-    steering_reg=0.02,
-    specificmoi=0.3,
-    plag=1,
-    plat=0.015,
-    pprog=0.2,
-    pab=0.0004,
-    pspeedcost=0.005,
-    pslack=7,
-    ptv=0.0075,
-)
-aggressive_spec = BehaviorSpec(
-    desc="Advanced mode enabled. Be careful, with high limits come high responsibilities", config=_aggressive
-)
-_drifting = DriverConfig(
-    max_speed=10,
-    max_acc=5,
-    steering_reg=0.02,
-    specificmoi=0.3,
-    plag=0.2,
-    plat=0.01,
-    pprog=0.1,
-    pab=0.0004,
-    pspeedcost=0.04,
-    pslack=4,
-    ptv=0.05,
-)
-drifting_spec = BehaviorSpec(desc="", config=_drifting)
-
-_custom = DriverConfig(
-    max_speed=7,
-    max_acc=5,
-    steering_reg=0.02,
-    specificmoi=0.3,
-    plag=1,
-    plat=0.0001,
-    pprog=0.2,
-    pab=0.04,
-    pspeedcost=0.0004,
-    pslack=5,
-    ptv=0.03,
-)
-custom_spec = BehaviorSpec(desc="", config=_custom)
-_collision = DriverConfig(
-    max_speed=3,
-    max_acc=5,
-    steering_reg=0.2,
-    specificmoi=0.3,
+    maxspeed=9,
+    targetspeed=8.3,
+    optcost1=0,
+    optcost2=0,
+    Xobstacle=0,
+    Yobstacle=0,
+    targetprog=7,
+    pspeedcostA=2,
+    pspeedcostB=0.5,
+    pspeedcostM=4,
     plag=1,
     plat=1,
-    pprog=0.2,
-    pab=0.04,
-    pspeedcost=1,
-    pslack=5,
-    ptv=0.01,
+    pLeftLane=3,
+    pab=0.006,
+    pdotbeta=3,
+    pslack=15,
+    distance=3.3,
+    carLength=2.5,
 )
-collision_spec = BehaviorSpec(desc="todo", config=_collision)
+cautious_spec = BehaviorSpec(desc="Config1", config=_cautious)
 
 behaviors_zoo: Mapping[str, BehaviorSpec] = frozendict(
     {
-        "beginner": cautious_spec,
-        "medium": medium_spec,
-        "advanced": aggressive_spec,
-        "drifting": drifting_spec,
-        "custom": custom_spec,
-        "collision": collision_spec,
+        "Config1": cautious_spec,
+
     }
 )

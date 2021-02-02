@@ -52,28 +52,24 @@ class IdxState(IntEnum):
 
 @unique
 class IdxParams(IntEnum):
-    ps = 0
-    pax = 1
-    pbeta = 2
-    pmoi = 3
-    pacFB = 4
-    pacFC = 5
-    pacFD = 6
-    pacRB = 7
-    pacRC = 8
-    pacRD = 9
-    steerStiff = 10
-    steerDamp = 11
-    steerInertia = 12
-    plag = 13
-    plat = 14
-    pprog = 15
-    pab = 16
-    pspeedcost = 17
-    pslack = 18
-    ptv = 19
-    # ptau = 20     # fixme what is this?
-
+    maxspeed = 0
+    targetspeed = 1
+    optcost1 = 2
+    optcost2 = 3
+    Xobstacle = 4
+    Yobstacle = 5
+    targetprog = 6
+    pspeedcostA = 7
+    pspeedcostB = 8
+    pspeedcostM = 9
+    plag = 10
+    plat = 11
+    pLeftLane = 12
+    pab = 13
+    pdotbeta = 14
+    pslack = 15
+    distance = 16
+    carLength = 17
 
 @dataclass(frozen=True)
 class VarDesc:

@@ -1,5 +1,5 @@
 /*
-MPCCgokart : A fast customized optimization solver.
+MPCC_Car : A fast customized optimization solver.
 
 Copyright (C) 2013-2020 EMBOTECH AG [info@embotech.com]. All rights reserved.
 
@@ -24,7 +24,7 @@ jurisdiction in case of any dispute.
 
 
 #define S_FUNCTION_LEVEL 2
-#define S_FUNCTION_NAME MPCCgokart_simulinkBlock
+#define S_FUNCTION_NAME MPCC_Car_simulinkBlock
 
 #include "simstruc.h"
 
@@ -41,7 +41,7 @@ FILE * __cdecl __iob_func(void)
 #endif
 
 /* include FORCES functions and defs */
-#include "../include/MPCCgokart.h" 
+#include "../include/MPCC_Car.h" 
 
 /* SYSTEM INCLUDES FOR TIMING ------------------------------------------ */
 
@@ -53,10 +53,10 @@ FILE * __cdecl __iob_func(void)
 #include "rtwtypes.h"
 #endif
 
-typedef MPCCgokartinterface_float MPCCgokartnmpc_float;
+typedef MPCC_Carinterface_float MPCC_Carnmpc_float;
 
 extern void (double *x, double *y, double *l, double *p, double *f, double *nabla_f, double *c, double *nabla_c, double *h, double *nabla_h, double *hess, solver_int32_default stage, solver_int32_default iteration, solver_int32_default threadID);
-MPCCgokart_extfunc pt2function_MPCCgokart = &;
+MPCC_Car_extfunc pt2function_MPCC_Car = &;
 
 
 
@@ -99,7 +99,7 @@ static void mdlInitializeSizes(SimStruct *S)
     ssSetInputPortDirectFeedThrough(S, 1, 1); /* Feedthrough enabled */
     ssSetInputPortRequiredContiguous(S, 1, 1); /*direct input signal access*/	
 	/* Input Port 2 */
-    ssSetInputPortMatrixDimensions(S,  2, 2015, 1);
+    ssSetInputPortMatrixDimensions(S,  2, 1953, 1);
     ssSetInputPortDataType(S, 2, SS_DOUBLE);
     ssSetInputPortComplexSignal(S, 2, COMPLEX_NO); /* no complex signals suppported */
     ssSetInputPortDirectFeedThrough(S, 2, 1); /* Feedthrough enabled */
@@ -213,9 +213,9 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 	
 
 	/* Solver data */
-	static MPCCgokart_params params;
-	static MPCCgokart_output output;
-	static MPCCgokart_info info;	
+	static MPCC_Car_params params;
+	static MPCC_Car_output output;
+	static MPCC_Car_info info;	
 	solver_int32_default exitflag;
 
 	/* Extra NMPC data */
@@ -232,7 +232,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 		params.x0[i] = (double) x0[i]; 
 	}
 
-	for( i=0; i<2015; i++)
+	for( i=0; i<1953; i++)
 	{ 
 		params.all_parameters[i] = (double) all_parameters[i]; 
 	}
@@ -241,7 +241,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 
 	
 
-    #if SET_PRINTLEVEL_MPCCgokart > 0
+    #if SET_PRINTLEVEL_MPCC_Car > 0
 		/* Prepare file for printfs */
         fp = fopen("stdout_temp","w+");
 		if( fp == NULL ) 
@@ -252,9 +252,9 @@ static void mdlOutputs(SimStruct *S, int_T tid)
 	#endif
 
 	/* Call solver */
-	exitflag = MPCCgokart_solve(&params, &output, &info, fp , pt2function_MPCCgokart);
+	exitflag = MPCC_Car_solve(&params, &output, &info, fp , pt2function_MPCC_Car);
 
-	#if SET_PRINTLEVEL_MPCCgokart > 0
+	#if SET_PRINTLEVEL_MPCC_Car > 0
 		/* Read contents of printfs printed to file */
 		rewind(fp);
 		while( (i = fgetc(fp)) != EOF ) 
