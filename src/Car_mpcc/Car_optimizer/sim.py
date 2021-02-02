@@ -40,10 +40,7 @@ def sim_car_model(
     :return:
     """
     # Load some parameters
-    # front_pacejka = gokart_pool[KITT].front_tires.pacejka
-    # rear_pacejka = gokart_pool[KITT].rear_tires.pacejka
-    #
-    # steering_column = gokart_pool[KITT].steering
+
     behavior = behaviors_zoo["Config1"].config
     n_states = params.n_states
     n_inputs = params.n_inputs
@@ -77,10 +74,8 @@ def sim_car_model(
     xinit[x_idx.y - n_inputs] = y_pos
     xinit[x_idx.theta - n_inputs] = theta_pos
     xinit[x_idx.vx - n_inputs] = 0.0  # totally arbitrary
-    # xinit[x_idx.vy - n_inputs] = -0.001  # totally arbitrary
     xinit[x_idx.beta - n_inputs] = -0.67  # totally arbitrary
     xinit[x_idx.s - n_inputs] = init_progress
-    # xinit[x_idx.ab - n_inputs] = casadiGetSmoothMaxAcc(xinit[x_idx.v - n_inputs])
 
     x[:, 0] = xinit
     problem = {}

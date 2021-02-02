@@ -65,8 +65,8 @@ extern void MPCC_Car_casadi2forces(MPCC_Car_float *x,        /* primal vars     
     MPCC_Car_float nabla_f_sparse[7];
     MPCC_Car_float h_sparse[3];
     MPCC_Car_float nabla_h_sparse[10];
-    MPCC_Car_float c_sparse[8];
-    MPCC_Car_float nabla_c_sparse[30];
+    MPCC_Car_float c_sparse[9];
+    MPCC_Car_float nabla_c_sparse[31];
             
     
     /* pointers to row and column info for 

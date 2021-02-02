@@ -1,7 +1,6 @@
 from bspline.bspline import *
 from .car_util import *
 from casadi import *
-import numpy as np
 
 
 def objective_car(z, p):
@@ -25,9 +24,7 @@ def objective_car(z, p):
     """
 
     points = getPointsFromParameters(p, params.n_param, params.n_bspline_points)
-    # print(points)
     radii = getRadiiFromParameters(p, params.n_param, params.n_bspline_points)
-    # print(radii)
     maxspeed = p[params.p_idx.maxspeed]
     targetspeed = p[params.p_idx.targetspeed]
     pdotbeta = p[params.p_idx.pdotbeta]
@@ -41,19 +38,17 @@ def objective_car(z, p):
     pslack = p[params.p_idx.pslack]
 
     # get the fancy spline
-    # l = gk_geometry.l
     splx, sply = casadiDynamicBSPLINE(z[params.s_idx.s], points)
     spldx, spldy = casadiDynamicBSPLINEforward(z[params.s_idx.s], points)
     splsx, splsy = casadiDynamicBSPLINEsidewards(z[params.s_idx.s], points)
     r = casadiDynamicBSPLINERadius(z[params.s_idx.s], radii)
-    # forward = np.array([[spldx, spldy]])
-    # sidewards = np.array([[splsx, splsy]])
+
     forward = vertcat(spldx, spldy)
     sidewards = vertcat(splsx, splsy)
 
     realPos = vertcat(z[params.s_idx.x], z[params.s_idx.y])
     centerPos = realPos
-    # wantedpos = np.array([[splx, sply]])
+
     wantedpos = vertcat(splx, sply)
     wantedpos_CL = vertcat(splx, sply) + r/2*sidewards
     # todo clarify what is this cost function
@@ -70,5 +65,5 @@ def objective_car(z, p):
     leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
     latcostCL = plat * laterror_CL ** 2
     regAB = z[params.i_idx.dAb] ** 2 * pab
-    regBeta=  z[params.i_idx.dBeta] ** 2 * pdotbeta
+    regBeta = z[params.i_idx.dBeta] ** 2 * pdotbeta
     return lagcost + leftLaneCost + latcostCL + regAB + regBeta + speedcostA + speedcostB + speedcostM + pslack * slack
