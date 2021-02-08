@@ -39,7 +39,7 @@ class IdxState(IntEnum):
     ab = 8
     """acceleration and braking"""
     beta = 9
-    """steering angle?"""
+    """steering angle"""
     s = 10
     """path progress in local spline reference system"""
     CumSlackCost = 11

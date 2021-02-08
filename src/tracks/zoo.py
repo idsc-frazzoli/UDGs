@@ -296,5 +296,5 @@ straightLineR2L = Track(
         ],
     ),
     background=plt.imread(os.path.join(path, "road06.png")),
-    scale_factor=1/21
+    scale_factor=1/20
 )

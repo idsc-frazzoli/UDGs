@@ -1,4 +1,4 @@
-from Car_mpcc.Car_optimizer.dynamics_car import dynamics_car
+from Car_mpcc.Car_optimizer.dynamics_car import _dynamics_car ,dynamics_cars
 
 import numpy as np
 
@@ -25,7 +25,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool):
     # Number of parameters
     model.npar = params.n_param + 3 * params.n_bspline_points
     model.eq = lambda z, p: nlp.integrate(
-        dynamics_car,
+        dynamics_cars[1],
         z[params.n_inputs: params.n_var],
         z[0: params.n_inputs],
         p,
