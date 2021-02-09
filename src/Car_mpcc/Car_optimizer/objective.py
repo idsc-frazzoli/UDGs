@@ -4,6 +4,7 @@ from bspline.bspline import *
 from .car_util import *
 from casadi import *
 
+
 def _objective_car(z, p, n):
     """
     Computes the objective for the solver
@@ -42,8 +43,8 @@ def _objective_car(z, p, n):
         update_for_sidx = k * params.n_states + (n - 1) * params.n_inputs
         update_for_iidx = k * params.n_inputs
 
-        points = getPointsFromParameters(p, pointsO + k * pointsN, (k + 1) * pointsN)  # todo check indices
-        radii = getRadiiFromParameters(p, pointsO + k * pointsN, (k + 1) * pointsN)  # todo check indices
+        points = getPointsFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
+        radii = getRadiiFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
 
         # get the fancy spline
         splx, sply = casadiDynamicBSPLINE(z[params.s_idx.s + update_for_sidx], points)
@@ -58,8 +59,8 @@ def _objective_car(z, p, n):
         centerPos = realPos
 
         wantedpos = vertcat(splx, sply)
-        wantedpos_CL = vertcat(splx, sply) + r/2 * sidewards
-    # todo clarify what is this cost function
+        wantedpos_CL = vertcat(splx, sply) + r / 2 * sidewards
+        # todo clarify what is this cost function
         error = centerPos - wantedpos
         error_CL = centerPos - wantedpos_CL
         lagerror = mtimes(forward.T, error)
@@ -74,7 +75,6 @@ def _objective_car(z, p, n):
         latcostCL = plat * laterror_CL ** 2
         regAB = z[params.i_idx.dAb + update_for_iidx] ** 2 * pab
         regBeta = z[params.i_idx.dBeta + update_for_iidx] ** 2 * pdotbeta
-
         obj = obj + lagcost + leftLaneCost + latcostCL + regAB + regBeta + speedcostA + speedcostB + speedcostM + pslack * slack
 
     return obj

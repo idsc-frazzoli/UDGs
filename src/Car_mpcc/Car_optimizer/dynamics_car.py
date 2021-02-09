@@ -24,21 +24,6 @@ def _dynamics_car(x, u, p, n):
 
     speedcostM = np.zeros(n)
     leftLaneCost = np.zeros(n)
-    points = np.zeros((n, params.n_bspline_points, 2))
-
-    for k in range(n):
-        points[k, :, :] = getPointsFromParameters(p, params.n_param, params.n_bspline_points)
-        splx, sply = casadiDynamicBSPLINE(x[params.s_idx.s + k*params.n_states - n*params.n_inputs], points[k])
-        splsx, splsy = casadiDynamicBSPLINEsidewards(x[params.s_idx.s + k*params.n_states - n*params.n_inputs], points[k])
-
-        sidewards = vertcat(splsx, splsy)
-        realPos = vertcat(x[params.s_idx.x + k*params.n_states - n*params.n_inputs], x[params.s_idx.y + k*params.n_states - n*params.n_inputs])
-        centerPos = realPos
-        wantedpos = vertcat(splx, sply)
-        error = centerPos - wantedpos
-        laterror = mtimes(sidewards.T, error)
-        speedcostM[k] = speedPunisherA(x[params.s_idx.vx + k*params.n_states - n*params.n_inputs], maxspeed) * pspeedcostM
-        leftLaneCost[k] = pLeftLane * laterrorPunisher(laterror, 0)
 
     dotab = np.zeros(n)
     dotbeta = np.zeros(n)
@@ -49,32 +34,54 @@ def _dynamics_car(x, u, p, n):
     vx = np.zeros(n)
     beta = np.zeros(n)
 
+    pointsO = params.n_param
+    pointsN = params.n_bspline_points
+
+    points = np.zeros((n, pointsN, 2))
+
     if isinstance(x[0], float):
         dx = np.zeros(n * params.n_states)
     else:  # fixme not sure what this was for
         dx = SX.zeros(n * params.n_states, 1)
 
     for k in range(n):
-        dotab[k] = u[params.i_idx.dAb + k*params.n_inputs]
-        dotbeta[k] = u[params.i_idx.dBeta + k*params.n_inputs]
-        dots[k] = u[params.i_idx.dots + k*params.n_inputs]
-        slack[k] = u[params.i_idx.slack + k*params.n_inputs]
-        ab[k] = x[params.s_idx.ab + k*params.n_states - n*params.n_inputs]
-        theta[k] = x[params.s_idx.theta + k*params.n_states - n*params.n_inputs]
-        vx[k] = x[params.s_idx.vx + k*params.n_states - n*params.n_inputs]
-        beta[k] = x[params.s_idx.beta + k*params.n_states - n*params.n_inputs]  # from steering.
+        upd_s_idx = k * params.n_states - params.n_inputs
+        upd_i_idx = k * params.n_inputs
 
-        dx[params.s_idx.x + k*params.n_states - n*params.n_inputs] = vx[k] * cos(theta[k])
-        dx[params.s_idx.y + k*params.n_states - n*params.n_inputs] = vx[k] * sin(theta[k])
-        dx[params.s_idx.theta + k*params.n_states - n*params.n_inputs] = vx[k] * tan(beta[k]) / lc
-        dx[params.s_idx.vx + k*params.n_states - n*params.n_inputs] = ab[k]
-        dx[params.s_idx.ab + k*params.n_states - n*params.n_inputs] = dotab[k]
-        dx[params.s_idx.beta + k*params.n_states - n*params.n_inputs] = dotbeta[k]
-        dx[params.s_idx.s + k*params.n_states - n*params.n_inputs] = dots[k]
-        dx[params.s_idx.CumSlackCost + k*params.n_states - n*params.n_inputs] = pslack * slack[k]
-        dx[params.s_idx.CumLatSpeedCost + k*params.n_states - n*params.n_inputs] = speedcostM[k] + leftLaneCost[k]
+        points[k, :, :] = getPointsFromParameters(p, pointsO + k * pointsN, pointsN)
+        splx, sply = casadiDynamicBSPLINE(x[params.s_idx.s + upd_s_idx], points[k, :, :])
+        splsx, splsy = casadiDynamicBSPLINEsidewards(x[params.s_idx.s + upd_s_idx], points[k, :, :])
+
+        sidewards = vertcat(splsx, splsy)
+        realPos = vertcat(x[params.s_idx.x + upd_s_idx], x[params.s_idx.y + upd_s_idx])
+        centerPos = realPos
+        wantedpos = vertcat(splx, sply)
+        error = centerPos - wantedpos
+        laterror = mtimes(sidewards.T, error)
+        speedcostM[k] = speedPunisherA(x[params.s_idx.vx + upd_s_idx], maxspeed) * pspeedcostM
+        leftLaneCost[k] = pLeftLane * laterrorPunisher(laterror, 0)
+
+        dotab[k] = u[params.i_idx.dAb + upd_i_idx]
+        dotbeta[k] = u[params.i_idx.dBeta + upd_i_idx]
+        dots[k] = u[params.i_idx.dots + upd_i_idx]
+        slack[k] = u[params.i_idx.slack + upd_i_idx]
+        ab[k] = x[params.s_idx.ab + upd_s_idx]
+        theta[k] = x[params.s_idx.theta + upd_s_idx]
+        vx[k] = x[params.s_idx.vx + upd_s_idx]
+        beta[k] = x[params.s_idx.beta + upd_s_idx]  # from steering.
+
+        dx[params.s_idx.x + upd_s_idx] = vx[k] * cos(theta[k])
+        dx[params.s_idx.y + upd_s_idx] = vx[k] * sin(theta[k])
+        dx[params.s_idx.theta + upd_s_idx] = vx[k] * tan(beta[k]) / lc
+        dx[params.s_idx.vx + upd_s_idx] = ab[k]
+        dx[params.s_idx.ab + upd_s_idx] = dotab[k]
+        dx[params.s_idx.beta + upd_s_idx] = dotbeta[k]
+        dx[params.s_idx.s + upd_s_idx] = dots[k]
+        dx[params.s_idx.CumSlackCost + upd_s_idx] = pslack * slack[k]
+        dx[params.s_idx.CumLatSpeedCost + upd_s_idx] = speedcostM[k] + leftLaneCost[k]
 
     return dx
+
 
 dynamics_cars = []
 for i in range(7):

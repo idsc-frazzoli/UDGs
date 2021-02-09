@@ -20,25 +20,25 @@ def _nlconst_car(z, p, n):
     v = []
 
     for k in range(n):
-        update_for_sidx = k * params.n_states + (n-1) * params.n_inputs
-        update_for_iidx = k * params.n_inputs
+        update_s_idx = k * params.n_states + (n - 1) * params.n_inputs
+        update_i_idx = k * params.n_inputs
 
-        points = getPointsFromParameters(p, pointsO + k * pointsN, (k + 1) * pointsN)  # todo check indices
-        radii = getRadiiFromParameters(p, pointsO + k * pointsN, (k + 1) * pointsN)  # todo check indices
+        points = getPointsFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
+        radii = getRadiiFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
 
-        splx, sply = casadiDynamicBSPLINE(z[params.s_idx.s + update_for_sidx], points)
-        splsx, splsy = casadiDynamicBSPLINEsidewards(z[params.s_idx.s + update_for_sidx], points)
-        r = casadiDynamicBSPLINERadius(z[params.s_idx.s + update_for_sidx], radii)
+        splx, sply = casadiDynamicBSPLINE(z[params.s_idx.s + update_s_idx], points)
+        splsx, splsy = casadiDynamicBSPLINEsidewards(z[params.s_idx.s + update_s_idx], points)
+        r = casadiDynamicBSPLINERadius(z[params.s_idx.s + update_s_idx], radii)
 
         wantedpos = vertcat(splx, sply)
         sidewards = vertcat(splsx, splsy)
 
-        realPos = np.array([[z[params.s_idx.x + update_for_sidx]], [z[params.s_idx.y + update_for_sidx]]])
+        realPos = np.array([[z[params.s_idx.x + update_s_idx]], [z[params.s_idx.y + update_s_idx]]])
         centerPos = realPos
         error = centerPos - wantedpos
         laterror = mtimes(sidewards.T, error)
 
-        slack = z[params.i_idx.slack + update_for_iidx]
+        slack = z[params.i_idx.slack + update_i_idx]
 
         v1 = laterror - r - slack
         v2 = -laterror - r - slack
@@ -67,29 +67,29 @@ def _nlconst_carN(z, p, n):
     v = []
 
     for k in range(n):
-        update_for_sidx = k * params.n_states + (n - 1) * params.n_inputs
-        update_for_iidx = k * params.n_inputs
+        update_s_idx = k * params.n_states + (n - 1) * params.n_inputs
+        update_i_idx = (k - 1) * params.n_inputs
 
-        points = getPointsFromParameters(p, pointsO + k * pointsN, (k + 1) * pointsN)  # todo check indices
-        radii = getRadiiFromParameters(p, pointsO + k * pointsN, (k + 1) * pointsN)  # todo check indices
+        points = getPointsFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
+        radii = getRadiiFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
 
-        splx, sply = casadiDynamicBSPLINE(z[params.s_idx.s + update_for_sidx], points)
-        splsx, splsy = casadiDynamicBSPLINEsidewards(z[params.s_idx.s + update_for_sidx], points)
-        r = casadiDynamicBSPLINERadius(z[params.s_idx.s + update_for_sidx], radii)
+        splx, sply = casadiDynamicBSPLINE(z[params.s_idx.s + update_s_idx], points)
+        splsx, splsy = casadiDynamicBSPLINEsidewards(z[params.s_idx.s + update_s_idx], points)
+        r = casadiDynamicBSPLINERadius(z[params.s_idx.s + update_s_idx], radii)
 
         wantedpos = vertcat(splx, sply)
         sidewards = vertcat(splsx, splsy)
 
-        realPos = np.array([[z[params.s_idx.x + update_for_sidx]], [z[params.s_idx.y + update_for_sidx]]])
+        realPos = np.array([[z[params.s_idx.x + update_s_idx]], [z[params.s_idx.y + update_s_idx]]])
         centerPos = realPos
         error = centerPos - wantedpos
         laterror = mtimes(sidewards.T, error)
 
-        slack = z[params.i_idx.slack + update_for_iidx]
+        slack = z[params.i_idx.slack + update_i_idx]
 
         v1 = laterror - r - slack
         v2 = -laterror - r - slack
-        v3 = -z[params.s_idx.s + update_for_sidx] + p[params.p_idx.targetprog]
+        v3 = -z[params.s_idx.s + update_s_idx] + p[params.p_idx.targetprog]
 
         v = np.append(np.array([v1, v2, v3]))
 
