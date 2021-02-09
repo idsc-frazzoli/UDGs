@@ -24,7 +24,7 @@ def getPointsFromParameters(p, pointsO, pointsN):
     :param pointsN:
     :return:
     """
-    data = p[pointsO : pointsO + pointsN * 2]  # todo check indices
+    data = p[pointsO: pointsO + pointsN * 2]  # todo check indices
     return reshape(data, (pointsN, 2))
 
 
@@ -36,7 +36,7 @@ def getRadiiFromParameters(p, pointsO, pointsN):
     :param pointsN:
     :return:
     """
-    return p[pointsO + pointsN * 2 : pointsO + pointsN * 3]
+    return p[pointsO + pointsN * 2: pointsO + pointsN * 3]
 
 
 def casadiGetSmoothMaxAcc(x):

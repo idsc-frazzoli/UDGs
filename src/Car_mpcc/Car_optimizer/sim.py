@@ -87,7 +87,7 @@ def sim_car_model(
         # while x[x_idx.s - n_inputs, k] >= 1:
         while x[x_idx.s - n_inputs, k] >= 1:
             # spline step forward
-            spline_start_idx += 1  # fixme some modulo operation (number of control points) is probably needed
+            spline_start_idx += 1  # fixme some module operation (number of control points) is probably needed
             x[x_idx.s - n_inputs, k] -= 1
 
         for i in range(params.n_bspline_points):
