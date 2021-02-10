@@ -10,7 +10,7 @@ from visualisation.vis import Visualization
 from .indices import var_descriptions
 
 
-def get_kart_plot(x, x_pred, u, u_pred, controlpoints, track: Track) -> Figure:
+def get_car_plot(x, x_pred, u, u_pred, controlpoints, num_cars, track: Track) -> Figure:
     """
 
     :param x: np.ndarray[n_states,sim_step]
@@ -18,6 +18,8 @@ def get_kart_plot(x, x_pred, u, u_pred, controlpoints, track: Track) -> Figure:
     :param u: np.ndarray[n_inputs,sim_step]
     :param u_pred: np.ndarray[n_inputs,mpc_horizon, sim_step]
     :param controlpoints: np.ndarray[n_bspline_points, 3, sim_length]
+    :param num_cars
+    :param track
     :return:
     """
     # some parameters
@@ -25,6 +27,7 @@ def get_kart_plot(x, x_pred, u, u_pred, controlpoints, track: Track) -> Figure:
     N = x_pred.shape[1]
     plotter = Visualization(track=track, gokarts=gokart_pool)
     n_inputs = params.n_inputs
+    n_states = params.n_states
     x_idx = params.s_idx
     u_idx = params.i_idx
 
@@ -36,18 +39,20 @@ def get_kart_plot(x, x_pred, u, u_pred, controlpoints, track: Track) -> Figure:
 
     # add traces that change during simulation steps (gokart and predictions)
     for k in range(sim_steps):  # sim_steps:
-        state_k = (
-            x[x_idx.x - n_inputs, k], x[x_idx.y - n_inputs, k], x[x_idx.theta - n_inputs, k],
-            x[x_idx.beta - n_inputs, k])
+        for jj in range(num_cars):
+            upd_s_idx = - n_inputs + jj * params.n_states
+            state_k = (
+                x[x_idx.x + upd_s_idx, k], x[x_idx.y + upd_s_idx, k], x[x_idx.theta + upd_s_idx, k],
+                x[x_idx.beta + upd_s_idx, k])
 
-        fig = plotter.plot_prediction_triangle(
-            x=x_pred[x_idx.x - n_inputs, :, k],
-            y=x_pred[x_idx.y - n_inputs, :, k],
-            psi=x_pred[x_idx.theta - n_inputs, :, k],
-            ab=x_pred[x_idx.ab - n_inputs, :, k],
-            fig=fig,
-        )
-        fig = plotter.plot_gokart(state_k[0], state_k[1], state_k[2], state_k[3], fig, KITT)
+            fig = plotter.plot_prediction_triangle(
+                x=x_pred[x_idx.x + upd_s_idx, :, k],
+                y=x_pred[x_idx.y + upd_s_idx, :, k],
+                psi=x_pred[x_idx.theta + upd_s_idx, :, k],
+                ab=x_pred[x_idx.ab + upd_s_idx, :, k],
+                fig=fig,
+            )
+            fig = plotter.plot_gokart(state_k[0], state_k[1], state_k[2], state_k[3], fig, KITT)
 
     n_step_traces = int((len(fig["data"]) - n_background_traces) / sim_steps)
     for k in range(sim_steps):
@@ -163,19 +168,20 @@ def get_solver_stats(solver_it, solver_time) -> Figure:
     return fig
 
 
-def get_state_plots(states) -> Figure:
+def get_state_plots(states, num_cars) -> Figure:
     n_sim_steps = states.shape[1]
     sim_steps = np.arange(0, n_sim_steps)
-    n_states = params.n_states
+    n_states = params.n_states * num_cars
     names = []
     units = []
-    for state_var in params.s_idx:
-        names.append(var_descriptions[state_var].title)
-        units.append(var_descriptions[state_var].units)
+    for k in range(num_cars):
+        for state_var in params.s_idx:
+            names.append(var_descriptions[state_var].title)
+            units.append(var_descriptions[state_var].units)
 
-    fig = make_subplots(
-        rows=int(np.ceil(n_states / 2)), cols=2, column_widths=[0.5, 0.5], subplot_titles=names
-    )
+        fig = make_subplots(
+            rows=int(np.ceil(n_states / 2)), cols=2, column_widths=[0.5, 0.5], subplot_titles=names
+        )
 
     for i in range(n_states):
         row = int(np.floor(i / 2)) + 1
@@ -198,19 +204,20 @@ def get_state_plots(states) -> Figure:
     return fig
 
 
-def get_input_plots(inputs) -> Figure:
+def get_input_plots(inputs, num_cars) -> Figure:
     n_sim_steps = inputs.shape[1]
     sim_steps = np.arange(0, n_sim_steps)
-    n_inputs = params.n_inputs
+    n_inputs = params.n_inputs * num_cars
     names = []
     units = []
-    for input_var in params.i_idx:
-        names.append(var_descriptions[input_var].title)
-        units.append(var_descriptions[input_var].units)
+    for k in range(num_cars):
+        for input_var in params.i_idx:
+            names.append(var_descriptions[input_var].title)
+            units.append(var_descriptions[input_var].units)
 
-    fig = make_subplots(
-        rows=int(np.ceil(n_inputs / 2)), cols=2, column_widths=[0.5, 0.5], subplot_titles=names
-    )
+        fig = make_subplots(
+            rows=int(np.ceil(n_inputs / 2)), cols=2, column_widths=[0.5, 0.5], subplot_titles=names
+        )
 
     for i in range(n_inputs):
         row = int(np.floor(i / 2)) + 1

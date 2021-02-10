@@ -43,13 +43,13 @@ def _nlconst_car(z, p, n):
         v1 = laterror - r - slack
         v2 = -laterror - r - slack
 
-        v = np.append(np.array([v1, v2]))
+        v = np.append(v, np.array([v1, v2]))
 
     return v
 
 
 nlconst_car = []
-for i in range(7):
+for i in range(5):
     nlconst_car.append(partial(_nlconst_car, n=i))
 
 
@@ -68,7 +68,7 @@ def _nlconst_carN(z, p, n):
 
     for k in range(n):
         update_s_idx = k * params.n_states + (n - 1) * params.n_inputs
-        update_i_idx = (k - 1) * params.n_inputs
+        update_i_idx = k * params.n_inputs
 
         points = getPointsFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
         radii = getRadiiFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
@@ -91,11 +91,11 @@ def _nlconst_carN(z, p, n):
         v2 = -laterror - r - slack
         v3 = -z[params.s_idx.s + update_s_idx] + p[params.p_idx.targetprog]
 
-        v = np.append(np.array([v1, v2, v3]))
+        v = np.append(v, np.array([v1, v2, v3]))
 
     return v
 
 
 nlconst_carN = []
-for i in range(7):
+for i in range(5):
     nlconst_carN.append(partial(_nlconst_carN, n=i))

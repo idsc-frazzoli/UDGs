@@ -12,7 +12,7 @@ def _parse_args():
     p.add_argument("--mpc_model", default="human-constraints", help="todo", type=str)
     p.add_argument(
         "--generate_solver",
-        default=False,
+        default=True,
         help="If set to false does not regenerate the solver but it looks for an existing one",
         type=bool,
     )
@@ -31,11 +31,11 @@ def _parse_args():
     return p.parse_args()
 
 
-def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: bool = False, num_cars: int = 1 ):
+def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: bool = False, num_cars: int = 1):
     if mpc_model == "human-constraints":
         model, solver = generate_car_model(generate_solver, to_deploy, num_cars)
-        sim_data = sim_car_model(model, solver, sim_length=5, track=straightLineR2L)
-        make_report(sim_data)
+        sim_data = sim_car_model(model, solver, num_cars, sim_length=5, track=straightLineR2L)
+        make_report(sim_data, num_cars)
     else:
         raise ValueError(f'The requested model "{mpc_model}" is not recognized.')
 

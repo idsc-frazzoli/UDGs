@@ -81,5 +81,5 @@ def _objective_car(z, p, n):
 
 
 objective_car = []
-for i in range(7):
+for i in range(5):
     objective_car.append(partial(_objective_car, n=i))

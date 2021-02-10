@@ -23,17 +23,26 @@ class SimData:
     u_pred: np.ndarray
     next_spline_points: np.ndarray
     track: Track
+    track2: Track
+    track3: Track
+    track4: Track
+    track5: Track
     solver_it: np.ndarray
     solver_time: np.ndarray
 
 
 def sim_car_model(
-        model, solver, sim_length: int = 200, seed: int = 1, track: Track = straightLineR2L
-) -> SimData:
+        model, solver, num_cars, sim_length: int = 200, seed: int = 1, track: Track = straightLineR2L,
+        track2: Track = straightLineR2L, track3: Track = straightLineR2L, track4: Track = straightLineR2L,
+        track5: Track = straightLineR2L) -> SimData:
     """
 
     :param seed:
     :param track:
+    :param track2:
+    :param track3:
+    :param track4:
+    :param track5:
     :param model:
     :param solver:
     :param sim_length:
@@ -42,8 +51,8 @@ def sim_car_model(
     # Load some parameters
 
     behavior = behaviors_zoo["Config1"].config
-    n_states = params.n_states
-    n_inputs = params.n_inputs
+    n_states = params.n_states + (num_cars-1) * params.n_states
+    n_inputs = params.n_inputs + (num_cars-1) * params.n_inputs
     x_idx = params.s_idx
 
     # Variables for storing simulation data
@@ -51,7 +60,7 @@ def sim_car_model(
     u = np.zeros((n_inputs, sim_length))  # inputs
     x_pred = np.zeros((n_states, model.N, sim_length + 1))  # states
     u_pred = np.zeros((n_inputs, model.N, sim_length))  # inputs
-    next_spline_points = np.zeros((params.n_bspline_points, 3, sim_length))
+    next_spline_points = np.zeros((params.n_bspline_points * num_cars, 3, sim_length))
     solver_it = np.zeros(sim_length)
     solver_time = np.zeros(sim_length)
 
@@ -60,44 +69,69 @@ def sim_car_model(
     spline_start_idx = 0
     if init_from_progress:
         init_progress = 0.0
-        x_pos, y_pos = casadiDynamicBSPLINE(init_progress, track.spline.as_np_array())
-        dx, dy = casadiDynamicBSPLINEforward(init_progress, track.spline.as_np_array())
-        theta_pos = atan2(dy, dx)
+        x_pos = np.zeros(num_cars)
+        y_pos = np.zeros(num_cars)
+        dx = np.zeros(num_cars)
+        dy = np.zeros(num_cars)
+        theta_pos = np.zeros(num_cars)
+        for k in range(num_cars):
+            x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track.spline.as_np_array())
+            dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track.spline.as_np_array())
+            theta_pos[k] = atan2(dy[k], dx[k])
     else:
         # init progress from pose
         x_pos, y_pos = 32.68, 19.10
         theta_pos = 0.039
         init_progress = spline_progress_from_pose(spline_track=track.spline, pose=np.array([x_pos, y_pos, theta_pos]))
 
-    xinit = np.zeros(n_states)
-    xinit[x_idx.x - n_inputs] = x_pos
-    xinit[x_idx.y - n_inputs] = y_pos
-    xinit[x_idx.theta - n_inputs] = theta_pos
-    xinit[x_idx.vx - n_inputs] = 0.0  # totally arbitrary
-    xinit[x_idx.beta - n_inputs] = -0.67  # totally arbitrary
-    xinit[x_idx.s - n_inputs] = init_progress
+    xinit = np.zeros(n_states * num_cars)
+    for k in range(num_cars):
+        upd_s_idx = - num_cars * n_inputs
+        xinit[x_idx.x + upd_s_idx] = x_pos[k]
+        xinit[x_idx.y + upd_s_idx] = y_pos[k]
+        xinit[x_idx.theta + upd_s_idx] = theta_pos[k]
+        xinit[x_idx.vx + upd_s_idx] = 0.0  # totally arbitrary
+        xinit[x_idx.beta + upd_s_idx] = -0.67  # totally arbitrary
+        xinit[x_idx.s + upd_s_idx] = init_progress
 
     x[:, 0] = xinit
     problem = {}
     problem["x0"] = np.zeros(model.N * model.nvar)
-
+    spline_start_idx = np.zeros(num_cars)
     for k in range(sim_length):
 
         # find bspline
         # while x[x_idx.s - n_inputs, k] >= 1:
-        while x[x_idx.s - n_inputs, k] >= 1:
-            # spline step forward
-            spline_start_idx += 1  # fixme some module operation (number of control points) is probably needed
-            x[x_idx.s - n_inputs, k] -= 1
-
-        for i in range(params.n_bspline_points):
-            next_point = track.spline.get_control_point(spline_start_idx + i)
-            next_spline_points[i, :, k] = next_point
-
-        # Limit acceleration
-        x[x_idx.ab - n_inputs, k] = min(
-            casadiGetMaxAcc(x[x_idx.vx - n_inputs, k]) - 0.0001, x[x_idx.ab - n_inputs, k]
-        )  # fixme why -0.0001?
+        for jj in range(num_cars):
+            upd_s_idx = - n_inputs + jj * n_states
+            while x[x_idx.s + upd_s_idx, k] >= 1:
+                # spline step forward
+                spline_start_idx[jj] += 1  # fixme some module operation (number of control points) is probably needed
+                x[x_idx.s + upd_s_idx, k] -= 1
+            if jj == 0:
+                for i in range(params.n_bspline_points):
+                    next_point = track.spline.get_control_point(spline_start_idx[jj].astype(int) + i)
+                    next_spline_points[i + jj * params.n_bspline_points, :, k] = next_point
+            elif jj == 1:
+                for i in range(params.n_bspline_points):
+                    next_point = track2.spline.get_control_point(spline_start_idx[jj].astype(int) + i)
+                    next_spline_points[i + jj * params.n_bspline_points, :, k] = next_point
+            elif jj == 2:
+                for i in range(params.n_bspline_points):
+                    next_point = track3.spline.get_control_point(spline_start_idx[jj].astype(int) + i)
+                    next_spline_points[i + jj * params.n_bspline_points, :, k] = next_point
+            elif jj == 3:
+                for i in range(params.n_bspline_points):
+                    next_point = track4.spline.get_control_point(spline_start_idx[jj].astype(int) + i)
+                    next_spline_points[i + jj * params.n_bspline_points, :, k] = next_point
+            else:
+                for i in range(params.n_bspline_points):
+                    next_point = track5.spline.get_control_point(spline_start_idx[jj].astype(int) + i)
+                    next_spline_points[i + jj * params.n_bspline_points, :, k] = next_point
+            # Limit acceleration
+            x[x_idx.ab + upd_s_idx, k] = min(
+                casadiGetMaxAcc(x[x_idx.vx + upd_s_idx, k]) - 0.0001, x[x_idx.ab + upd_s_idx, k]
+            )  # fixme why -0.0001?
 
         # Set initial state
         problem["xinit"] = x[:, k]
@@ -157,6 +191,10 @@ def sim_car_model(
         u_pred=u_pred,
         next_spline_points=next_spline_points,
         track=track,
+        track2=track2,
+        track3=track3,
+        track4=track4,
+        track5=track5,
         solver_it=solver_it,
         solver_time=solver_time,
     )

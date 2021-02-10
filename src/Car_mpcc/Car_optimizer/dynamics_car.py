@@ -37,7 +37,7 @@ def _dynamics_car(x, u, p, n):
     pointsO = params.n_param
     pointsN = params.n_bspline_points
 
-    points = np.zeros((n, pointsN, 2))
+    # points = np.zeros((n, pointsN, 2))
 
     if isinstance(x[0], float):
         dx = np.zeros(n * params.n_states)
@@ -45,12 +45,12 @@ def _dynamics_car(x, u, p, n):
         dx = SX.zeros(n * params.n_states, 1)
 
     for k in range(n):
-        upd_s_idx = k * params.n_states - params.n_inputs
+        upd_s_idx = k * params.n_states - n * params.n_inputs
         upd_i_idx = k * params.n_inputs
 
-        points[k, :, :] = getPointsFromParameters(p, pointsO + k * pointsN, pointsN)
-        splx, sply = casadiDynamicBSPLINE(x[params.s_idx.s + upd_s_idx], points[k, :, :])
-        splsx, splsy = casadiDynamicBSPLINEsidewards(x[params.s_idx.s + upd_s_idx], points[k, :, :])
+        points = getPointsFromParameters(p, pointsO + k * pointsN, pointsN)
+        splx, sply = casadiDynamicBSPLINE(x[params.s_idx.s + upd_s_idx], points)
+        splsx, splsy = casadiDynamicBSPLINEsidewards(x[params.s_idx.s + upd_s_idx], points)
 
         sidewards = vertcat(splsx, splsy)
         realPos = vertcat(x[params.s_idx.x + upd_s_idx], x[params.s_idx.y + upd_s_idx])
@@ -84,5 +84,5 @@ def _dynamics_car(x, u, p, n):
 
 
 dynamics_cars = []
-for i in range(7):
+for i in range(5):
     dynamics_cars.append(partial(_dynamics_car, n=i))
