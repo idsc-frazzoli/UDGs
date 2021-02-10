@@ -24,7 +24,7 @@ def _parse_args():
     )
     p.add_argument(
         "--num_cars",
-        default=1,
+        default=2,
         help="If True generates the solver with additional flags for targeting Docker Linux platform (gokart)",
         type=int,
     )

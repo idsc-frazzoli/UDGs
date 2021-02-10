@@ -22,17 +22,17 @@ def _dynamics_car(x, u, p, n):
     lc = p[params.p_idx.carLength]
     pslack = p[params.p_idx.pslack]
 
-    speedcostM = np.zeros(n)
-    leftLaneCost = np.zeros(n)
-
-    dotab = np.zeros(n)
-    dotbeta = np.zeros(n)
-    dots = np.zeros(n)
-    slack = np.zeros(n)
-    ab = np.zeros(n)
-    theta = np.zeros(n)
-    vx = np.zeros(n)
-    beta = np.zeros(n)
+    # speedcostM = np.zeros(n)
+    # leftLaneCost = np.zeros(n)
+    #
+    # dotab = np.zeros(n)
+    # dotbeta = np.zeros(n)
+    # dots = np.zeros(n)
+    # slack = np.zeros(n)
+    # ab = np.zeros(n)
+    # theta = np.zeros(n)
+    # vx = np.zeros(n)
+    # beta = np.zeros(n)
 
     pointsO = params.n_param
     pointsN = params.n_bspline_points
@@ -58,27 +58,27 @@ def _dynamics_car(x, u, p, n):
         wantedpos = vertcat(splx, sply)
         error = centerPos - wantedpos
         laterror = mtimes(sidewards.T, error)
-        speedcostM[k] = speedPunisherA(x[params.s_idx.vx + upd_s_idx], maxspeed) * pspeedcostM
-        leftLaneCost[k] = pLeftLane * laterrorPunisher(laterror, 0)
+        speedcostM = speedPunisherA(x[params.s_idx.vx + upd_s_idx], maxspeed) * pspeedcostM
+        leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
 
-        dotab[k] = u[params.i_idx.dAb + upd_i_idx]
-        dotbeta[k] = u[params.i_idx.dBeta + upd_i_idx]
-        dots[k] = u[params.i_idx.dots + upd_i_idx]
-        slack[k] = u[params.i_idx.slack + upd_i_idx]
-        ab[k] = x[params.s_idx.ab + upd_s_idx]
-        theta[k] = x[params.s_idx.theta + upd_s_idx]
-        vx[k] = x[params.s_idx.vx + upd_s_idx]
-        beta[k] = x[params.s_idx.beta + upd_s_idx]  # from steering.
+        dotab = u[params.i_idx.dAb + upd_i_idx]
+        dotbeta = u[params.i_idx.dBeta + upd_i_idx]
+        dots = u[params.i_idx.dots + upd_i_idx]
+        slack = u[params.i_idx.slack + upd_i_idx]
+        ab = x[params.s_idx.ab + upd_s_idx]
+        theta = x[params.s_idx.theta + upd_s_idx]
+        vx = x[params.s_idx.vx + upd_s_idx]
+        beta = x[params.s_idx.beta + upd_s_idx]  # from steering.
 
-        dx[params.s_idx.x + upd_s_idx] = vx[k] * cos(theta[k])
-        dx[params.s_idx.y + upd_s_idx] = vx[k] * sin(theta[k])
-        dx[params.s_idx.theta + upd_s_idx] = vx[k] * tan(beta[k]) / lc
-        dx[params.s_idx.vx + upd_s_idx] = ab[k]
-        dx[params.s_idx.ab + upd_s_idx] = dotab[k]
-        dx[params.s_idx.beta + upd_s_idx] = dotbeta[k]
-        dx[params.s_idx.s + upd_s_idx] = dots[k]
-        dx[params.s_idx.CumSlackCost + upd_s_idx] = pslack * slack[k]
-        dx[params.s_idx.CumLatSpeedCost + upd_s_idx] = speedcostM[k] + leftLaneCost[k]
+        dx[params.s_idx.x + upd_s_idx] = vx * cos(theta)
+        dx[params.s_idx.y + upd_s_idx] = vx * sin(theta)
+        dx[params.s_idx.theta + upd_s_idx] = vx * tan(beta) / lc
+        dx[params.s_idx.vx + upd_s_idx] = ab
+        dx[params.s_idx.ab + upd_s_idx] = dotab
+        dx[params.s_idx.beta + upd_s_idx] = dotbeta
+        dx[params.s_idx.s + upd_s_idx] = dots
+        dx[params.s_idx.CumSlackCost + upd_s_idx] = pslack * slack
+        dx[params.s_idx.CumLatSpeedCost + upd_s_idx] = speedcostM + leftLaneCost
 
     return dx
 
