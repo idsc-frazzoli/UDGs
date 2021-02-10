@@ -57,3 +57,5 @@ src/Car_mpcc/MPCC_Car/interface/MPCC_Car_lib.mdl
 src/Car_mpcc/MPCC_Car/interface/MPCC_Car.m
 src/Car_mpcc/MPCC_Car/interface/definitions.py
 src/Car_mpcc/MPCC_Car/include/MPCC_Car.h
+src/Car_mpcc/MPCC_Car_model.c
+src/Car_mpcc/MPCC_Car_model.h
