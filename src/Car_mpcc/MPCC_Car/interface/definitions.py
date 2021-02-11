@@ -9,13 +9,13 @@ c_header = "include/MPCC_Car.h"
 
 # Parameter             | Type    | Scalar type      | Ctypes type    | Numpy type   | Shape     | Len
 params = \
-[("xinit"               , "dense" , ""               , ctypes.c_double, numpy.float64, (  9,   1),    9),
- ("x0"                  , "dense" , ""               , ctypes.c_double, numpy.float64, (403,   1),  403),
- ("all_parameters"      , "dense" , ""               , ctypes.c_double, numpy.float64, (1953,   1), 1953)]
+[("xinit"               , "dense" , ""               , ctypes.c_double, numpy.float64, ( 27,   1),   27),
+ ("x0"                  , "dense" , ""               , ctypes.c_double, numpy.float64, (1209,   1), 1209),
+ ("all_parameters"      , "dense" , ""               , ctypes.c_double, numpy.float64, (4743,   1), 4743)]
 
 # Output                | Type    | Scalar type      | Ctypes type    | Numpy type   | Shape     | Len
 outputs = \
-[("all_var"             , ""      , ""               , ctypes.c_double, numpy.float64,     ( 13,),  403)]
+[("all_var"             , ""      , ""               , ctypes.c_double, numpy.float64,     ( 39,), 1209)]
 
 # Info Struct Fields
 info = \

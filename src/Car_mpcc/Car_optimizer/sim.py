@@ -83,6 +83,18 @@ def sim_car_model(
                 x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track2.spline.as_np_array())
                 dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track2.spline.as_np_array())
                 theta_pos[k] = atan2(dy[k], dx[k])
+            elif k == 2:
+                x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track3.spline.as_np_array())
+                dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track3.spline.as_np_array())
+                theta_pos[k] = atan2(dy[k], dx[k])
+            elif k == 3:
+                x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track4.spline.as_np_array())
+                dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track4.spline.as_np_array())
+                theta_pos[k] = atan2(dy[k], dx[k])
+            elif k == 4:
+                x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track5.spline.as_np_array())
+                dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track5.spline.as_np_array())
+                theta_pos[k] = atan2(dy[k], dx[k])
     else:
         # init progress from pose
         x_pos, y_pos = 32.68, 19.10
