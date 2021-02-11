@@ -60,13 +60,13 @@ Model {
       }
     }
   }
-  Created		  "2/11/2021 1:01:17 PM"
+  Created		  "2/11/2021 1:07:50 PM"
   Creator		  "embotech AG"
   UpdateHistory		  "UpdateHistoryNever"
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "embotech AG"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "2/11/2021 1:01:17 PM"
+  LastModifiedDate	  "2/11/2021 1:07:50 PM"
   RTWModifiedTimeStamp	  315310195
   ModelVersionFormat	  "1.%<AutoIncrement:2>"
   ConfigurationManager	  "None"
@@ -804,12 +804,12 @@ Model {
 	Help			"MPCC_Car_simulinkBlockcompact provides an easy Simulink interface for simulating your customized solver.  \n"
 	"\nOUTPUTS = MPCC_Car(INPUTS) solves an optimization problem where:\n\n"
 	"INPUTS:\n"
-	" - xinit - column vector of length 27\n "
-" - x0 - column vector of length 1209\n "
-" - all_parameters - column vector of length 4743\n "
+	" - xinit - column vector of length 18\n "
+" - x0 - column vector of length 806\n "
+" - all_parameters - column vector of length 3348\n "
 
 	"\nOUTPUTS:\n"
-	" - outputs - column vector of length 1209\n "
+	" - outputs - column vector of length 806\n "
 
 	"\n For more information, see https://www.embotech.com/FORCES-Pro/How-to-use/Simulink-Interface/Simulink-Block \n "
 

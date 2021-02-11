@@ -2,12 +2,12 @@
 %
 %   OUTPUT = MPCC_Car(PARAMS) solves a multistage problem
 %   subject to the parameters supplied in the following struct:
-%       PARAMS.xinit - column vector of length 27
-%       PARAMS.x0 - column vector of length 1209
-%       PARAMS.all_parameters - column vector of length 4743
+%       PARAMS.xinit - column vector of length 18
+%       PARAMS.x0 - column vector of length 806
+%       PARAMS.all_parameters - column vector of length 3348
 %
 %   OUTPUT returns the values of the last iteration of the solver where
-%       OUTPUT.all_var - column vector of size 1209
+%       OUTPUT.all_var - column vector of size 806
 %
 %   [OUTPUT, EXITFLAG] = MPCC_Car(PARAMS) returns additionally
 %   the integer EXITFLAG indicating the state of the solution with 
