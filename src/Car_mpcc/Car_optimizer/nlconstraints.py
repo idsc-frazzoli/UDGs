@@ -45,6 +45,11 @@ def _nlconst_car(z, p, n):
 
         v = np.append(v, np.array([v1, v2]))
 
+    # coll_eqs = ((n-1)*n)/2
+    # for kk in range(coll_eqs-1):
+    #     v3 =
+    #     v = np.append(v, v3)
+
     return v
 
 

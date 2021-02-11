@@ -68,7 +68,7 @@ def sim_car_model(
     init_from_progress = True
     spline_start_idx = 0
     if init_from_progress:
-        init_progress = 0.0
+        init_progress = 0.01
         x_pos = np.zeros(num_cars)
         y_pos = np.zeros(num_cars)
         dx = np.zeros(num_cars)
@@ -79,10 +79,12 @@ def sim_car_model(
                 x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track.spline.as_np_array())
                 dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track.spline.as_np_array())
                 theta_pos[k] = atan2(dy[k], dx[k])
+                y_pos[k] = y_pos[k] + 1.75
             elif k == 1:
                 x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track2.spline.as_np_array())
                 dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track2.spline.as_np_array())
                 theta_pos[k] = atan2(dy[k], dx[k])
+                x_pos[k] = x_pos[k] - 1.75
             elif k == 2:
                 x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track3.spline.as_np_array())
                 dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track3.spline.as_np_array())
@@ -107,8 +109,10 @@ def sim_car_model(
         xinit[x_idx.x + upd_s_idx] = x_pos[k]
         xinit[x_idx.y + upd_s_idx] = y_pos[k]
         xinit[x_idx.theta + upd_s_idx] = theta_pos[k]
-        xinit[x_idx.vx + upd_s_idx] = 0.0  # totally arbitrary
-        xinit[x_idx.beta + upd_s_idx] = -0.67  # totally arbitrary
+        xinit[x_idx.vx + upd_s_idx] = 7
+
+        # totally arbitrary
+        xinit[x_idx.beta + upd_s_idx] = 0  # totally arbitrary
         xinit[x_idx.s + upd_s_idx] = init_progress
 
     x[:, 0] = xinit
