@@ -22,18 +22,6 @@ def _dynamics_car(x, u, p, n):
     lc = p[params.p_idx.carLength]
     pslack = p[params.p_idx.pslack]
 
-    # speedcostM = np.zeros(n)
-    # leftLaneCost = np.zeros(n)
-    #
-    # dotab = np.zeros(n)
-    # dotbeta = np.zeros(n)
-    # dots = np.zeros(n)
-    # slack = np.zeros(n)
-    # ab = np.zeros(n)
-    # theta = np.zeros(n)
-    # vx = np.zeros(n)
-    # beta = np.zeros(n)
-
     pointsO = params.n_param
     pointsN = params.n_bspline_points
 
@@ -45,10 +33,10 @@ def _dynamics_car(x, u, p, n):
         dx = SX.zeros(n * params.n_states, 1)
 
     for k in range(n):
-        upd_s_idx = k * params.n_states - n * params.n_inputs
+        upd_s_idx = k * params.n_states - params.n_inputs  # todo check here update state for > 3 vehicles
         upd_i_idx = k * params.n_inputs
 
-        points = getPointsFromParameters(p, pointsO + k * pointsN, pointsN)
+        points = getPointsFromParameters(p, pointsO + k * pointsN * 3, pointsN)
         splx, sply = casadiDynamicBSPLINE(x[params.s_idx.s + upd_s_idx], points)
         splsx, splsy = casadiDynamicBSPLINEsidewards(x[params.s_idx.s + upd_s_idx], points)
 
@@ -65,9 +53,10 @@ def _dynamics_car(x, u, p, n):
         dotbeta = u[params.i_idx.dBeta + upd_i_idx]
         dots = u[params.i_idx.dots + upd_i_idx]
         slack = u[params.i_idx.slack + upd_i_idx]
-        ab = x[params.s_idx.ab + upd_s_idx]
+
         theta = x[params.s_idx.theta + upd_s_idx]
         vx = x[params.s_idx.vx + upd_s_idx]
+        ab = x[params.s_idx.ab + upd_s_idx]
         beta = x[params.s_idx.beta + upd_s_idx]  # from steering.
 
         dx[params.s_idx.x + upd_s_idx] = vx * cos(theta)

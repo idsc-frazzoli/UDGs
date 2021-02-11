@@ -40,22 +40,22 @@ def _objective_car(z, p, n):
     obj = 0
 
     for k in range(n):
-        update_for_sidx = k * params.n_states + (n - 1) * params.n_inputs
-        update_for_iidx = k * params.n_inputs
+        upd_s_idx = k * params.n_states + (n - 1) * params.n_inputs
+        update_i_idx = k * params.n_inputs
 
         points = getPointsFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
         radii = getRadiiFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
 
         # get the fancy spline
-        splx, sply = casadiDynamicBSPLINE(z[params.s_idx.s + update_for_sidx], points)
-        spldx, spldy = casadiDynamicBSPLINEforward(z[params.s_idx.s + update_for_sidx], points)
-        splsx, splsy = casadiDynamicBSPLINEsidewards(z[params.s_idx.s + update_for_sidx], points)
-        r = casadiDynamicBSPLINERadius(z[params.s_idx.s + update_for_sidx], radii)
+        splx, sply = casadiDynamicBSPLINE(z[params.s_idx.s + upd_s_idx], points)
+        spldx, spldy = casadiDynamicBSPLINEforward(z[params.s_idx.s + upd_s_idx], points)
+        splsx, splsy = casadiDynamicBSPLINEsidewards(z[params.s_idx.s + upd_s_idx], points)
+        r = casadiDynamicBSPLINERadius(z[params.s_idx.s + upd_s_idx], radii)
 
         forward = vertcat(spldx, spldy)
         sidewards = vertcat(splsx, splsy)
 
-        realPos = vertcat(z[params.s_idx.x + update_for_sidx], z[params.s_idx.y + update_for_sidx])
+        realPos = vertcat(z[params.s_idx.x + upd_s_idx], z[params.s_idx.y + upd_s_idx])
         centerPos = realPos
 
         wantedpos = vertcat(splx, sply)
@@ -66,15 +66,15 @@ def _objective_car(z, p, n):
         lagerror = mtimes(forward.T, error)
         laterror = mtimes(sidewards.T, error)
         laterror_CL = mtimes(sidewards.T, error_CL)
-        speedcostA = speedPunisherA(z[params.s_idx.vx + update_for_sidx], targetspeed) * pspeedcostA
-        speedcostB = speedPunisherB(z[params.s_idx.vx + update_for_sidx], targetspeed) * pspeedcostB
-        speedcostM = speedPunisherA(z[params.s_idx.vx + update_for_sidx], maxspeed) * pspeedcostM
-        slack = z[params.i_idx.slack + update_for_iidx]
+        speedcostA = speedPunisherA(z[params.s_idx.vx + upd_s_idx], targetspeed) * pspeedcostA
+        speedcostB = speedPunisherB(z[params.s_idx.vx + upd_s_idx], targetspeed) * pspeedcostB
+        speedcostM = speedPunisherA(z[params.s_idx.vx + upd_s_idx], maxspeed) * pspeedcostM
+        slack = z[params.i_idx.slack + update_i_idx]
         lagcost = plag * lagerror ** 2
         leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
         latcostCL = plat * laterror_CL ** 2
-        regAB = z[params.i_idx.dAb + update_for_iidx] ** 2 * pab
-        regBeta = z[params.i_idx.dBeta + update_for_iidx] ** 2 * pdotbeta
+        regAB = z[params.i_idx.dAb + update_i_idx] ** 2 * pab
+        regBeta = z[params.i_idx.dBeta + update_i_idx] ** 2 * pdotbeta
         obj = obj + lagcost + leftLaneCost + latcostCL + regAB + regBeta + speedcostA + speedcostB + speedcostM + pslack * slack
 
     return obj

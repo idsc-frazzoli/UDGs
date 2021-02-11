@@ -168,8 +168,8 @@ def set_p_car(
     distance,
     carLength,
     points,
-):
-    p = np.zeros((params.n_param + 3 * params.n_bspline_points))
+    num_cars):
+    p = np.zeros((params.n_param + 3 * params.n_bspline_points * num_cars))
     p[params.p_idx.maxspeed] = maxspeed
     p[params.p_idx.targetspeed] = targetspeed
     p[params.p_idx.optcost1] = optcost1
@@ -188,5 +188,9 @@ def set_p_car(
     p[params.p_idx.pslack] = pslack
     p[params.p_idx.distance] = distance
     p[params.p_idx.carLength] = carLength
-    p[params.n_param: params.n_param + 3 * params.n_bspline_points] = points.flatten(order="f")
+    for k in range(num_cars):
+        update = 3 * params.n_bspline_points * k
+        temp = points[params.n_bspline_points * k: params.n_bspline_points + params.n_bspline_points * k, :]
+        p[params.n_param + update: params.n_param + 3 * params.n_bspline_points + update] = temp.flatten(order="f")
+
     return p

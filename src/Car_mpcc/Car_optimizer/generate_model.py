@@ -9,6 +9,7 @@ from forcespro import nlp, CodeOptions
 
 __all__=["generate_car_model"]
 
+
 def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
     """
     This model assumes:
@@ -67,40 +68,40 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
 
     for k in range(num_cars):
         # delta path progress
-        update_for_sidx = k * params.n_states + (num_cars - 1) * params.n_inputs
-        update_for_iidx = k * params.n_inputs
+        upd_s_idx = k * params.n_states + (num_cars - 1) * params.n_inputs
+        upd_i_idx = k * params.n_inputs
 
-        model.ub[params.i_idx.dots + update_for_iidx] = 5
-        model.lb[params.i_idx.dots + update_for_iidx] = -1
-
-        # Forward force lower bound
-        model.lb[params.i_idx.dAb + update_for_iidx] = -10
-        model.ub[params.i_idx.dAb + update_for_iidx] = 10
+        model.ub[params.i_idx.dots + upd_i_idx] = 5
+        model.lb[params.i_idx.dots + upd_i_idx] = -1
 
         # Forward force lower bound
-        model.lb[params.s_idx.ab + update_for_iidx] = -np.inf
-        model.ub[params.s_idx.ab + update_for_iidx] = 2
+        model.lb[params.i_idx.dAb + upd_i_idx] = -10
+        model.ub[params.i_idx.dAb + upd_i_idx] = 10
+
+        # Forward force lower bound
+        model.lb[params.s_idx.ab + upd_s_idx] = -np.inf
+        model.ub[params.s_idx.ab + upd_s_idx] = 2
         # slack limit
-        model.lb[params.i_idx.slack + update_for_iidx] = 0
+        model.lb[params.i_idx.slack + upd_i_idx] = 0
 
         # Speed lower bound
-        model.lb[params.s_idx.vx + update_for_sidx] = 0
-        model.ub[params.s_idx.vx + update_for_sidx] = 20
+        model.lb[params.s_idx.vx + upd_s_idx] = 0
+        model.ub[params.s_idx.vx + upd_s_idx] = 20
 
         # Steering Angle Bounds
-        model.ub[params.s_idx.beta + update_for_sidx] = 0.95
-        model.lb[params.s_idx.beta + update_for_sidx] = -0.95
+        model.ub[params.s_idx.beta + upd_s_idx] = 0.95
+        model.lb[params.s_idx.beta + upd_s_idx] = -0.95
 
         # Path  Progress  Bounds
-        model.ub[params.s_idx.s + update_for_sidx] = params.n_bspline_points - 2  # fixme why limiting path progress?
-        model.lb[params.s_idx.s + update_for_sidx] = 0
+        model.ub[params.s_idx.s + upd_s_idx] = params.n_bspline_points - 2  # fixme why limiting path progress?
+        model.lb[params.s_idx.s + upd_s_idx] = 0
 
     # CodeOptions  for FORCES solver
     codeoptions = CodeOptions(solver_name)
     codeoptions.maxit = 200  # Maximum number of iterations
     codeoptions.printlevel = 0  # Use printlevel = 2 to print progress (but not for timings)
     # 0: no optimization, 1: optimize for size, 2: optimize for speed, 3: optimize for size & speed
-    codeoptions.optlevel = (2)
+    codeoptions.optlevel = 2
     codeoptions.printlevel = 0  # optional, on some platforms printing is not supported
     codeoptions.cleanup = 0  # to keep necessary files for target compile
     codeoptions.timing = 1
@@ -119,7 +120,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
 
     if generate_solver:
         # necessary to have all the zs stack in one vector
-        output_all = ("all_var", list(range(0, params.N)), list(range(0, params.n_var)))
+        output_all = ("all_var", list(range(0, params.N)), list(range(0, params.n_var * num_cars)))
         solver = model.generate_solver(codeoptions, [output_all])
     else:
         solver = nlp.Solver.from_directory(solver_name)

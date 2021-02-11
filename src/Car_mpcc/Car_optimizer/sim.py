@@ -11,7 +11,7 @@ from Car_mpcc.Car_optimizer.car_util import set_p_car, casadiGetMaxAcc
 from tracks import Track
 from tracks.utils import spline_progress_from_pose
 
-from tracks.zoo import winti_001, straightLineR2L
+from tracks.zoo import winti_001, straightLineR2L, straightLineN2S
 from vehicle import gokart_pool, KITT
 
 
@@ -51,15 +51,15 @@ def sim_car_model(
     # Load some parameters
 
     behavior = behaviors_zoo["Config1"].config
-    n_states = params.n_states + (num_cars-1) * params.n_states
-    n_inputs = params.n_inputs + (num_cars-1) * params.n_inputs
+    n_states = params.n_states
+    n_inputs = params.n_inputs
     x_idx = params.s_idx
 
     # Variables for storing simulation data
-    x = np.zeros((n_states, sim_length + 1))  # states
-    u = np.zeros((n_inputs, sim_length))  # inputs
-    x_pred = np.zeros((n_states, model.N, sim_length + 1))  # states
-    u_pred = np.zeros((n_inputs, model.N, sim_length))  # inputs
+    x = np.zeros((n_states * num_cars, sim_length + 1))  # states
+    u = np.zeros((n_inputs * num_cars, sim_length))  # inputs
+    x_pred = np.zeros((n_states * num_cars, model.N, sim_length + 1))  # states
+    u_pred = np.zeros((n_inputs * num_cars, model.N, sim_length))  # inputs
     next_spline_points = np.zeros((params.n_bspline_points * num_cars, 3, sim_length))
     solver_it = np.zeros(sim_length)
     solver_time = np.zeros(sim_length)
@@ -75,9 +75,14 @@ def sim_car_model(
         dy = np.zeros(num_cars)
         theta_pos = np.zeros(num_cars)
         for k in range(num_cars):
-            x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track.spline.as_np_array())
-            dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track.spline.as_np_array())
-            theta_pos[k] = atan2(dy[k], dx[k])
+            if k == 0:
+                x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track.spline.as_np_array())
+                dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track.spline.as_np_array())
+                theta_pos[k] = atan2(dy[k], dx[k])
+            elif k == 1:
+                x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track2.spline.as_np_array())
+                dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track2.spline.as_np_array())
+                theta_pos[k] = atan2(dy[k], dx[k])
     else:
         # init progress from pose
         x_pos, y_pos = 32.68, 19.10
@@ -86,7 +91,7 @@ def sim_car_model(
 
     xinit = np.zeros(n_states * num_cars)
     for k in range(num_cars):
-        upd_s_idx = - num_cars * n_inputs
+        upd_s_idx = - n_inputs + k * n_states
         xinit[x_idx.x + upd_s_idx] = x_pos[k]
         xinit[x_idx.y + upd_s_idx] = y_pos[k]
         xinit[x_idx.theta + upd_s_idx] = theta_pos[k]
@@ -156,6 +161,7 @@ def sim_car_model(
             distance=behavior.distance,
             pslack=behavior.pslack,
             points=next_spline_points[:, :, k],
+            num_cars=num_cars
         )  # fixme check order here
         problem["all_parameters"] = np.tile(p_vector, (model.N,))
 
@@ -174,8 +180,8 @@ def sim_car_model(
         problem["x0"][model.nvar * (model.N - 1): model.nvar * model.N] = output["all_var"][model.nvar * (
                 model.N - 1):model.nvar * model.N]
         temp = output["all_var"].reshape(model.nvar, model.N, order='F')
-        u_pred[:, :, k] = temp[0:n_inputs, :]  # predicted inputs
-        x_pred[:, :, k] = temp[n_inputs: params.n_var, :]  # predicted states
+        u_pred[:, :, k] = temp[0:n_inputs * num_cars, :]  # predicted inputs
+        x_pred[:, :, k] = temp[n_inputs * num_cars: params.n_var * num_cars, :]  # predicted states
 
         # Apply optimized input u of first stage to system and save simulation data
         u[:, k] = u_pred[:, 0, k]
