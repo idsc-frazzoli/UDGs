@@ -1,7 +1,7 @@
 from casadi import *
 import numpy as np
 
-from Car_mpcc.Car_optimizer import params
+from udgs_models.model_def import params
 
 
 def acclim(VELY, VELX, taccx, maxA):
@@ -24,7 +24,7 @@ def getPointsFromParameters(p, pointsO, pointsN):
     :param pointsN:
     :return:
     """
-    data = p[pointsO : pointsO + pointsN * 2]  # todo check indices
+    data = p[pointsO: pointsO + pointsN * 2]  # todo check indices
     return reshape(data, (pointsN, 2))
 
 
@@ -36,7 +36,7 @@ def getRadiiFromParameters(p, pointsO, pointsN):
     :param pointsN:
     :return:
     """
-    return p[pointsO + pointsN * 2 : pointsO + pointsN * 3]
+    return p[pointsO + pointsN * 2: pointsO + pointsN * 3]
 
 
 def casadiGetSmoothMaxAcc(x):
@@ -149,44 +149,48 @@ def laterrorPunisher(laterror,cc):
     return x ** 2
 
 def set_p_car(
-    maxspeed,
-    targetspeed,
-    optcost1,
-    optcost2,
+    SpeedLimit,
+    TargetSpeed,
+    OptCost1,
+    OptCost2,
     Xobstacle,
     Yobstacle,
-    targetprog,
-    pspeedcostA,
-    pspeedcostB,
-    pspeedcostM,
-    plag,
-    plat,
+    TargetProg,
+    kAboveTargetSpeedCost,
+    kBelowTargetSpeedCost,
+    kAboveSpeedLimit,
+    kLag,
+    kLat,
     pLeftLane,
-    pab,
-    pdotbeta,
-    pslack,
-    distance,
+    kReg_dAb,
+    kReg_dDelta,
+    kSlack,
+    minSafetyDistance,
     carLength,
     points,
-):
-    p = np.zeros((params.n_param + 3 * params.n_bspline_points))
-    p[params.p_idx.maxspeed] = maxspeed
-    p[params.p_idx.targetspeed] = targetspeed
-    p[params.p_idx.optcost1] = optcost1
-    p[params.p_idx.optcost2] = optcost2
+    num_cars):
+    p = np.zeros((params.n_param + 3 * params.n_bspline_points * num_cars))
+    p[params.p_idx.SpeedLimit] = SpeedLimit
+    p[params.p_idx.TargetSpeed] = TargetSpeed
+    p[params.p_idx.OptCost1] = OptCost1
+    p[params.p_idx.OptCost2] = OptCost2
     p[params.p_idx.Xobstacle] = Xobstacle
     p[params.p_idx.Yobstacle] = Yobstacle
-    p[params.p_idx.targetprog] = targetprog
-    p[params.p_idx.pspeedcostA] = pspeedcostA
-    p[params.p_idx.pspeedcostB] = pspeedcostB
-    p[params.p_idx.pspeedcostM] = pspeedcostM
-    p[params.p_idx.plag] = plag
-    p[params.p_idx.plat] = plat
+    p[params.p_idx.TargetProg] = TargetProg
+    p[params.p_idx.kAboveTargetSpeedCost] = kAboveTargetSpeedCost
+    p[params.p_idx.kBelowTargetSpeedCost] = kBelowTargetSpeedCost
+    p[params.p_idx.kAboveSpeedLimit] = kAboveSpeedLimit
+    p[params.p_idx.kLag] = kLag
+    p[params.p_idx.kLat] = kLat
     p[params.p_idx.pLeftLane] = pLeftLane
-    p[params.p_idx.pab] = pab
-    p[params.p_idx.pdotbeta] = pdotbeta
-    p[params.p_idx.pslack] = pslack
-    p[params.p_idx.distance] = distance
+    p[params.p_idx.kReg_dAb] = kReg_dAb
+    p[params.p_idx.kReg_dDelta] = kReg_dDelta
+    p[params.p_idx.kSlack] = kSlack
+    p[params.p_idx.minSafetyDistance] = minSafetyDistance
     p[params.p_idx.carLength] = carLength
-    p[params.n_param: params.n_param + 3 * params.n_bspline_points] = points.flatten(order="f")
+    for k in range(num_cars):
+        update = 3 * params.n_bspline_points * k
+        temp = points[params.n_bspline_points * k: params.n_bspline_points + params.n_bspline_points * k, :]
+        p[params.n_param + update: params.n_param + 3 * params.n_bspline_points + update] = temp.flatten(order="f")
+
     return p

@@ -1,10 +1,10 @@
 import argparse
 import forcespro
 
-from Car_mpcc.Car_optimizer.sim import sim_car_model
-from Car_mpcc.Car_optimizer.sim_report import make_report
-from Car_optimizer.generate_model import generate_car_model
-from tracks import straightLineR2L, winti_002
+from udgs_models.model_def.sim import sim_car_model
+from udgs_models.model_def.sim_report import make_report
+from model_def.generate_model import generate_car_model
+from tracks import straightLineR2L, winti_002, straightLineN2S
 
 
 def _parse_args():
@@ -12,7 +12,7 @@ def _parse_args():
     p.add_argument("--mpc_model", default="human-constraints", help="todo", type=str)
     p.add_argument(
         "--generate_solver",
-        default=True,
+        default=False,
         help="If set to false does not regenerate the solver but it looks for an existing one",
         type=bool,
     )
@@ -22,14 +22,20 @@ def _parse_args():
         help="If True generates the solver with additional flags for targeting Docker Linux platform (gokart)",
         type=bool,
     )
+    p.add_argument(
+        "--num_cars",
+        default=2,
+        help="todo",
+        type=int,
+    )
     return p.parse_args()
 
 
-def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: bool = False):
+def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: bool = False, num_cars: int = 2):
     if mpc_model == "human-constraints":
-        model, solver = generate_car_model(generate_solver, to_deploy)
-        sim_data = sim_car_model(model, solver, sim_length=5, track=straightLineR2L)
-        make_report(sim_data)
+        model, solver = generate_car_model(generate_solver, to_deploy, num_cars)
+        sim_data = sim_car_model(model, solver, num_cars, sim_length=50, track=straightLineR2L, track2=straightLineN2S)
+        make_report(sim_data, num_cars)
     else:
         raise ValueError(f'The requested model "{mpc_model}" is not recognized.')
 
