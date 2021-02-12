@@ -16,56 +16,62 @@ def _dynamics_car(x, u, p, n):
     :param p: parameter variables
     :return:
     """
-    points = getPointsFromParameters(p, params.n_param, params.n_bspline_points)
-
     maxspeed = p[params.p_idx.maxspeed]
     pspeedcostM = p[params.p_idx.pspeedcostM]
-
-    splx, sply = casadiDynamicBSPLINE(x[params.s_idx.s - params.n_inputs], points)
-    splsx, splsy = casadiDynamicBSPLINEsidewards(x[params.s_idx.s - params.n_inputs], points)
-
-    sidewards = vertcat(splsx, splsy)
-
-    realPos = vertcat(x[params.s_idx.x - params.n_inputs], x[params.s_idx.y - params.n_inputs])
-    centerPos = realPos
     pLeftLane = p[params.p_idx.pLeftLane]
-
-    wantedpos = vertcat(splx, sply)
-    error = centerPos - wantedpos
-    laterror = mtimes(sidewards.T, error)
-    speedcostM = speedPunisherA(x[params.s_idx.vx - params.n_inputs], maxspeed) * pspeedcostM
-
-    leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
-
-    dotab = u[params.i_idx.dAb]
-    dotbeta = u[params.i_idx.dBeta]
-    dots = u[params.i_idx.dots]
-    slack = u[params.i_idx.slack]
-
-    ab = x[params.s_idx.ab - params.n_inputs]
-    theta = x[params.s_idx.theta - params.n_inputs]
-    vx = x[params.s_idx.vx - params.n_inputs]
-    beta = x[params.s_idx.beta - params.n_inputs]  # from steering.
-
-    if isinstance(x[0], float):
-        dx = np.zeros(params.n_states)
-    else:  # fixme not sure what this was for
-        dx = SX.zeros(params.n_states, 1)
     lc = p[params.p_idx.carLength]
     pslack = p[params.p_idx.pslack]
 
-    dx[params.s_idx.x - params.n_inputs] = vx * cos(theta)
-    dx[params.s_idx.y - params.n_inputs] = vx * sin(theta)
-    dx[params.s_idx.theta - params.n_inputs] = vx * tan(beta) / lc
-    dx[params.s_idx.vx - params.n_inputs] = ab
-    dx[params.s_idx.ab - params.n_inputs] = dotab
-    dx[params.s_idx.beta - params.n_inputs] = dotbeta
-    dx[params.s_idx.s - params.n_inputs] = dots
-    dx[params.s_idx.CumSlackCost - params.n_inputs] = pslack * slack
-    dx[params.s_idx.CumLatSpeedCost - params.n_inputs] = speedcostM + leftLaneCost
+    pointsO = params.n_param
+    pointsN = params.n_bspline_points
+
+    # points = np.zeros((n, pointsN, 2))
+
+    if isinstance(x[0], float):
+        dx = np.zeros(n * params.n_states)
+    else:  # fixme not sure what this was for
+        dx = SX.zeros(n * params.n_states, 1)
+
+    for k in range(n):
+        upd_s_idx = k * params.n_states - params.n_inputs  # todo check here update state for > 3 vehicles
+        upd_i_idx = k * params.n_inputs
+
+        points = getPointsFromParameters(p, pointsO + k * pointsN * 3, pointsN)
+        splx, sply = casadiDynamicBSPLINE(x[params.s_idx.s + upd_s_idx], points)
+        splsx, splsy = casadiDynamicBSPLINEsidewards(x[params.s_idx.s + upd_s_idx], points)
+
+        sidewards = vertcat(splsx, splsy)
+        realPos = vertcat(x[params.s_idx.x + upd_s_idx], x[params.s_idx.y + upd_s_idx])
+        centerPos = realPos
+        wantedpos = vertcat(splx, sply)
+        error = centerPos - wantedpos
+        laterror = mtimes(sidewards.T, error)
+        speedcostM = speedPunisherA(x[params.s_idx.vx + upd_s_idx], maxspeed) * pspeedcostM
+        leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
+
+        dotab = u[params.i_idx.dAb + upd_i_idx]
+        dotbeta = u[params.i_idx.dBeta + upd_i_idx]
+        dots = u[params.i_idx.dots + upd_i_idx]
+        slack = u[params.i_idx.slack + upd_i_idx]
+
+        theta = x[params.s_idx.theta + upd_s_idx]
+        vx = x[params.s_idx.vx + upd_s_idx]
+        ab = x[params.s_idx.ab + upd_s_idx]
+        beta = x[params.s_idx.beta + upd_s_idx]  # from steering.
+
+        dx[params.s_idx.x + upd_s_idx] = vx * cos(theta)
+        dx[params.s_idx.y + upd_s_idx] = vx * sin(theta)
+        dx[params.s_idx.theta + upd_s_idx] = vx * tan(beta) / lc
+        dx[params.s_idx.vx + upd_s_idx] = ab
+        dx[params.s_idx.ab + upd_s_idx] = dotab
+        dx[params.s_idx.beta + upd_s_idx] = dotbeta
+        dx[params.s_idx.s + upd_s_idx] = dots
+        dx[params.s_idx.CumSlackCost + upd_s_idx] = pslack * slack
+        dx[params.s_idx.CumLatSpeedCost + upd_s_idx] = speedcostM + leftLaneCost
+
     return dx
+
 
 dynamics_cars = []
 for i in range(5):
     dynamics_cars.append(partial(_dynamics_car, n=i))
-

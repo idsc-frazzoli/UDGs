@@ -9,7 +9,8 @@ from forcespro import nlp, CodeOptions
 
 __all__=["generate_car_model"]
 
-def generate_car_model(generate_solver: bool, to_deploy: bool):
+
+def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
     """
     This model assumes:
         - a state given by ...
@@ -19,15 +20,15 @@ def generate_car_model(generate_solver: bool, to_deploy: bool):
     """
     solver_name: str = "MPCC_Car"
     model = nlp.SymbolicModel(params.N)
-    model.nvar = params.n_var
-    model.neq = params.n_states
+    model.nvar = params.n_var * num_cars
+    model.neq = params.n_states * num_cars
 
     # Number of parameters
-    model.npar = params.n_param + 3 * params.n_bspline_points
+    model.npar = params.n_param + 3 * num_cars * params.n_bspline_points
     model.eq = lambda z, p: nlp.integrate(
-        dynamics_cars[1],
-        z[params.n_inputs: params.n_var],
-        z[0: params.n_inputs],
+        dynamics_cars[num_cars],
+        z[params.n_inputs * num_cars: params.n_var * num_cars],
+        z[0: params.n_inputs * num_cars],
         p,
         integrator=nlp.integrators.RK4,
         stepsize=params.dt_integrator_step,
@@ -36,61 +37,71 @@ def generate_car_model(generate_solver: bool, to_deploy: bool):
     # model.continuous_dynamics = lambda x, u, p: dynamics_HC
 
     # indices of the left hand side of the dynamical constraint
-    model.E = np.concatenate([np.zeros((params.n_states, params.n_inputs)), np.eye(params.n_states)], axis=1)
+    model.E = np.concatenate([np.zeros((num_cars * params.n_states, num_cars * params.n_inputs)), np.eye(num_cars * params.n_states)], axis=1)
 
     # inequality constraints
-    model.nh = 2  # Number of inequality constraints
-    model.ineq = nlconst_car
-    model.hu = np.array([0, 0])  # upper bound for nonlinear constraints
-    model.hl = np.array([-np.inf, -np.inf])  # lower bound for nonlinear constraints
+    model.nh = 2 * num_cars  # Number of inequality constraints
+    model.ineq = nlconst_car[num_cars]
+    model.hu = np.array([0, 0])
+    model.hl = np.array([-np.inf, -np.inf])
+    for k in range(num_cars-1):
+        model.hu = np.append(model.hu, np.array([0, 0]))  # upper bound for nonlinear constraints
+        model.hl = np.append(model.hl, np.array([-np.inf, -np.inf]))  # lower bound for nonlinear constraints
 
     # Terminal State Constraints
-    model.nhN = 3  # Number of inequality constraints
-    model.ineqN = nlconst_carN
-    model.huN = np.array([0, 0, 0])  # upper bound for nonlinear constraints
-    model.hlN = np.array([-np.inf, -np.inf, -np.inf])  # lower bound for nonlinear constraints
+    model.nhN = 3 * num_cars  # Number of inequality constraints
+    model.ineqN = nlconst_carN[num_cars]
+    model.huN = np.array([0, 0, 0])
+    model.hlN = np.array([-np.inf, -np.inf, -np.inf])
+    for k in range(num_cars-1):
+        model.huN = np.append(model.huN, np.array([0, 0, 0]))  # upper bound for nonlinear constraints
+        model.hlN = np.append(model.hlN, np.array([-np.inf, -np.inf, -np.inf]))  # lower bound for nonlinear constraints
 
     for i in range(params.N):
-        model.objective[i] = objective_car
+        model.objective[i] = objective_car[num_cars]
 
-    model.xinitidx = range(params.n_inputs, params.n_var)
+    model.xinitidx = range(params.n_inputs * num_cars, params.n_var * num_cars)
 
     # Equality constraints
-    model.ub = np.ones(params.n_var) * np.inf
-    model.lb = -np.ones(params.n_var) * np.inf
+    model.ub = np.ones(params.n_var * num_cars) * np.inf
+    model.lb = -np.ones(params.n_var * num_cars) * np.inf
 
-    # delta path progress
-    model.ub[params.i_idx.dots] = 5
-    model.lb[params.i_idx.dots] = -1
+    for k in range(num_cars):
+        # delta path progress
+        upd_s_idx = k * params.n_states + (num_cars - 1) * params.n_inputs
+        upd_i_idx = k * params.n_inputs
 
-    # Forward force lower bound
-    model.lb[params.i_idx.dAb] = -10
-    model.ub[params.i_idx.dAb] = 10
+        model.ub[params.i_idx.dots + upd_i_idx] = 5
+        model.lb[params.i_idx.dots + upd_i_idx] = -1
 
-    # Forward force lower bound
-    model.lb[params.s_idx.ab] = -np.inf
-    model.ub[params.s_idx.ab] = 2
-    # slack limit
-    model.lb[params.i_idx.slack] = 0
+        # Forward force lower bound
+        model.lb[params.i_idx.dAb + upd_i_idx] = -10
+        model.ub[params.i_idx.dAb + upd_i_idx] = 10
 
-    # Speed lower bound
-    model.lb[params.s_idx.vx] = 0
-    model.ub[params.s_idx.vx] = 20
+        # Forward force lower bound
+        model.lb[params.s_idx.ab + upd_s_idx] = -np.inf
+        model.ub[params.s_idx.ab + upd_s_idx] = 2
+        # slack limit
+        model.lb[params.i_idx.slack + upd_i_idx] = 0
 
-    # Steering Angle Bounds
-    model.ub[params.s_idx.beta] = 0.95
-    model.lb[params.s_idx.beta] = -0.95
+        # Speed lower bound
+        model.lb[params.s_idx.vx + upd_s_idx] = 0
+        model.ub[params.s_idx.vx + upd_s_idx] = 20
 
-    # Path  Progress  Bounds
-    model.ub[params.s_idx.s] = params.n_bspline_points - 2  # fixme why limiting path progress?
-    model.lb[params.s_idx.s] = 0
+        # Steering Angle Bounds
+        model.ub[params.s_idx.beta + upd_s_idx] = 0.95
+        model.lb[params.s_idx.beta + upd_s_idx] = -0.95
+
+        # Path  Progress  Bounds
+        model.ub[params.s_idx.s + upd_s_idx] = params.n_bspline_points - 2  # fixme why limiting path progress?
+        model.lb[params.s_idx.s + upd_s_idx] = 0
 
     # CodeOptions  for FORCES solver
     codeoptions = CodeOptions(solver_name)
-    codeoptions.maxit = 200  # Maximum number of iterations
+    codeoptions.maxit = 2000  # Maximum number of iterations
     codeoptions.printlevel = 0  # Use printlevel = 2 to print progress (but not for timings)
     # 0: no optimization, 1: optimize for size, 2: optimize for speed, 3: optimize for size & speed
-    codeoptions.optlevel = (2)
+    codeoptions.optlevel = 2
     codeoptions.printlevel = 0  # optional, on some platforms printing is not supported
     codeoptions.cleanup = 0  # to keep necessary files for target compile
     codeoptions.timing = 1
@@ -109,7 +120,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool):
 
     if generate_solver:
         # necessary to have all the zs stack in one vector
-        output_all = ("all_var", list(range(0, params.N)), list(range(0, params.n_var)))
+        output_all = ("all_var", list(range(0, params.N)), list(range(0, params.n_var * num_cars)))
         solver = model.generate_solver(codeoptions, [output_all])
     else:
         solver = nlp.Solver.from_directory(solver_name)
