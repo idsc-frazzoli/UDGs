@@ -1,13 +1,14 @@
-from Car_mpcc.Car_optimizer.dynamics_car import _dynamics_car ,dynamics_cars
+from udgs_models.model_def.dynamics_car import _dynamics_car, dynamics_cars
 
 import numpy as np
 
 from . import params
+from .indices import input_constraints, state_constraints
 from .objective import objective_car
 from .nlconstraints import nlconst_car, nlconst_carN
 from forcespro import nlp, CodeOptions
 
-__all__=["generate_car_model"]
+__all__ = ["generate_car_model"]
 
 
 def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
@@ -18,7 +19,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
 
     :return:
     """
-    solver_name: str = "MPCC_Car"
+    solver_name: str = "Forces_udgs_solver"
     model = nlp.SymbolicModel(params.N)
     model.nvar = params.n_var * num_cars
     model.neq = params.n_states * num_cars
@@ -37,14 +38,16 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
     # model.continuous_dynamics = lambda x, u, p: dynamics_HC
 
     # indices of the left hand side of the dynamical constraint
-    model.E = np.concatenate([np.zeros((num_cars * params.n_states, num_cars * params.n_inputs)), np.eye(num_cars * params.n_states)], axis=1)
+    model.E = np.concatenate(
+        [np.zeros((num_cars * params.n_states, num_cars * params.n_inputs)), np.eye(num_cars * params.n_states)],
+        axis=1)
 
     # inequality constraints
     model.nh = 2 * num_cars  # Number of inequality constraints
     model.ineq = nlconst_car[num_cars]
     model.hu = np.array([0, 0])
     model.hl = np.array([-np.inf, -np.inf])
-    for k in range(num_cars-1):
+    for k in range(num_cars - 1):
         model.hu = np.append(model.hu, np.array([0, 0]))  # upper bound for nonlinear constraints
         model.hl = np.append(model.hl, np.array([-np.inf, -np.inf]))  # lower bound for nonlinear constraints
 
@@ -53,7 +56,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
     model.ineqN = nlconst_carN[num_cars]
     model.huN = np.array([0, 0, 0])
     model.hlN = np.array([-np.inf, -np.inf, -np.inf])
-    for k in range(num_cars-1):
+    for k in range(num_cars - 1):
         model.huN = np.append(model.huN, np.array([0, 0, 0]))  # upper bound for nonlinear constraints
         model.hlN = np.append(model.hlN, np.array([-np.inf, -np.inf, -np.inf]))  # lower bound for nonlinear constraints
 
@@ -71,30 +74,31 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
         upd_s_idx = k * params.n_states + (num_cars - 1) * params.n_inputs
         upd_i_idx = k * params.n_inputs
 
-        model.ub[params.i_idx.dots + upd_i_idx] = 5
-        model.lb[params.i_idx.dots + upd_i_idx] = -1
+        model.ub[params.i_idx.dS + upd_i_idx] = input_constraints.dS[0]
+        model.lb[params.i_idx.dS + upd_i_idx] = input_constraints.dS[1]
 
         # Forward force lower bound
-        model.lb[params.i_idx.dAb + upd_i_idx] = -10
-        model.ub[params.i_idx.dAb + upd_i_idx] = 10
+        model.lb[params.i_idx.dAcc + upd_i_idx] = input_constraints.dAcc[0]
+        model.ub[params.i_idx.dAcc + upd_i_idx] = input_constraints.dAcc[1]
 
-        # Forward force lower bound
-        model.lb[params.s_idx.ab + upd_s_idx] = -np.inf
-        model.ub[params.s_idx.ab + upd_s_idx] = 2
         # slack limit
-        model.lb[params.i_idx.slack + upd_i_idx] = 0
+        model.lb[params.i_idx.Slack + upd_i_idx] = 0
+
+        # Forward force lower bound
+        model.lb[params.s_idx.Acc + upd_s_idx] = state_constraints.Acc[0]
+        model.ub[params.s_idx.Acc + upd_s_idx] = state_constraints.Acc[1]
 
         # Speed lower bound
-        model.lb[params.s_idx.vx + upd_s_idx] = 0
-        model.ub[params.s_idx.vx + upd_s_idx] = 20
+        model.lb[params.s_idx.Vx + upd_s_idx] = state_constraints.Vx[0]
+        model.ub[params.s_idx.Vx + upd_s_idx] = state_constraints.Vx[1]
 
         # Steering Angle Bounds
-        model.ub[params.s_idx.beta + upd_s_idx] = 0.95
-        model.lb[params.s_idx.beta + upd_s_idx] = -0.95
+        model.ub[params.s_idx.Delta + upd_s_idx] = state_constraints.Delta[0]
+        model.lb[params.s_idx.Delta + upd_s_idx] = state_constraints.Delta[1]
 
         # Path  Progress  Bounds
-        model.ub[params.s_idx.s + upd_s_idx] = params.n_bspline_points - 2  # fixme why limiting path progress?
-        model.lb[params.s_idx.s + upd_s_idx] = 0
+        model.ub[params.s_idx.S + upd_s_idx] = state_constraints.S[0]
+        model.lb[params.s_idx.S + upd_s_idx] = state_constraints.S[1]
 
     # CodeOptions  for FORCES solver
     codeoptions = CodeOptions(solver_name)
@@ -109,14 +113,14 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
     codeoptions.BuildSimulinkBlock = 0
     codeoptions.noVariableElimination = 1
     codeoptions.nlp.checkFunctions = 0
+    codeoptions.nlp.integrator.type = 'ERK4'
+    codeoptions.nlp.integrator.Ts = params.integrator_stepsize
+    codeoptions.nlp.integrator.nodes = 1
     if to_deploy:
         codeoptions.useFloatingLicense = 1  # Comment out unless you got a floating license
         codeoptions.platform = (
             "Docker-Gnu-x86_64"  # Comment    out  unless  you  got  a  SW / testing  license
         )
-    # codeoptions.nlp.integrator.type = 'RK4'
-    # codeoptions.nlp.integrator.Ts = params.integrator_stepsize
-    # codeoptions.nlp.integrator.nodes = 5  # fixme what is this?
 
     if generate_solver:
         # necessary to have all the zs stack in one vector

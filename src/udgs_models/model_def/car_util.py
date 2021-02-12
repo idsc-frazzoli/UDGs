@@ -1,7 +1,7 @@
 from casadi import *
 import numpy as np
 
-from Car_mpcc.Car_optimizer import params
+from udgs_models.model_def import params
 
 
 def acclim(VELY, VELX, taccx, maxA):
@@ -170,23 +170,23 @@ def set_p_car(
     points,
     num_cars):
     p = np.zeros((params.n_param + 3 * params.n_bspline_points * num_cars))
-    p[params.p_idx.maxspeed] = maxspeed
-    p[params.p_idx.targetspeed] = targetspeed
-    p[params.p_idx.optcost1] = optcost1
-    p[params.p_idx.optcost2] = optcost2
+    p[params.p_idx.SpeedLimit] = maxspeed
+    p[params.p_idx.TargetSpeed] = targetspeed
+    p[params.p_idx.OptCost1] = optcost1
+    p[params.p_idx.OptCost2] = optcost2
     p[params.p_idx.Xobstacle] = Xobstacle
     p[params.p_idx.Yobstacle] = Yobstacle
-    p[params.p_idx.targetprog] = targetprog
-    p[params.p_idx.pspeedcostA] = pspeedcostA
-    p[params.p_idx.pspeedcostB] = pspeedcostB
-    p[params.p_idx.pspeedcostM] = pspeedcostM
-    p[params.p_idx.plag] = plag
-    p[params.p_idx.plat] = plat
+    p[params.p_idx.TargetProg] = targetprog
+    p[params.p_idx.kAboveTargetSpeedCost] = pspeedcostA
+    p[params.p_idx.kBelowTargetSpeedCost] = pspeedcostB
+    p[params.p_idx.kAboveSpeedLimit] = pspeedcostM
+    p[params.p_idx.kLag] = plag
+    p[params.p_idx.kLat] = plat
     p[params.p_idx.pLeftLane] = pLeftLane
-    p[params.p_idx.pab] = pab
-    p[params.p_idx.pdotbeta] = pdotbeta
-    p[params.p_idx.pslack] = pslack
-    p[params.p_idx.distance] = distance
+    p[params.p_idx.kReg_dAb] = pab
+    p[params.p_idx.kReg_dDelta] = pdotbeta
+    p[params.p_idx.kSlack] = pslack
+    p[params.p_idx.minSafetyDistance] = distance
     p[params.p_idx.carLength] = carLength
     for k in range(num_cars):
         update = 3 * params.n_bspline_points * k

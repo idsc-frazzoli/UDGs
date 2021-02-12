@@ -2,12 +2,12 @@ from dataclasses import dataclass
 from math import floor
 
 from bspline.bspline import casadiDynamicBSPLINE, atan2, casadiDynamicBSPLINEforward
-from Car_mpcc.forces_utils import ForcesException
-from Car_mpcc.Car_optimizer import params
+from udgs_models.forces_utils import ForcesException
+from udgs_models.model_def import params
 import numpy as np
 
-from Car_mpcc.Car_optimizer.driver_config import behaviors_zoo
-from Car_mpcc.Car_optimizer.car_util import set_p_car, casadiGetMaxAcc
+from udgs_models.model_def.driver_config import behaviors_zoo
+from udgs_models.model_def.car_util import set_p_car, casadiGetMaxAcc
 from tracks import Track
 from tracks.utils import spline_progress_from_pose
 
@@ -29,7 +29,27 @@ class SimData:
     track5: Track
     solver_it: np.ndarray
     solver_time: np.ndarray
+"""
+PlayerId = int
+@dataclass(frozen=True)
+class SimData:
+    x: Dict[PlayerId, np.ndarray]
+    x_pred: np.ndarray
+    u: np.ndarray
+    u_pred: np.ndarray
+    next_spline_points: np.ndarray
+    track: Track
+    track2: Track
+    track3: Track
+    track4: Track
+    track5: Track
+    solver_it: np.ndarray
+    solver_time: np.ndarray
 
+
+
+
+"""
 
 def sim_car_model(
         model, solver, num_cars, sim_length: int = 200, seed: int = 1, track: Track = straightLineR2L,

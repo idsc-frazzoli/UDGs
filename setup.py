@@ -8,7 +8,7 @@ def get_version(filename):
     with open(filename) as f:
         for line in f:
             if line.startswith("__version__"):
-                version = ast.parse(line).body[0].value.s
+                version = ast.parse(line).body[0].value.S
                 break
         else:
             raise ValueError(f"No version found in {filename}.")

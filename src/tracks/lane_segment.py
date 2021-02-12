@@ -269,7 +269,7 @@ class LaneSegment(PlacedObject):
         bracket = (-1.0, len(self.control_points))
         res0 = scipy.optimize.minimize_scalar(get_delta, bracket=bracket, tol=tol)
         # print(res)
-        beta0 = res0.x
+        beta0 = res0.X
         q = self.center_point(beta0)
         return beta0, q
 

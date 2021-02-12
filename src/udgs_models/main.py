@@ -1,9 +1,9 @@
 import argparse
 import forcespro
 
-from Car_mpcc.Car_optimizer.sim import sim_car_model
-from Car_mpcc.Car_optimizer.sim_report import make_report
-from Car_optimizer.generate_model import generate_car_model
+from udgs_models.model_def.sim import sim_car_model
+from udgs_models.model_def.sim_report import make_report
+from model_def.generate_model import generate_car_model
 from tracks import straightLineR2L, winti_002, straightLineN2S
 
 
@@ -25,7 +25,7 @@ def _parse_args():
     p.add_argument(
         "--num_cars",
         default=2,
-        help="If True generates the solver with additional flags for targeting Docker Linux platform (gokart)",
+        help="todo",
         type=int,
     )
     return p.parse_args()

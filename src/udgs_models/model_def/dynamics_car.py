@@ -2,7 +2,7 @@ from functools import partial
 
 from .car_util import *
 from bspline.bspline import *
-from Car_mpcc.Car_optimizer import params
+from udgs_models.model_def import params
 from casadi import *
 
 import numpy as np
