@@ -24,17 +24,17 @@ def _objective_car(z, p, n):
     :param ptv:
     :return: Objective to be minimized by the solver
     """
-    maxspeed = p[params.p_idx.maxspeed]
-    targetspeed = p[params.p_idx.targetspeed]
-    pdotbeta = p[params.p_idx.pdotbeta]
-    plag = p[params.p_idx.plag]
-    plat = p[params.p_idx.plat]
+    speed_limit = p[params.p_idx.SpeedLimit]
+    target_speed = p[params.p_idx.TargetSpeed]
+    kReg_dDelta = p[params.p_idx.kReg_dDelta]
+    kLag = p[params.p_idx.kLag]
+    kLat = p[params.p_idx.kLat]
     pLeftLane = p[params.p_idx.pLeftLane]
-    pab = p[params.p_idx.pab]
-    pspeedcostA = p[params.p_idx.pspeedcostA]
-    pspeedcostB = p[params.p_idx.pspeedcostB]
-    pspeedcostM = p[params.p_idx.pspeedcostM]
-    pslack = p[params.p_idx.pslack]
+    kReg_dAb = p[params.p_idx.kReg_dAb]
+    kAboveTargetSpeedCost = p[params.p_idx.kAboveTargetSpeedCost]
+    kBelowTargetSpeedCost = p[params.p_idx.kBelowTargetSpeedCost]
+    kAboveSpeedLimit = p[params.p_idx.kAboveSpeedLimit]
+    kSlack = p[params.p_idx.kSlack]
     pointsO = params.n_param
     pointsN = params.n_bspline_points
     obj = 0
@@ -47,15 +47,15 @@ def _objective_car(z, p, n):
         radii = getRadiiFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
 
         # get the fancy spline
-        splx, sply = casadiDynamicBSPLINE(z[params.s_idx.s + upd_s_idx], points)
-        spldx, spldy = casadiDynamicBSPLINEforward(z[params.s_idx.s + upd_s_idx], points)
-        splsx, splsy = casadiDynamicBSPLINEsidewards(z[params.s_idx.s + upd_s_idx], points)
-        r = casadiDynamicBSPLINERadius(z[params.s_idx.s + upd_s_idx], radii)
+        splx, sply = casadiDynamicBSPLINE(z[params.s_idx.S + upd_s_idx], points)
+        spldx, spldy = casadiDynamicBSPLINEforward(z[params.s_idx.S + upd_s_idx], points)
+        splsx, splsy = casadiDynamicBSPLINEsidewards(z[params.s_idx.S + upd_s_idx], points)
+        r = casadiDynamicBSPLINERadius(z[params.s_idx.S + upd_s_idx], radii)
 
         forward = vertcat(spldx, spldy)
         sidewards = vertcat(splsx, splsy)
 
-        realPos = vertcat(z[params.s_idx.x + upd_s_idx], z[params.s_idx.y + upd_s_idx])
+        realPos = vertcat(z[params.s_idx.X + upd_s_idx], z[params.s_idx.Y + upd_s_idx])
         centerPos = realPos
 
         wantedpos = vertcat(splx, sply)
@@ -66,16 +66,16 @@ def _objective_car(z, p, n):
         lagerror = mtimes(forward.T, error)
         laterror = mtimes(sidewards.T, error)
         laterror_CL = mtimes(sidewards.T, error_CL)
-        speedcostA = speedPunisherA(z[params.s_idx.vx + upd_s_idx], targetspeed) * pspeedcostA
-        speedcostB = speedPunisherB(z[params.s_idx.vx + upd_s_idx], targetspeed) * pspeedcostB
-        speedcostM = speedPunisherA(z[params.s_idx.vx + upd_s_idx], maxspeed) * pspeedcostM
-        slack = z[params.i_idx.slack + update_i_idx]
-        lagcost = plag * lagerror ** 2
+        speedcostA = speedPunisherA(z[params.s_idx.Vx + upd_s_idx], target_speed) * kAboveTargetSpeedCost
+        speedcostB = speedPunisherB(z[params.s_idx.Vx + upd_s_idx], target_speed) * kBelowTargetSpeedCost
+        speedcostM = speedPunisherA(z[params.s_idx.Vx + upd_s_idx], speed_limit) * kAboveSpeedLimit
+        slack = z[params.i_idx.Slack + update_i_idx]
+        lagcost = kLag * lagerror ** 2
         leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
-        latcostCL = plat * laterror_CL ** 2
-        regAB = z[params.i_idx.dAb + update_i_idx] ** 2 * pab
-        regBeta = z[params.i_idx.dBeta + update_i_idx] ** 2 * pdotbeta
-        obj = obj + lagcost + leftLaneCost + latcostCL + regAB + regBeta + speedcostA + speedcostB + speedcostM + pslack * slack
+        latcostCL = kLat * laterror_CL ** 2
+        regAB = z[params.i_idx.dAcc + update_i_idx] ** 2 * kReg_dAb
+        regBeta = z[params.i_idx.dDelta + update_i_idx] ** 2 * kReg_dDelta
+        obj = obj + lagcost + leftLaneCost + latcostCL + regAB + regBeta + speedcostA + speedcostB + speedcostM + kSlack * slack
 
     return obj
 

@@ -42,14 +42,14 @@ def get_car_plot(x, x_pred, u, u_pred, controlpoints, num_cars, track: Track) ->
         for jj in range(num_cars):
             upd_s_idx = - n_inputs + jj * params.n_states
             state_k = (
-                x[x_idx.x + upd_s_idx, k], x[x_idx.y + upd_s_idx, k], x[x_idx.theta + upd_s_idx, k],
-                x[x_idx.beta + upd_s_idx, k])
+                x[x_idx.X + upd_s_idx, k], x[x_idx.Y + upd_s_idx, k], x[x_idx.Theta + upd_s_idx, k],
+                x[x_idx.Delta + upd_s_idx, k])
 
             fig = plotter.plot_prediction_triangle(
-                x=x_pred[x_idx.x + upd_s_idx, :, k],
-                y=x_pred[x_idx.y + upd_s_idx, :, k],
-                psi=x_pred[x_idx.theta + upd_s_idx, :, k],
-                ab=x_pred[x_idx.ab + upd_s_idx, :, k],
+                x=x_pred[x_idx.X + upd_s_idx, :, k],
+                y=x_pred[x_idx.Y + upd_s_idx, :, k],
+                psi=x_pred[x_idx.Theta + upd_s_idx, :, k],
+                ab=x_pred[x_idx.Acc + upd_s_idx, :, k],
                 fig=fig,
             )
             fig = plotter.plot_gokart(state_k[0], state_k[1], state_k[2], state_k[3], fig, KITT)

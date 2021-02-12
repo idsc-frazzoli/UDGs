@@ -126,14 +126,14 @@ def sim_car_model(
     xinit = np.zeros(n_states * num_cars)
     for k in range(num_cars):
         upd_s_idx = - n_inputs + k * n_states
-        xinit[x_idx.x + upd_s_idx] = x_pos[k]
-        xinit[x_idx.y + upd_s_idx] = y_pos[k]
-        xinit[x_idx.theta + upd_s_idx] = theta_pos[k]
-        xinit[x_idx.vx + upd_s_idx] = 7
+        xinit[x_idx.X + upd_s_idx] = x_pos[k]
+        xinit[x_idx.Y + upd_s_idx] = y_pos[k]
+        xinit[x_idx.Theta + upd_s_idx] = theta_pos[k]
+        xinit[x_idx.Vx + upd_s_idx] = 7
 
         # totally arbitrary
-        xinit[x_idx.beta + upd_s_idx] = 0  # totally arbitrary
-        xinit[x_idx.s + upd_s_idx] = init_progress
+        xinit[x_idx.Delta + upd_s_idx] = 0  # totally arbitrary
+        xinit[x_idx.S + upd_s_idx] = init_progress
 
     x[:, 0] = xinit
     problem = {}
@@ -145,10 +145,10 @@ def sim_car_model(
         # while x[x_idx.s - n_inputs, k] >= 1:
         for jj in range(num_cars):
             upd_s_idx = - n_inputs + jj * n_states
-            while x[x_idx.s + upd_s_idx, k] >= 1:
+            while x[x_idx.S + upd_s_idx, k] >= 1:
                 # spline step forward
                 spline_start_idx[jj] += 1  # fixme some module operation (number of control points) is probably needed
-                x[x_idx.s + upd_s_idx, k] -= 1
+                x[x_idx.S + upd_s_idx, k] -= 1
             if jj == 0:
                 for i in range(params.n_bspline_points):
                     next_point = track.spline.get_control_point(spline_start_idx[jj].astype(int) + i)
@@ -170,32 +170,30 @@ def sim_car_model(
                     next_point = track5.spline.get_control_point(spline_start_idx[jj].astype(int) + i)
                     next_spline_points[i + jj * params.n_bspline_points, :, k] = next_point
             # Limit acceleration
-            x[x_idx.ab + upd_s_idx, k] = min(
-                casadiGetMaxAcc(x[x_idx.vx + upd_s_idx, k]) - 0.0001, x[x_idx.ab + upd_s_idx, k]
-            )  # fixme why -0.0001?
+            x[x_idx.Acc + upd_s_idx, k] = min(1.99, x[x_idx.Acc + upd_s_idx, k])
 
         # Set initial state
         problem["xinit"] = x[:, k]
         # Set runtime parameters (the only really changing between stages are the next control points of the spline)
         p_vector = set_p_car(
-            maxspeed=behavior.maxspeed,
-            targetspeed=behavior.targetspeed,
-            optcost1=behavior.optcost1,
-            optcost2=behavior.optcost2,
+            SpeedLimit=behavior.maxspeed,
+            TargetSpeed=behavior.targetspeed,
+            OptCost1=behavior.optcost1,
+            OptCost2=behavior.optcost2,
             Xobstacle=behavior.Xobstacle,
             Yobstacle=behavior.Yobstacle,
-            targetprog=behavior.targetprog,
-            pspeedcostA=behavior.pspeedcostA,
-            pspeedcostB=behavior.pspeedcostB,
-            pspeedcostM=behavior.pspeedcostM,
-            plag=behavior.plag,
-            plat=behavior.plat,
+            TargetProg=behavior.targetprog,
+            kAboveTargetSpeedCost=behavior.pspeedcostA,
+            kBelowTargetSpeedCost=behavior.pspeedcostB,
+            kAboveSpeedLimit=behavior.pspeedcostM,
+            kLag=behavior.plag,
+            kLat=behavior.plat,
             pLeftLane=behavior.pLeftLane,
-            pab=behavior.pab,
-            pdotbeta=behavior.pdotbeta,
+            kReg_dAb=behavior.pab,
+            kReg_dDelta=behavior.pdotbeta,
             carLength=behavior.carLength,
-            distance=behavior.distance,
-            pslack=behavior.pslack,
+            minSafetyDistance=behavior.distance,
+            kSlack=behavior.pslack,
             points=next_spline_points[:, :, k],
             num_cars=num_cars
         )  # fixme check order here

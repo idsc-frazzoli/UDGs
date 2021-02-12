@@ -16,11 +16,11 @@ def _dynamics_car(x, u, p, n):
     :param p: parameter variables
     :return:
     """
-    maxspeed = p[params.p_idx.maxspeed]
-    pspeedcostM = p[params.p_idx.pspeedcostM]
+    speed_limit = p[params.p_idx.SpeedLimit]
+    kAboveSpeedLimit = p[params.p_idx.kAboveSpeedLimit]
     pLeftLane = p[params.p_idx.pLeftLane]
     lc = p[params.p_idx.carLength]
-    pslack = p[params.p_idx.pslack]
+    kSlack = p[params.p_idx.kSlack]
 
     pointsO = params.n_param
     pointsN = params.n_bspline_points
@@ -37,36 +37,36 @@ def _dynamics_car(x, u, p, n):
         upd_i_idx = k * params.n_inputs
 
         points = getPointsFromParameters(p, pointsO + k * pointsN * 3, pointsN)
-        splx, sply = casadiDynamicBSPLINE(x[params.s_idx.s + upd_s_idx], points)
-        splsx, splsy = casadiDynamicBSPLINEsidewards(x[params.s_idx.s + upd_s_idx], points)
+        splx, sply = casadiDynamicBSPLINE(x[params.s_idx.S + upd_s_idx], points)
+        splsx, splsy = casadiDynamicBSPLINEsidewards(x[params.s_idx.S + upd_s_idx], points)
 
         sidewards = vertcat(splsx, splsy)
-        realPos = vertcat(x[params.s_idx.x + upd_s_idx], x[params.s_idx.y + upd_s_idx])
+        realPos = vertcat(x[params.s_idx.X + upd_s_idx], x[params.s_idx.Y + upd_s_idx])
         centerPos = realPos
         wantedpos = vertcat(splx, sply)
         error = centerPos - wantedpos
         laterror = mtimes(sidewards.T, error)
-        speedcostM = speedPunisherA(x[params.s_idx.vx + upd_s_idx], maxspeed) * pspeedcostM
+        speedcostM = speedPunisherA(x[params.s_idx.Vx + upd_s_idx], speed_limit) * kAboveSpeedLimit
         leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
 
-        dotab = u[params.i_idx.dAb + upd_i_idx]
-        dotbeta = u[params.i_idx.dBeta + upd_i_idx]
-        dots = u[params.i_idx.dots + upd_i_idx]
-        slack = u[params.i_idx.slack + upd_i_idx]
+        dAcc = u[params.i_idx.dAcc + upd_i_idx]
+        dDelta = u[params.i_idx.dDelta + upd_i_idx]
+        dS = u[params.i_idx.dS + upd_i_idx]
+        slack = u[params.i_idx.Slack + upd_i_idx]
 
-        theta = x[params.s_idx.theta + upd_s_idx]
-        vx = x[params.s_idx.vx + upd_s_idx]
-        ab = x[params.s_idx.ab + upd_s_idx]
-        beta = x[params.s_idx.beta + upd_s_idx]  # from steering.
+        theta = x[params.s_idx.Theta + upd_s_idx]
+        vx = x[params.s_idx.Vx + upd_s_idx]
+        Acc = x[params.s_idx.Acc + upd_s_idx]
+        delta = x[params.s_idx.Delta + upd_s_idx]  # from steering.
 
-        dx[params.s_idx.x + upd_s_idx] = vx * cos(theta)
-        dx[params.s_idx.y + upd_s_idx] = vx * sin(theta)
-        dx[params.s_idx.theta + upd_s_idx] = vx * tan(beta) / lc
-        dx[params.s_idx.vx + upd_s_idx] = ab
-        dx[params.s_idx.ab + upd_s_idx] = dotab
-        dx[params.s_idx.beta + upd_s_idx] = dotbeta
-        dx[params.s_idx.s + upd_s_idx] = dots
-        dx[params.s_idx.CumSlackCost + upd_s_idx] = pslack * slack
+        dx[params.s_idx.X + upd_s_idx] = vx * cos(theta)
+        dx[params.s_idx.Y + upd_s_idx] = vx * sin(theta)
+        dx[params.s_idx.Theta + upd_s_idx] = vx * tan(delta) / lc
+        dx[params.s_idx.Vx + upd_s_idx] = Acc
+        dx[params.s_idx.Acc + upd_s_idx] = dAcc
+        dx[params.s_idx.Delta + upd_s_idx] = dDelta
+        dx[params.s_idx.S + upd_s_idx] = dS
+        dx[params.s_idx.CumSlackCost + upd_s_idx] = kSlack * slack
         dx[params.s_idx.CumLatSpeedCost + upd_s_idx] = speedcostM + leftLaneCost
 
     return dx

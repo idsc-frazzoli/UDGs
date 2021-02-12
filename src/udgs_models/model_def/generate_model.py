@@ -74,8 +74,8 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
         upd_s_idx = k * params.n_states + (num_cars - 1) * params.n_inputs
         upd_i_idx = k * params.n_inputs
 
-        model.ub[params.i_idx.dS + upd_i_idx] = input_constraints.dS[0]
-        model.lb[params.i_idx.dS + upd_i_idx] = input_constraints.dS[1]
+        model.lb[params.i_idx.dS + upd_i_idx] = input_constraints.dS[0]
+        model.ub[params.i_idx.dS + upd_i_idx] = input_constraints.dS[1]
 
         # Forward force lower bound
         model.lb[params.i_idx.dAcc + upd_i_idx] = input_constraints.dAcc[0]
@@ -93,12 +93,12 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
         model.ub[params.s_idx.Vx + upd_s_idx] = state_constraints.Vx[1]
 
         # Steering Angle Bounds
-        model.ub[params.s_idx.Delta + upd_s_idx] = state_constraints.Delta[0]
-        model.lb[params.s_idx.Delta + upd_s_idx] = state_constraints.Delta[1]
+        model.lb[params.s_idx.Delta + upd_s_idx] = state_constraints.Delta[0]
+        model.ub[params.s_idx.Delta + upd_s_idx] = state_constraints.Delta[1]
 
         # Path  Progress  Bounds
-        model.ub[params.s_idx.S + upd_s_idx] = state_constraints.S[0]
-        model.lb[params.s_idx.S + upd_s_idx] = state_constraints.S[1]
+        model.lb[params.s_idx.S + upd_s_idx] = state_constraints.S[0]
+        model.ub[params.s_idx.S + upd_s_idx] = state_constraints.S[1]
 
     # CodeOptions  for FORCES solver
     codeoptions = CodeOptions(solver_name)
@@ -114,7 +114,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
     codeoptions.noVariableElimination = 1
     codeoptions.nlp.checkFunctions = 0
     codeoptions.nlp.integrator.type = 'ERK4'
-    codeoptions.nlp.integrator.Ts = params.integrator_stepsize
+    codeoptions.nlp.integrator.Ts = params.dt_integrator_step
     codeoptions.nlp.integrator.nodes = 1
     if to_deploy:
         codeoptions.useFloatingLicense = 1  # Comment out unless you got a floating license

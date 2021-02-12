@@ -1,7 +1,7 @@
 from reprep import Report
 
-from Car_mpcc.Car_optimizer.sim import SimData
-from Car_mpcc.Car_optimizer.sim_plot import get_car_plot, get_solver_stats, get_state_plots, get_input_plots
+from udgs_models.model_def.sim import SimData
+from udgs_models.model_def.sim_plot import get_car_plot, get_solver_stats, get_state_plots, get_input_plots
 
 
 def make_report(sim_data: SimData, num_cars):

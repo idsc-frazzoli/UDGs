@@ -149,44 +149,44 @@ def laterrorPunisher(laterror,cc):
     return x ** 2
 
 def set_p_car(
-    maxspeed,
-    targetspeed,
-    optcost1,
-    optcost2,
+    SpeedLimit,
+    TargetSpeed,
+    OptCost1,
+    OptCost2,
     Xobstacle,
     Yobstacle,
-    targetprog,
-    pspeedcostA,
-    pspeedcostB,
-    pspeedcostM,
-    plag,
-    plat,
+    TargetProg,
+    kAboveTargetSpeedCost,
+    kBelowTargetSpeedCost,
+    kAboveSpeedLimit,
+    kLag,
+    kLat,
     pLeftLane,
-    pab,
-    pdotbeta,
-    pslack,
-    distance,
+    kReg_dAb,
+    kReg_dDelta,
+    kSlack,
+    minSafetyDistance,
     carLength,
     points,
     num_cars):
     p = np.zeros((params.n_param + 3 * params.n_bspline_points * num_cars))
-    p[params.p_idx.SpeedLimit] = maxspeed
-    p[params.p_idx.TargetSpeed] = targetspeed
-    p[params.p_idx.OptCost1] = optcost1
-    p[params.p_idx.OptCost2] = optcost2
+    p[params.p_idx.SpeedLimit] = SpeedLimit
+    p[params.p_idx.TargetSpeed] = TargetSpeed
+    p[params.p_idx.OptCost1] = OptCost1
+    p[params.p_idx.OptCost2] = OptCost2
     p[params.p_idx.Xobstacle] = Xobstacle
     p[params.p_idx.Yobstacle] = Yobstacle
-    p[params.p_idx.TargetProg] = targetprog
-    p[params.p_idx.kAboveTargetSpeedCost] = pspeedcostA
-    p[params.p_idx.kBelowTargetSpeedCost] = pspeedcostB
-    p[params.p_idx.kAboveSpeedLimit] = pspeedcostM
-    p[params.p_idx.kLag] = plag
-    p[params.p_idx.kLat] = plat
+    p[params.p_idx.TargetProg] = TargetProg
+    p[params.p_idx.kAboveTargetSpeedCost] = kAboveTargetSpeedCost
+    p[params.p_idx.kBelowTargetSpeedCost] = kBelowTargetSpeedCost
+    p[params.p_idx.kAboveSpeedLimit] = kAboveSpeedLimit
+    p[params.p_idx.kLag] = kLag
+    p[params.p_idx.kLat] = kLat
     p[params.p_idx.pLeftLane] = pLeftLane
-    p[params.p_idx.kReg_dAb] = pab
-    p[params.p_idx.kReg_dDelta] = pdotbeta
-    p[params.p_idx.kSlack] = pslack
-    p[params.p_idx.minSafetyDistance] = distance
+    p[params.p_idx.kReg_dAb] = kReg_dAb
+    p[params.p_idx.kReg_dDelta] = kReg_dDelta
+    p[params.p_idx.kSlack] = kSlack
+    p[params.p_idx.minSafetyDistance] = minSafetyDistance
     p[params.p_idx.carLength] = carLength
     for k in range(num_cars):
         update = 3 * params.n_bspline_points * k
