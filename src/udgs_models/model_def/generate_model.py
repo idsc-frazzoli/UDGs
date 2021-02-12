@@ -102,7 +102,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
 
     # CodeOptions  for FORCES solver
     codeoptions = CodeOptions(solver_name)
-    codeoptions.maxit = 2000  # Maximum number of iterations
+    codeoptions.maxit = 5000  # Maximum number of iterations
     codeoptions.printlevel = 0  # Use printlevel = 2 to print progress (but not for timings)
     # 0: no optimization, 1: optimize for size, 2: optimize for speed, 3: optimize for size & speed
     codeoptions.optlevel = 2

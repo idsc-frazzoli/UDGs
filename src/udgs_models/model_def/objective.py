@@ -41,7 +41,7 @@ def _objective_car(z, p, n):
 
     for k in range(n):
         upd_s_idx = k * params.n_states + (n - 1) * params.n_inputs
-        update_i_idx = k * params.n_inputs
+        upd_i_idx = k * params.n_inputs
 
         points = getPointsFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
         radii = getRadiiFromParameters(p, pointsO + k * pointsN * 3, pointsN)  # todo check indices
@@ -69,12 +69,12 @@ def _objective_car(z, p, n):
         speedcostA = speedPunisherA(z[params.s_idx.Vx + upd_s_idx], target_speed) * kAboveTargetSpeedCost
         speedcostB = speedPunisherB(z[params.s_idx.Vx + upd_s_idx], target_speed) * kBelowTargetSpeedCost
         speedcostM = speedPunisherA(z[params.s_idx.Vx + upd_s_idx], speed_limit) * kAboveSpeedLimit
-        slack = z[params.i_idx.Slack + update_i_idx]
+        slack = z[params.i_idx.Slack + upd_i_idx]
         lagcost = kLag * lagerror ** 2
         leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
         latcostCL = kLat * laterror_CL ** 2
-        regAB = z[params.i_idx.dAcc + update_i_idx] ** 2 * kReg_dAb
-        regBeta = z[params.i_idx.dDelta + update_i_idx] ** 2 * kReg_dDelta
+        regAB = z[params.i_idx.dAcc + upd_i_idx] ** 2 * kReg_dAb
+        regBeta = z[params.i_idx.dDelta + upd_i_idx] ** 2 * kReg_dDelta
         obj = obj + lagcost + leftLaneCost + latcostCL + regAB + regBeta + speedcostA + speedcostB + speedcostM + kSlack * slack
 
     return obj

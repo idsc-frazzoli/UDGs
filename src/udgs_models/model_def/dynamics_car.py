@@ -33,7 +33,7 @@ def _dynamics_car(x, u, p, n):
         dx = SX.zeros(n * params.n_states, 1)
 
     for k in range(n):
-        upd_s_idx = k * params.n_states - params.n_inputs  # todo check here update state for > 3 vehicles
+        upd_s_idx = k * params.n_states - params.n_inputs
         upd_i_idx = k * params.n_inputs
 
         points = getPointsFromParameters(p, pointsO + k * pointsN * 3, pointsN)
@@ -56,13 +56,13 @@ def _dynamics_car(x, u, p, n):
 
         theta = x[params.s_idx.Theta + upd_s_idx]
         vx = x[params.s_idx.Vx + upd_s_idx]
-        Acc = x[params.s_idx.Acc + upd_s_idx]
+        acc = x[params.s_idx.Acc + upd_s_idx]
         delta = x[params.s_idx.Delta + upd_s_idx]  # from steering.
 
         dx[params.s_idx.X + upd_s_idx] = vx * cos(theta)
         dx[params.s_idx.Y + upd_s_idx] = vx * sin(theta)
         dx[params.s_idx.Theta + upd_s_idx] = vx * tan(delta) / lc
-        dx[params.s_idx.Vx + upd_s_idx] = Acc
+        dx[params.s_idx.Vx + upd_s_idx] = acc
         dx[params.s_idx.Acc + upd_s_idx] = dAcc
         dx[params.s_idx.Delta + upd_s_idx] = dDelta
         dx[params.s_idx.S + upd_s_idx] = dS

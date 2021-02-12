@@ -109,6 +109,7 @@ def sim_car_model(
                 x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track3.spline.as_np_array())
                 dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track3.spline.as_np_array())
                 theta_pos[k] = atan2(dy[k], dx[k])
+                y_pos[k] = y_pos[k] + 1.75
             elif k == 3:
                 x_pos[k], y_pos[k] = casadiDynamicBSPLINE(init_progress, track4.spline.as_np_array())
                 dx[k], dy[k] = casadiDynamicBSPLINEforward(init_progress, track4.spline.as_np_array())
@@ -129,7 +130,7 @@ def sim_car_model(
         xinit[x_idx.X + upd_s_idx] = x_pos[k]
         xinit[x_idx.Y + upd_s_idx] = y_pos[k]
         xinit[x_idx.Theta + upd_s_idx] = theta_pos[k]
-        xinit[x_idx.Vx + upd_s_idx] = 7
+        xinit[x_idx.Vx + upd_s_idx] = 0
 
         # totally arbitrary
         xinit[x_idx.Delta + upd_s_idx] = 0  # totally arbitrary
@@ -170,7 +171,7 @@ def sim_car_model(
                     next_point = track5.spline.get_control_point(spline_start_idx[jj].astype(int) + i)
                     next_spline_points[i + jj * params.n_bspline_points, :, k] = next_point
             # Limit acceleration
-            x[x_idx.Acc + upd_s_idx, k] = min(1.99, x[x_idx.Acc + upd_s_idx, k])
+            x[x_idx.Acc + upd_s_idx, k] = min(2, x[x_idx.Acc + upd_s_idx, k])
 
         # Set initial state
         problem["xinit"] = x[:, k]

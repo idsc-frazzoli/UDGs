@@ -34,7 +34,7 @@ Pair = Tuple[float, float]
 @dataclass(frozen=True)
 class InputConstraints:
     dS: Pair = (-1, 5)
-    dAcc: Pair = (-10, 10)
+    dAcc: Pair = (-2, 2)
 
 
 input_constraints = InputConstraints()
@@ -67,7 +67,7 @@ class StateConstraints:
     Acc: Pair = (-10, 2)
     Vx: Pair = (0, 20)
     Delta: Pair = (-pi / 3, pi / 3)
-    S: Pair = (0, 10)
+    S: Pair = (0, 13)
 
 
 state_constraints = StateConstraints()
