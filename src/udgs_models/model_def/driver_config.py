@@ -65,11 +65,11 @@ _cautious = DriverConfig(
     pspeedcostM=4,
     plag=1,
     plat=1,
-    pLeftLane=6,
-    pab=0.0006,
+    pLeftLane=2,
+    pab=0.006,
     pdotbeta=2,
-    pslack=10000,
-    distance=3.3,
+    pslack=1000000,
+    distance=4,
     carLength=2.5,
 )
 cautious_spec = BehaviorSpec(desc="Config1", config=_cautious)
