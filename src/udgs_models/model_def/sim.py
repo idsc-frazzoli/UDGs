@@ -138,8 +138,8 @@ def sim_car_model(
 
     x[:, 0] = xinit
     problem = {}
-    EE = np.tile(np.append(np.zeros(n_inputs * num_cars), xinit), model.N)
-    problem["x0"] = EE
+    initialization = np.tile(np.append(np.zeros(n_inputs * num_cars), xinit), model.N)
+    problem["x0"] = initialization
     spline_start_idx = np.zeros(num_cars)
     for k in range(sim_length):
 

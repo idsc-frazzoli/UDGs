@@ -54,13 +54,13 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
         model.hl = np.append(model.hl, np.array(-np.inf))  # lower bound for nonlinear constraints
 
     # Terminal State Constraints
-    # model.nhN = 3 * num_cars + coll_constraints  # Number of inequality constraints
-    # model.ineqN = nlconst_carN[num_cars]
-    # model.huN = []
-    # model.hlN = []
-    # for k in range(model.nhN):
-    #     model.huN = np.append(model.huN, np.array(0))  # upper bound for nonlinear constraints
-    #     model.hlN = np.append(model.hlN, np.array(-np.inf))  # lower bound for nonlinear constraints
+    model.nhN = 3 * num_cars + coll_constraints  # Number of inequality constraints
+    model.ineqN = nlconst_carN[num_cars]
+    model.huN = []
+    model.hlN = []
+    for k in range(model.nhN):
+        model.huN = np.append(model.huN, np.array(0))  # upper bound for nonlinear constraints
+        model.hlN = np.append(model.hlN, np.array(-np.inf))  # lower bound for nonlinear constraints
 
     for i in range(params.N):
         model.objective[i] = objective_car[num_cars]
