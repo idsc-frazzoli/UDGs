@@ -24,17 +24,23 @@ def _parse_args():
     )
     p.add_argument(
         "--num_cars",
-        default=2,
+        default=3,
         help="todo",
+        type=int,
+    )
+    p.add_argument(
+        "--condition",
+        default=0,
+        help="0: PG, 1:LexiPG, 2:IBR, 3:LexiIBR",
         type=int,
     )
     return p.parse_args()
 
 
-def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: bool = False, num_cars: int = 3):
+def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: bool = False, num_cars: int = 3, condition: int = 0):
     if mpc_model == "human-constraints":
-        model, solver = generate_car_model(generate_solver, to_deploy, num_cars)
-        sim_data = sim_car_model(model, solver, num_cars, sim_length=50, track=straightLineL2R, track2=straightLineN2S,
+        model, solver = generate_car_model(generate_solver, to_deploy, num_cars, condition)
+        sim_data = sim_car_model(model, solver, num_cars, condition, sim_length=50, track=straightLineL2R, track2=straightLineN2S,
                                  track3=straightLineR2L)
         make_report(sim_data, num_cars)
     else:
@@ -43,4 +49,4 @@ def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: boo
 
 if __name__ == "__main__":
     args = _parse_args()
-    _generate_model(args.mpc_model, args.generate_solver, args.to_deploy)
+    _generate_model(args.mpc_model, args.generate_solver, args.to_deploy, args.num_cars, args.condition)

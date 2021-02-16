@@ -52,7 +52,7 @@ class SimData:
 """
 
 def sim_car_model(
-        model, solver, num_cars, sim_length: int = 200, seed: int = 1, track: Track = straightLineR2L,
+        model, solver, num_cars, condition, sim_length: int = 200, seed: int = 1, track: Track = straightLineR2L,
         track2: Track = straightLineN2S, track3: Track = straightLineR2L, track4: Track = straightLineR2L,
         track5: Track = straightLineR2L) -> SimData:
     """

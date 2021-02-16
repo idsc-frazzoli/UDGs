@@ -65,18 +65,86 @@ _cautious = DriverConfig(
     pspeedcostM=4,
     plag=1,
     plat=1,
-    pLeftLane=2,
-    pab=0.006,
+    pLeftLane=6,
+    pab=0.0006,
     pdotbeta=2,
-    pslack=1000000,
-    distance=4,
+    pslack=10000,
+    distance=3.3,
     carLength=2.5,
 )
 cautious_spec = BehaviorSpec(desc="Config1", config=_cautious)
 
+_initializationConfig = DriverConfig(
+    maxspeed=9,
+    targetspeed=8.3,
+    optcost1=0,
+    optcost2=0,
+    Xobstacle=0,
+    Yobstacle=0,
+    targetprog=7,
+    pspeedcostA=2,
+    pspeedcostB=0.1,
+    pspeedcostM=4,
+    plag=1,
+    plat=1,
+    pLeftLane=2,
+    pab=0.006,
+    pdotbeta=2,
+    pslack=1000000,
+    distance=0,
+    carLength=2.5,
+)
+initialization_spec = BehaviorSpec(desc="initConfig", config=_initializationConfig)
+
+_firstOptim = DriverConfig(
+    maxspeed=9,
+    targetspeed=8.3,
+    optcost1=0,
+    optcost2=0,
+    Xobstacle=0,
+    Yobstacle=0,
+    targetprog=7,
+    pspeedcostA=0,
+    pspeedcostB=0,
+    pspeedcostM=0,
+    plag=1,
+    plat=0,
+    pLeftLane=0,
+    pab=0,
+    pdotbeta=0,
+    pslack=1000000,
+    distance=4,
+    carLength=2.5,
+)
+firstOptim_spec = BehaviorSpec(desc="firstOptim", config=_firstOptim)
+
+_secondOptim = DriverConfig(
+    maxspeed=9,
+    targetspeed=8.3,
+    optcost1=0,
+    optcost2=0,
+    Xobstacle=0,
+    Yobstacle=0,
+    targetprog=7,
+    pspeedcostA=0,
+    pspeedcostB=0,
+    pspeedcostM=4,
+    plag=1,
+    plat=0,
+    pLeftLane=6,
+    pab=0,
+    pdotbeta=0,
+    pslack=1000000,
+    distance=4,
+    carLength=2.5,
+)
+secondOptim_spec = BehaviorSpec(desc="secondOptim", config=_secondOptim)
+
 behaviors_zoo: Mapping[str, BehaviorSpec] = frozendict(
     {
         "Config1": cautious_spec,
-
+        "initConfig": initialization_spec,
+        "firstOptim": firstOptim_spec,
+        "secondOptim": secondOptim_spec,
     }
 )
