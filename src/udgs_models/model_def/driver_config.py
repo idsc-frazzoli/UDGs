@@ -121,8 +121,8 @@ firstOptim_spec = BehaviorSpec(desc="firstOptim", config=_firstOptim)
 _secondOptim = DriverConfig(
     maxspeed=9,
     targetspeed=8.3,
-    optcost1=0,
-    optcost2=0,
+    optcost1=100000,
+    optcost2=100000,
     Xobstacle=50,
     Yobstacle=37,
     targetprog=7,
