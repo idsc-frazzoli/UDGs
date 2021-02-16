@@ -12,6 +12,7 @@ from tracks import Track
 from tracks.utils import spline_progress_from_pose
 
 from tracks.zoo import winti_001, straightLineR2L, straightLineN2S
+from udgs_models.model_def.sim_lexicographic import sim_lexicographic, round_optimization
 from vehicle import gokart_pool, KITT
 
 
@@ -86,8 +87,13 @@ def sim_car_model(
     x_pred = np.zeros((n_states * num_cars, model.N, sim_length + 1))  # states
     u_pred = np.zeros((n_inputs * num_cars, model.N, sim_length))  # inputs
     next_spline_points = np.zeros((params.n_bspline_points * num_cars, 3, sim_length))
-    solver_it = np.zeros(sim_length)
-    solver_time = np.zeros(sim_length)
+
+    solver_it = np.zeros((sim_length, 1))
+    solver_time = np.zeros((sim_length, 1))
+    solver_cost = np.zeros((sim_length, 1))
+    solver_cost_lexi = np.zeros((sim_length, 3))
+    solver_it_lexi = np.zeros((sim_length, 3))
+    solver_time_lexi = np.zeros((sim_length, 3))
 
     # Set initial condition
     init_from_progress = True
@@ -179,58 +185,41 @@ def sim_car_model(
             # Limit acceleration
             x[x_idx.Acc + upd_s_idx, k] = min(2, x[x_idx.Acc + upd_s_idx, k])
 
+        if condition == 0:  # PG only
+            # Set initial state
+            output, problem, p_vector = round_optimization(model, solver, num_cars, problem, behavior_pg, x, k, 0,
+                                                           next_spline_points, solver_it, solver_time,
+                                                           solver_cost, behavior_pg.optcost1, behavior_pg.optcost2)
+            # Extract output and initialize next iteration with current solution shifted by one stage
+            problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
+            problem["x0"][model.nvar * (model.N - 1): model.nvar * model.N] = output["all_var"][model.nvar * (
+                    model.N - 1):model.nvar * model.N]
+            temp = output["all_var"].reshape(model.nvar, model.N, order='F')
 
-        # Set initial state
-        problem["xinit"] = x[:, k]
-        # Set runtime parameters (the only really changing between stages are the next control points of the spline)
-        p_vector = set_p_car(
-            SpeedLimit=behavior_pg.maxspeed,
-            TargetSpeed=behavior_pg.targetspeed,
-            OptCost1=behavior_pg.optcost1,
-            OptCost2=behavior_pg.optcost2,
-            Xobstacle=behavior_pg.Xobstacle,
-            Yobstacle=behavior_pg.Yobstacle,
-            TargetProg=behavior_pg.targetprog,
-            kAboveTargetSpeedCost=behavior_pg.pspeedcostA,
-            kBelowTargetSpeedCost=behavior_pg.pspeedcostB,
-            kAboveSpeedLimit=behavior_pg.pspeedcostM,
-            kLag=behavior_pg.plag,
-            kLat=behavior_pg.plat,
-            pLeftLane=behavior_pg.pLeftLane,
-            kReg_dAb=behavior_pg.pab,
-            kReg_dDelta=behavior_pg.pdotbeta,
-            carLength=behavior_pg.carLength,
-            minSafetyDistance=behavior_pg.distance,
-            kSlack=behavior_pg.pslack,
-            points=next_spline_points[:, :, k],
-            num_cars=num_cars
-        )  # fixme check order here
-        problem["all_parameters"] = np.tile(p_vector, (model.N,))
+            u_pred[:, :, k] = temp[0:n_inputs * num_cars, :]  # predicted inputs
+            x_pred[:, :, k] = temp[n_inputs * num_cars: params.n_var * num_cars, :]  # predicted states
 
-        # Time to solve the NLP!
-        output, exitflag, info = solver.solve(problem)
-        # Make sure the solver has exited properly.
-        if exitflag < 0:
-            print(f"At simulation step {k}")
-            raise ForcesException(exitflag)
-        else:
-            solver_it[k] = info.it
-            solver_time[k] = info.solvetime
+            # Apply optimized input u of first stage to system and save simulation data
+            u[:, k] = u_pred[:, 0, k]
+            z = np.concatenate((u[:, k], x[:, k]))
 
-        # Extract output and initialize next iteration with current solution shifted by one stage
-        problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
-        problem["x0"][model.nvar * (model.N - 1): model.nvar * model.N] = output["all_var"][model.nvar * (
-                model.N - 1):model.nvar * model.N]
-        temp = output["all_var"].reshape(model.nvar, model.N, order='F')
-        u_pred[:, :, k] = temp[0:n_inputs * num_cars, :]  # predicted inputs
-        x_pred[:, :, k] = temp[n_inputs * num_cars: params.n_var * num_cars, :]  # predicted states
+            # "simulate" state evolution
+            x[:, k + 1] = np.transpose(model.eq(z, p_vector))
 
-        # Apply optimized input u of first stage to system and save simulation data
-        u[:, k] = u_pred[:, 0, k]
-        z = np.concatenate((u[:, k], x[:, k]))
+        elif condition == 1:  # PG lexicographic
+            temp, problem, p_vector = sim_lexicographic(model, solver, num_cars, problem, behavior_init, behavior_first,
+                                                        behavior_second, behavior_third, x, k, next_spline_points,
+                                                        solver_it_lexi, solver_time_lexi, solver_cost_lexi)
 
-        # "simulate" state evolution
-        x[:, k + 1] = np.transpose(model.eq(z, p_vector))
+            u_pred[:, :, k] = temp[0:n_inputs * num_cars, :]  # predicted inputs
+            x_pred[:, :, k] = temp[n_inputs * num_cars: params.n_var * num_cars, :]  # predicted states
+
+            # Apply optimized input u of first stage to system and save simulation data
+            u[:, k] = u_pred[:, 0, k]
+            z = np.concatenate((u[:, k], x[:, k]))
+
+            # "simulate" state evolution
+            x[:, k + 1] = np.transpose(model.eq(z, p_vector))
 
     return SimData(
         x=x,

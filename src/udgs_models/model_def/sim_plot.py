@@ -138,7 +138,7 @@ def get_solver_stats(solver_it, solver_time) -> Figure:
     fig.add_trace(
         go.Scatter(
             x=sim_steps,
-            y=solver_it,
+            y=solver_it[:, -1],
             line=dict(color=it_color, width=1, dash="dot"),
             mode="lines+markers",
             name="Solver iterations",
@@ -153,7 +153,7 @@ def get_solver_stats(solver_it, solver_time) -> Figure:
     fig.add_trace(
         go.Scatter(
             x=sim_steps,
-            y=solver_time,
+            y=solver_time[:, -1],
             line=dict(color=time_color, width=1, dash="dot"),
             mode="lines+markers",
             name="Solver time",

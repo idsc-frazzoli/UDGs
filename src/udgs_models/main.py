@@ -37,10 +37,14 @@ def _parse_args():
     return p.parse_args()
 
 
-def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: bool = False, num_cars: int = 3, condition: int = 0):
+def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: bool = False, num_cars: int = 3,
+                    condition: int = 0):
     if mpc_model == "human-constraints":
         model, solver = generate_car_model(generate_solver, to_deploy, num_cars, condition)
-        sim_data = sim_car_model(model, solver, num_cars, condition, sim_length=50, track=straightLineL2R, track2=straightLineN2S,
+        sim_data = sim_car_model(model, solver, num_cars, condition,
+                                 sim_length=20,
+                                 track=straightLineL2R,
+                                 track2=straightLineN2S,
                                  track3=straightLineR2L)
         make_report(sim_data, num_cars)
     else:

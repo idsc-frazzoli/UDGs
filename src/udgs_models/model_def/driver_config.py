@@ -72,25 +72,25 @@ _cautious = DriverConfig(
     distance=3,
     carLength=2.5,
 )
-cautious_spec = BehaviorSpec(desc="Config1", config=_cautious)
+cautious_spec = BehaviorSpec(desc="PG", config=_cautious)
 
 _initializationConfig = DriverConfig(
     maxspeed=9,
     targetspeed=8.3,
-    optcost1=10000000,
-    optcost2=10000000,
+    optcost1=100000,
+    optcost2=100000,
     Xobstacle=50,
     Yobstacle=37,
     targetprog=7,
     pspeedcostA=2,
-    pspeedcostB=0.1,
+    pspeedcostB=0.5,
     pspeedcostM=4,
     plag=1,
     plat=1,
     pLeftLane=1,
-    pab=0.006,
+    pab=0.0006,
     pdotbeta=2,
-    pslack=1000000,
+    pslack=10000,
     distance=0,
     carLength=2.5,
 )
@@ -121,8 +121,8 @@ firstOptim_spec = BehaviorSpec(desc="firstOptim", config=_firstOptim)
 _secondOptim = DriverConfig(
     maxspeed=9,
     targetspeed=8.3,
-    optcost1=100000000,  # collision
-    optcost2=100000000,  # rules
+    optcost1=100000,  # collision
+    optcost2=100000,  # rules
     Xobstacle=50,
     Yobstacle=37,
     targetprog=7,
@@ -131,10 +131,10 @@ _secondOptim = DriverConfig(
     pspeedcostM=4,
     plag=1,
     plat=0,
-    pLeftLane=6,
+    pLeftLane=1,
     pab=0,
     pdotbeta=0,
-    pslack=0,
+    pslack=1000000,
     distance=3,
     carLength=2.5,
 )
@@ -144,20 +144,20 @@ secondOptim_spec = BehaviorSpec(desc="secondOptim", config=_secondOptim)
 _thirdOptim = DriverConfig(
     maxspeed=9,
     targetspeed=8.3,
-    optcost1=10000000,
-    optcost2=10000000,
+    optcost1=100000,
+    optcost2=100000,
     Xobstacle=50,
     Yobstacle=37,
     targetprog=7,
     pspeedcostA=2,
     pspeedcostB=0.1,
-    pspeedcostM=0,
+    pspeedcostM=4,
     plag=1,
     plat=1,
-    pLeftLane=0,
+    pLeftLane=1,
     pab=0.006,
     pdotbeta=2,
-    pslack=0,
+    pslack=1000000,
     distance=3,
     carLength=2.5,
 )
