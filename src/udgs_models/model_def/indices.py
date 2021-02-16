@@ -112,6 +112,7 @@ var_descriptions = {  # todo check units
     IdxInput.dS: VarDesc('Progress derivative', '-'),
     IdxInput.Slack_Lat: VarDesc('SlackLat', '-'),
     IdxInput.Slack_Coll: VarDesc('SlackColl', '-'),
+    IdxInput.Slack_Obs: VarDesc('SlackObs', '-'),
     IdxState.X: VarDesc('x-position', 'm'),
     IdxState.Y: VarDesc('y-position', 'm'),
     IdxState.Theta: VarDesc('Orientation', 'rad'),

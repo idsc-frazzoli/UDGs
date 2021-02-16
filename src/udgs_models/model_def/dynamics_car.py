@@ -58,6 +58,7 @@ def _dynamics_car(x, u, p, n):
         dS = u[params.i_idx.dS + upd_i_idx]
         slack = u[params.i_idx.Slack_Lat + upd_i_idx]
         slack_coll = u[params.i_idx.Slack_Coll + upd_i_idx]
+        slack_obs = u[params.i_idx.Slack_Obs + upd_i_idx]
 
         theta = x[params.s_idx.Theta + upd_s_idx]
         vx = x[params.s_idx.Vx + upd_s_idx]
@@ -71,7 +72,7 @@ def _dynamics_car(x, u, p, n):
         dx[params.s_idx.Acc + upd_s_idx] = dAcc
         dx[params.s_idx.Delta + upd_s_idx] = dDelta
         dx[params.s_idx.S + upd_s_idx] = dS
-        dx[params.s_idx.CumSlackCost + upd_s_idx] = lagcost + kSlack * slack + kSlack * slack_coll
+        dx[params.s_idx.CumSlackCost + upd_s_idx] = lagcost + kSlack * slack + kSlack * slack_coll + kSlack * slack_obs
         dx[params.s_idx.CumLatSpeedCost + upd_s_idx] = lagcost + speedcostM + leftLaneCost
 
     return dx

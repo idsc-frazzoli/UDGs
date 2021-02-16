@@ -86,7 +86,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, co
         # slack limit
         model.lb[params.i_idx.Slack_Lat + upd_i_idx] = 0
         model.lb[params.i_idx.Slack_Coll + upd_i_idx] = 0
-
+        model.lb[params.i_idx.Slack_Obs + upd_i_idx] = 0
         # Forward force lower bound
         model.lb[params.s_idx.Acc + upd_s_idx] = state_constraints.Acc[0]
         model.ub[params.s_idx.Acc + upd_s_idx] = state_constraints.Acc[1]
