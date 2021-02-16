@@ -146,7 +146,7 @@ def get_solver_stats(solver_it, solver_time) -> Figure:
         row=1,
         col=1,
     )
-    fig.add_trace(go.Histogram(y=solver_it, marker_color=it_color, opacity=0.75), row=1, col=2)
+    fig.add_trace(go.Histogram(y=solver_it[:, -1], marker_color=it_color, opacity=0.75), row=1, col=2)
 
     # stats about solving time
     time_color = "blueviolet"
@@ -161,7 +161,7 @@ def get_solver_stats(solver_it, solver_time) -> Figure:
         row=2,
         col=1,
     )
-    fig.add_trace(go.Histogram(y=solver_time, marker_color=time_color, opacity=0.75), row=2, col=2)
+    fig.add_trace(go.Histogram(y=solver_time[:, -1], marker_color=time_color, opacity=0.75), row=2, col=2)
     print(f"Average solving time: {np.average(solver_time):.4f}")
     # general layout
     fig.update_layout(title_text="Solver stats")

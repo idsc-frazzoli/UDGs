@@ -30,7 +30,7 @@ def _parse_args():
     )
     p.add_argument(
         "--condition",
-        default=0,
+        default=1,
         help="0: PG, 1:LexiPG, 2:IBR, 3:LexiIBR",
         type=int,
     )
@@ -42,7 +42,7 @@ def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: boo
     if mpc_model == "human-constraints":
         model, solver = generate_car_model(generate_solver, to_deploy, num_cars, condition)
         sim_data = sim_car_model(model, solver, num_cars, condition,
-                                 sim_length=20,
+                                 sim_length=40,
                                  track=straightLineL2R,
                                  track2=straightLineN2S,
                                  track3=straightLineR2L)

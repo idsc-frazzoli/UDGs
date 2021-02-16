@@ -1,6 +1,7 @@
 from udgs_models.forces_utils import ForcesException
 import numpy as np
 
+from udgs_models.model_def import params
 from udgs_models.model_def.car_util import set_p_car
 
 
@@ -65,19 +66,35 @@ def sim_lexicographic(model, solver, num_cars, problem, behavior_init, behavior_
                                                            solver_time_lexi, solver_cost_lexi,
                                                            behavior_first.optcost1, behavior_first.optcost2)
             problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
+            temp = output["all_var"].reshape(model.nvar, model.N, order='F')
+            row, col = temp.shape
+            slackcost = 0
+            for zz in range(num_cars):
+                upd_s_idx = zz * params.n_states + (num_cars - 1) * params.n_inputs
+                slackcost = slackcost + temp[params.s_idx.CumSlackCost + upd_s_idx, col-1]
+
         elif jj == 1:
             output, problem, p_vector = round_optimization(model, solver, num_cars, problem, behavior_second, x,
                                                            k, jj, next_spline_points, solver_it_lexi,
                                                            solver_time_lexi, solver_cost_lexi,
-                                                           solver_cost_lexi[k, jj-1] + 10,
+                                                           slackcost + 0.03 * slackcost,
                                                            behavior_second.optcost2)
             problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
+            temp = output["all_var"].reshape(model.nvar, model.N, order='F')
+            row, col = temp.shape
+            cumlatcost = 0
+            for zz in range(num_cars):
+                upd_s_idx = zz * params.n_states + (num_cars - 1) * params.n_inputs
+                cumlatcost = cumlatcost + temp[params.s_idx.CumLatSpeedCost + upd_s_idx, col - 1]
+            slackcost = 0
+            for zz in range(num_cars):
+                upd_s_idx = zz * params.n_states + (num_cars - 1) * params.n_inputs
+                slackcost = slackcost + temp[params.s_idx.CumSlackCost + upd_s_idx, col - 1]
         else:
             output, problem, p_vector = round_optimization(model, solver, num_cars, problem, behavior_third, x,
                                                            k, jj, next_spline_points, solver_it_lexi,
                                                            solver_time_lexi, solver_cost_lexi,
-                                                           solver_cost_lexi[k, jj-2] + 10,
-                                                           solver_cost_lexi[k, jj-1] + 20)
+                                                           slackcost + 0.1, cumlatcost + 1)
 
     # Extract output and initialize next iteration with current solution shifted by one stage
     problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
@@ -85,5 +102,9 @@ def sim_lexicographic(model, solver, num_cars, problem, behavior_init, behavior_
                   model.N - 1):model.nvar * model.N]
 
     temp = output["all_var"].reshape(model.nvar, model.N, order='F')
-
+    # row, col = temp.shape
+    # cumlatcost1 = 0
+    # for zz in range(num_cars):
+    #     upd_s_idx = zz * params.n_states + (num_cars - 1) * params.n_inputs
+    #     cumlatcost1 = cumlatcost1 + temp[params.s_idx.CumLatSpeedCost + upd_s_idx, col - 1]
     return temp, problem, p_vector

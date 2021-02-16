@@ -30,6 +30,7 @@ class SimData:
     track5: Track
     solver_it: np.ndarray
     solver_time: np.ndarray
+    solver_cost: np.ndarray
 """
 PlayerId = int
 @dataclass(frozen=True)
@@ -88,13 +89,14 @@ def sim_car_model(
     u_pred = np.zeros((n_inputs * num_cars, model.N, sim_length))  # inputs
     next_spline_points = np.zeros((params.n_bspline_points * num_cars, 3, sim_length))
 
-    solver_it = np.zeros((sim_length, 1))
-    solver_time = np.zeros((sim_length, 1))
-    solver_cost = np.zeros((sim_length, 1))
-    solver_cost_lexi = np.zeros((sim_length, 3))
-    solver_it_lexi = np.zeros((sim_length, 3))
-    solver_time_lexi = np.zeros((sim_length, 3))
-
+    if condition == 0:
+        solver_it = np.zeros((sim_length, 1))
+        solver_time = np.zeros((sim_length, 1))
+        solver_cost = np.zeros((sim_length, 1))
+    else:
+        solver_it = np.zeros((sim_length, 3))
+        solver_time = np.zeros((sim_length, 3))
+        solver_cost = np.zeros((sim_length, 3))
     # Set initial condition
     init_from_progress = True
     spline_start_idx = 0
@@ -209,7 +211,7 @@ def sim_car_model(
         elif condition == 1:  # PG lexicographic
             temp, problem, p_vector = sim_lexicographic(model, solver, num_cars, problem, behavior_init, behavior_first,
                                                         behavior_second, behavior_third, x, k, next_spline_points,
-                                                        solver_it_lexi, solver_time_lexi, solver_cost_lexi)
+                                                        solver_it, solver_time, solver_cost)
 
             u_pred[:, :, k] = temp[0:n_inputs * num_cars, :]  # predicted inputs
             x_pred[:, :, k] = temp[n_inputs * num_cars: params.n_var * num_cars, :]  # predicted states
@@ -234,4 +236,5 @@ def sim_car_model(
         track5=track5,
         solver_it=solver_it,
         solver_time=solver_time,
+        solver_cost=solver_cost,
     )
