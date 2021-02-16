@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Mapping
-
+import numpy as np
 from frozendict import frozendict
 
 __all__ = ["DriverConfig", "BehaviorSpec", "behaviors_zoo"]
@@ -55,8 +55,8 @@ class BehaviorSpec:
 _cautious = DriverConfig(
     maxspeed=9,
     targetspeed=8.3,
-    optcost1=0,
-    optcost2=0,
+    optcost1=100000,
+    optcost2=100000,
     Xobstacle=50,
     Yobstacle=37,
     targetprog=7,
@@ -69,7 +69,7 @@ _cautious = DriverConfig(
     pab=0.0006,
     pdotbeta=2,
     pslack=10000,
-    distance=3.3,
+    distance=3,
     carLength=2.5,
 )
 cautious_spec = BehaviorSpec(desc="Config1", config=_cautious)
@@ -79,19 +79,19 @@ _initializationConfig = DriverConfig(
     targetspeed=8.3,
     optcost1=0,
     optcost2=0,
-    Xobstacle=0,
-    Yobstacle=0,
+    Xobstacle=50,
+    Yobstacle=37,
     targetprog=7,
     pspeedcostA=2,
     pspeedcostB=0.1,
     pspeedcostM=4,
     plag=1,
     plat=1,
-    pLeftLane=2,
+    pLeftLane=1,
     pab=0.006,
     pdotbeta=2,
     pslack=1000000,
-    distance=0,
+    distance=3,
     carLength=2.5,
 )
 initialization_spec = BehaviorSpec(desc="initConfig", config=_initializationConfig)
@@ -101,8 +101,8 @@ _firstOptim = DriverConfig(
     targetspeed=8.3,
     optcost1=0,
     optcost2=0,
-    Xobstacle=0,
-    Yobstacle=0,
+    Xobstacle=50,
+    Yobstacle=37,
     targetprog=7,
     pspeedcostA=0,
     pspeedcostB=0,
@@ -113,7 +113,7 @@ _firstOptim = DriverConfig(
     pab=0,
     pdotbeta=0,
     pslack=1000000,
-    distance=4,
+    distance=3,
     carLength=2.5,
 )
 firstOptim_spec = BehaviorSpec(desc="firstOptim", config=_firstOptim)
@@ -123,8 +123,8 @@ _secondOptim = DriverConfig(
     targetspeed=8.3,
     optcost1=0,
     optcost2=0,
-    Xobstacle=0,
-    Yobstacle=0,
+    Xobstacle=50,
+    Yobstacle=37,
     targetprog=7,
     pspeedcostA=0,
     pspeedcostB=0,
@@ -135,7 +135,7 @@ _secondOptim = DriverConfig(
     pab=0,
     pdotbeta=0,
     pslack=1000000,
-    distance=4,
+    distance=3,
     carLength=2.5,
 )
 secondOptim_spec = BehaviorSpec(desc="secondOptim", config=_secondOptim)

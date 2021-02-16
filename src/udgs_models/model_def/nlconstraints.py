@@ -130,10 +130,10 @@ def _nlconst_carN(z, p, n):
         totslackcost = totslackcost + z[params.s_idx.CumSlackCost + upd_s_idx]
         totlatcost = totlatcost + z[params.s_idx.CumLatSpeedCost + upd_s_idx]
 
-    # v4 = totslackcost - p[params.p_idx.pSlackCost]
-    # v5 = totlatcost - p[params.p_idx.pLaterrorCost]
-    # v = np.append(v, np.array([v4]))
-    # v = np.append(v, np.array([v5]))
+    v4 = totslackcost - p[params.p_idx.OptCost1]
+    v5 = totlatcost - p[params.p_idx.OptCost2]
+    v = np.append(v, np.array([v4]))
+    v = np.append(v, np.array([v5]))
 
     if n == 2:
         upd_s_idx1 = params.n_inputs
@@ -166,6 +166,8 @@ def _nlconst_carN(z, p, n):
         v7 = -sqrt(distance_x ** 2 + distance_y ** 2) + minSafetyDistance - slack_obs
         v = np.append(v, np.array([v7]))
     return v
+
+
 nlconst_carN = []
 for i in range(5):
     nlconst_carN.append(partial(_nlconst_carN, n=i))

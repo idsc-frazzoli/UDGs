@@ -54,7 +54,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, co
         model.hl = np.append(model.hl, np.array(-np.inf))  # lower bound for nonlinear constraints
 
     # Terminal State Constraints
-    model.nhN = 3 * num_cars + coll_constraints + obs_constraints  # Number of inequality constraints
+    model.nhN = 3 * num_cars + coll_constraints + obs_constraints + 2  # Number of inequality constraints
     model.ineqN = nlconst_carN[num_cars]
     model.huN = []
     model.hlN = []
