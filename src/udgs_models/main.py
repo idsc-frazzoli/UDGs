@@ -4,7 +4,7 @@ import forcespro
 from udgs_models.model_def.sim import sim_car_model
 from udgs_models.model_def.sim_report import make_report
 from model_def.generate_model import generate_car_model
-from tracks import straightLineR2L, winti_002, straightLineN2S, straightLineL2R
+from tracks import straightLineR2L, straightLineN2S, straightLineL2R
 
 
 def _parse_args():
@@ -12,7 +12,7 @@ def _parse_args():
     p.add_argument("--mpc_model", default="human-constraints", help="todo", type=str)
     p.add_argument(
         "--generate_solver",
-        default=False,
+        default=True,
         help="If set to false does not regenerate the solver but it looks for an existing one",
         type=bool,
     )

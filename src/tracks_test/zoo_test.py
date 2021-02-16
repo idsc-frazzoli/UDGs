@@ -1,4 +1,4 @@
-from tracks import straightLineR2L, winti_002
+from tracks import straightLineR2L
 from PIL import Image
 from numpy import asarray
 import numpy as np

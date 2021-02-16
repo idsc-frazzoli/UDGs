@@ -29,6 +29,9 @@ class IdxInput(IntEnum):
     Slack_Coll = 4
     """TODO"""
     Slack_Obs = 5
+    """TODO"""
+
+
 Pair = Tuple[float, float]
 
 
