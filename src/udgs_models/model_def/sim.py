@@ -70,7 +70,7 @@ def sim_car_model(
     """
     # Load some parameters
 
-    behavior = behaviors_zoo["Config1"].config
+    behavior = behaviors_zoo["firstOptim"].config
     n_states = params.n_states
     n_inputs = params.n_inputs
     x_idx = params.s_idx

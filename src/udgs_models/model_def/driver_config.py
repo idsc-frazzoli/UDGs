@@ -77,8 +77,8 @@ cautious_spec = BehaviorSpec(desc="Config1", config=_cautious)
 _initializationConfig = DriverConfig(
     maxspeed=9,
     targetspeed=8.3,
-    optcost1=0,
-    optcost2=0,
+    optcost1=10000000,
+    optcost2=10000000,
     Xobstacle=50,
     Yobstacle=37,
     targetprog=7,
@@ -91,7 +91,7 @@ _initializationConfig = DriverConfig(
     pab=0.006,
     pdotbeta=2,
     pslack=1000000,
-    distance=3,
+    distance=0,
     carLength=2.5,
 )
 initialization_spec = BehaviorSpec(desc="initConfig", config=_initializationConfig)
@@ -99,8 +99,8 @@ initialization_spec = BehaviorSpec(desc="initConfig", config=_initializationConf
 _firstOptim = DriverConfig(
     maxspeed=9,
     targetspeed=8.3,
-    optcost1=0,
-    optcost2=0,
+    optcost1=100000,
+    optcost2=100000,
     Xobstacle=50,
     Yobstacle=37,
     targetprog=7,
