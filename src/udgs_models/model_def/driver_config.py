@@ -121,8 +121,8 @@ firstOptim_spec = BehaviorSpec(desc="firstOptim", config=_firstOptim)
 _secondOptim = DriverConfig(
     maxspeed=9,
     targetspeed=8.3,
-    optcost1=100000,
-    optcost2=100000,
+    optcost1=100000000,  # collision
+    optcost2=100000000,  # rules
     Xobstacle=50,
     Yobstacle=37,
     targetprog=7,
@@ -134,17 +134,41 @@ _secondOptim = DriverConfig(
     pLeftLane=6,
     pab=0,
     pdotbeta=0,
-    pslack=1000000,
+    pslack=0,
     distance=3,
     carLength=2.5,
 )
 secondOptim_spec = BehaviorSpec(desc="secondOptim", config=_secondOptim)
 
+
+_thirdOptim = DriverConfig(
+    maxspeed=9,
+    targetspeed=8.3,
+    optcost1=10000000,
+    optcost2=10000000,
+    Xobstacle=50,
+    Yobstacle=37,
+    targetprog=7,
+    pspeedcostA=2,
+    pspeedcostB=0.1,
+    pspeedcostM=0,
+    plag=1,
+    plat=1,
+    pLeftLane=0,
+    pab=0.006,
+    pdotbeta=2,
+    pslack=0,
+    distance=3,
+    carLength=2.5,
+)
+thirdOptim_spec = BehaviorSpec(desc="thirdOptim", config=_thirdOptim)
+
 behaviors_zoo: Mapping[str, BehaviorSpec] = frozendict(
     {
-        "Config1": cautious_spec,
+        "PG": cautious_spec,
         "initConfig": initialization_spec,
         "firstOptim": firstOptim_spec,
         "secondOptim": secondOptim_spec,
+        "thirdOptim": thirdOptim_spec,
     }
 )

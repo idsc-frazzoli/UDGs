@@ -70,7 +70,12 @@ def sim_car_model(
     """
     # Load some parameters
 
-    behavior = behaviors_zoo["firstOptim"].config
+    behavior_init = behaviors_zoo["initConfig"].config
+    behavior_first = behaviors_zoo["firstOptim"].config
+    behavior_second = behaviors_zoo["secondOptim"].config
+    behavior_third = behaviors_zoo["thirdOptim"].config
+    behavior_pg = behaviors_zoo["PG"].config
+
     n_states = params.n_states
     n_inputs = params.n_inputs
     x_idx = params.s_idx
@@ -174,28 +179,29 @@ def sim_car_model(
             # Limit acceleration
             x[x_idx.Acc + upd_s_idx, k] = min(2, x[x_idx.Acc + upd_s_idx, k])
 
+
         # Set initial state
         problem["xinit"] = x[:, k]
         # Set runtime parameters (the only really changing between stages are the next control points of the spline)
         p_vector = set_p_car(
-            SpeedLimit=behavior.maxspeed,
-            TargetSpeed=behavior.targetspeed,
-            OptCost1=behavior.optcost1,
-            OptCost2=behavior.optcost2,
-            Xobstacle=behavior.Xobstacle,
-            Yobstacle=behavior.Yobstacle,
-            TargetProg=behavior.targetprog,
-            kAboveTargetSpeedCost=behavior.pspeedcostA,
-            kBelowTargetSpeedCost=behavior.pspeedcostB,
-            kAboveSpeedLimit=behavior.pspeedcostM,
-            kLag=behavior.plag,
-            kLat=behavior.plat,
-            pLeftLane=behavior.pLeftLane,
-            kReg_dAb=behavior.pab,
-            kReg_dDelta=behavior.pdotbeta,
-            carLength=behavior.carLength,
-            minSafetyDistance=behavior.distance,
-            kSlack=behavior.pslack,
+            SpeedLimit=behavior_pg.maxspeed,
+            TargetSpeed=behavior_pg.targetspeed,
+            OptCost1=behavior_pg.optcost1,
+            OptCost2=behavior_pg.optcost2,
+            Xobstacle=behavior_pg.Xobstacle,
+            Yobstacle=behavior_pg.Yobstacle,
+            TargetProg=behavior_pg.targetprog,
+            kAboveTargetSpeedCost=behavior_pg.pspeedcostA,
+            kBelowTargetSpeedCost=behavior_pg.pspeedcostB,
+            kAboveSpeedLimit=behavior_pg.pspeedcostM,
+            kLag=behavior_pg.plag,
+            kLat=behavior_pg.plat,
+            pLeftLane=behavior_pg.pLeftLane,
+            kReg_dAb=behavior_pg.pab,
+            kReg_dDelta=behavior_pg.pdotbeta,
+            carLength=behavior_pg.carLength,
+            minSafetyDistance=behavior_pg.distance,
+            kSlack=behavior_pg.pslack,
             points=next_spline_points[:, :, k],
             num_cars=num_cars
         )  # fixme check order here
