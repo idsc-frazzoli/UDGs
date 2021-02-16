@@ -11,7 +11,7 @@ from forcespro import nlp, CodeOptions
 __all__ = ["generate_car_model"]
 
 
-def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
+def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, condition: int):
     """
     This model assumes:
         - a state given by ...
@@ -43,9 +43,9 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
         axis=1)
 
     coll_constraints = int(num_cars * (num_cars - 1) / 2)
-
+    obs_constraints = num_cars
     # inequality constraints
-    model.nh = 2 * num_cars + coll_constraints  # Number of inequality constraints
+    model.nh = 2 * num_cars + coll_constraints + obs_constraints  # Number of inequality constraints
     model.ineq = nlconst_car[num_cars]
     model.hu = []
     model.hl = []
@@ -54,7 +54,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
         model.hl = np.append(model.hl, np.array(-np.inf))  # lower bound for nonlinear constraints
 
     # Terminal State Constraints
-    model.nhN = 3 * num_cars + coll_constraints  # Number of inequality constraints
+    model.nhN = 3 * num_cars + coll_constraints + obs_constraints + 2  # Number of inequality constraints
     model.ineqN = nlconst_carN[num_cars]
     model.huN = []
     model.hlN = []
@@ -86,7 +86,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int):
         # slack limit
         model.lb[params.i_idx.Slack_Lat + upd_i_idx] = 0
         model.lb[params.i_idx.Slack_Coll + upd_i_idx] = 0
-
+        model.lb[params.i_idx.Slack_Obs + upd_i_idx] = 0
         # Forward force lower bound
         model.lb[params.s_idx.Acc + upd_s_idx] = state_constraints.Acc[0]
         model.ub[params.s_idx.Acc + upd_s_idx] = state_constraints.Acc[1]

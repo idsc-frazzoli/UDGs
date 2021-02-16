@@ -27,7 +27,8 @@ class IdxInput(IntEnum):
     Slack_Lat = 3
     """TODO"""
     Slack_Coll = 4
-
+    """TODO"""
+    Slack_Obs = 5
 Pair = Tuple[float, float]
 
 
@@ -42,23 +43,23 @@ input_constraints = InputConstraints()
 
 @unique
 class IdxState(IntEnum):
-    X = 5
+    X = 6
     """x-position in world frame"""
-    Y = 6
+    Y = 7
     """y-position in world frame"""
-    Theta = 7
+    Theta = 8
     """orientation in world frame"""
-    Vx = 8
+    Vx = 9
     """forward velocity in kart frame"""
-    Acc = 9
+    Acc = 10
     """acceleration and braking"""
-    Delta = 10
+    Delta = 11
     """steering angle"""
-    S = 11
+    S = 12
     """path progress in local spline reference system"""
-    CumSlackCost = 12
+    CumSlackCost = 13
     """cumulative slack"""
-    CumLatSpeedCost = 13
+    CumLatSpeedCost = 14
     """cumulative left laterror cost + cost for exceeding speed limit"""
 
 
@@ -111,6 +112,7 @@ var_descriptions = {  # todo check units
     IdxInput.dS: VarDesc('Progress derivative', '-'),
     IdxInput.Slack_Lat: VarDesc('SlackLat', '-'),
     IdxInput.Slack_Coll: VarDesc('SlackColl', '-'),
+    IdxInput.Slack_Obs: VarDesc('SlackObs', '-'),
     IdxState.X: VarDesc('x-position', 'm'),
     IdxState.Y: VarDesc('y-position', 'm'),
     IdxState.Theta: VarDesc('Orientation', 'rad'),

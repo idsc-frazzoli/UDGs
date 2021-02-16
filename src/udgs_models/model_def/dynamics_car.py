@@ -21,7 +21,7 @@ def _dynamics_car(x, u, p, n):
     pLeftLane = p[params.p_idx.pLeftLane]
     lc = p[params.p_idx.carLength]
     kSlack = p[params.p_idx.kSlack]
-
+    kLag = p[params.p_idx.kLag]
     pointsO = params.n_param
     pointsN = params.n_bspline_points
 
@@ -39,7 +39,9 @@ def _dynamics_car(x, u, p, n):
         points = getPointsFromParameters(p, pointsO + k * pointsN * 3, pointsN)
         splx, sply = casadiDynamicBSPLINE(x[params.s_idx.S + upd_s_idx], points)
         splsx, splsy = casadiDynamicBSPLINEsidewards(x[params.s_idx.S + upd_s_idx], points)
+        spldx, spldy = casadiDynamicBSPLINEforward(x[params.s_idx.S + upd_s_idx], points)
 
+        forward = vertcat(spldx, spldy)
         sidewards = vertcat(splsx, splsy)
         realPos = vertcat(x[params.s_idx.X + upd_s_idx], x[params.s_idx.Y + upd_s_idx])
         centerPos = realPos
@@ -48,12 +50,15 @@ def _dynamics_car(x, u, p, n):
         laterror = mtimes(sidewards.T, error)
         speedcostM = speedPunisherA(x[params.s_idx.Vx + upd_s_idx], speed_limit) * kAboveSpeedLimit
         leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
+        lagerror = mtimes(forward.T, error)
+        lagcost = kLag * lagerror ** 2
 
         dAcc = u[params.i_idx.dAcc + upd_i_idx]
         dDelta = u[params.i_idx.dDelta + upd_i_idx]
         dS = u[params.i_idx.dS + upd_i_idx]
         slack = u[params.i_idx.Slack_Lat + upd_i_idx]
         slack_coll = u[params.i_idx.Slack_Coll + upd_i_idx]
+        slack_obs = u[params.i_idx.Slack_Obs + upd_i_idx]
 
         theta = x[params.s_idx.Theta + upd_s_idx]
         vx = x[params.s_idx.Vx + upd_s_idx]
@@ -67,7 +72,7 @@ def _dynamics_car(x, u, p, n):
         dx[params.s_idx.Acc + upd_s_idx] = dAcc
         dx[params.s_idx.Delta + upd_s_idx] = dDelta
         dx[params.s_idx.S + upd_s_idx] = dS
-        dx[params.s_idx.CumSlackCost + upd_s_idx] = kSlack * slack + kSlack * slack_coll
+        dx[params.s_idx.CumSlackCost + upd_s_idx] = kSlack * slack + kSlack * slack_coll + kSlack * slack_obs
         dx[params.s_idx.CumLatSpeedCost + upd_s_idx] = speedcostM + leftLaneCost
 
     return dx

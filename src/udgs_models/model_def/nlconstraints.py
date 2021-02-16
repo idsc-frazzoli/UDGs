@@ -68,8 +68,16 @@ def _nlconst_car(z, p, n):
                 slack_coll = z[params.i_idx.Slack_Coll + upd_i_idx]
                 v4 = -sqrt(distance_x ** 2 + distance_y ** 2) + minSafetyDistance - slack_coll
                 v = np.append(v, np.array([v4]))
-    return v
 
+    for jj in range(n):
+        upd_s_idx1 = jj * params.n_states + (n - 1) * params.n_inputs
+        upd_i_idx = jj * params.n_inputs
+        distance_x = (z[params.s_idx.X + upd_s_idx1] - p[params.p_idx.Xobstacle])
+        distance_y = (z[params.s_idx.Y + upd_s_idx1] - p[params.p_idx.Yobstacle])
+        slack_obs = z[params.i_idx.Slack_Obs + upd_i_idx]
+        v5 = -sqrt(distance_x ** 2 + distance_y ** 2) + minSafetyDistance - slack_obs
+        v = np.append(v, np.array([v5]))
+    return v
 
 nlconst_car = []
 for i in range(5):
@@ -89,6 +97,8 @@ def _nlconst_carN(z, p, n):
     pointsO = params.n_param
     pointsN = params.n_bspline_points
     v = []
+    totslackcost = 0
+    totlatcost = 0
 
     for k in range(n):
         upd_s_idx = k * params.n_states + (n - 1) * params.n_inputs
@@ -117,6 +127,14 @@ def _nlconst_carN(z, p, n):
 
         v = np.append(v, np.array([v1, v2, v3]))
 
+        totslackcost = totslackcost + z[params.s_idx.CumSlackCost + upd_s_idx]
+        totlatcost = totlatcost + z[params.s_idx.CumLatSpeedCost + upd_s_idx]
+
+    v4 = totslackcost - p[params.p_idx.OptCost1]
+    v5 = totlatcost - p[params.p_idx.OptCost2]
+    v = np.append(v, np.array([v4]))
+    v = np.append(v, np.array([v5]))
+
     if n == 2:
         upd_s_idx1 = params.n_inputs
         upd_s_idx2 = params.n_states + params.n_inputs
@@ -125,8 +143,8 @@ def _nlconst_carN(z, p, n):
         distance_y = (z[params.s_idx.Y + upd_s_idx1] - z[params.s_idx.Y + upd_s_idx2])  #
         eucl_dist = sqrt(distance_x ** 2 + distance_y ** 2)
         slack_coll = z[params.i_idx.Slack_Coll]
-        v4 = -eucl_dist + minSafetyDistance - slack_coll
-        v = np.append(v, np.array([v4]))
+        v6 = -eucl_dist + minSafetyDistance - slack_coll
+        v = np.append(v, np.array([v6]))
     elif n > 2:
         for kk in range(coll_constraints - 1):
             for jj in range(kk + 1, coll_constraints):
@@ -136,8 +154,17 @@ def _nlconst_carN(z, p, n):
                 distance_x = (z[params.s_idx.X + upd_s_idx1] - z[params.s_idx.X + upd_s_idx2])
                 distance_y = (z[params.s_idx.Y + upd_s_idx1] - z[params.s_idx.Y + upd_s_idx2])
                 slack_coll = z[params.i_idx.Slack_Coll + upd_i_idx]
-                v4 = -sqrt(distance_x ** 2 + distance_y ** 2) + minSafetyDistance - slack_coll
-                v = np.append(v, np.array([v4]))
+                v6 = -sqrt(distance_x ** 2 + distance_y ** 2) + minSafetyDistance - slack_coll
+                v = np.append(v, np.array([v6]))
+
+    for jj in range(n):
+        upd_s_idx1 = jj * params.n_states + (n - 1) * params.n_inputs
+        upd_i_idx = jj * params.n_inputs
+        distance_x = (z[params.s_idx.X + upd_s_idx1] - p[params.p_idx.Xobstacle])
+        distance_y = (z[params.s_idx.Y + upd_s_idx1] - p[params.p_idx.Yobstacle])
+        slack_obs = z[params.i_idx.Slack_Obs + upd_i_idx]
+        v7 = -sqrt(distance_x ** 2 + distance_y ** 2) + minSafetyDistance - slack_obs
+        v = np.append(v, np.array([v7]))
     return v
 
 
