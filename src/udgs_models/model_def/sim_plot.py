@@ -28,8 +28,8 @@ def get_car_plot(x, x_pred, u, u_pred, controlpoints, num_cars, track: Track) ->
     plotter = Visualization(track=track, gokarts=gokart_pool)
     n_inputs = params.n_inputs
     n_states = params.n_states
-    x_idx = params.s_idx
-    u_idx = params.i_idx
+    x_idx = params.x_idx
+    u_idx = params.u_idx
 
     # create background traces
     fig = plotter.plot_map()
@@ -40,9 +40,11 @@ def get_car_plot(x, x_pred, u, u_pred, controlpoints, num_cars, track: Track) ->
     # add traces that change during simulation steps (gokart and predictions)
     for k in range(sim_steps):  # sim_steps:
         for jj in range(num_cars):
-            upd_s_idx = - n_inputs + jj * params.n_states
+            upd_s_idx = - n_inputs + jj * n_states
             state_k = (
-                x[x_idx.X + upd_s_idx, k], x[x_idx.Y + upd_s_idx, k], x[x_idx.Theta + upd_s_idx, k],
+                x[x_idx.X + upd_s_idx, k],
+                x[x_idx.Y + upd_s_idx, k],
+                x[x_idx.Theta + upd_s_idx, k],
                 x[x_idx.Delta + upd_s_idx, k])
 
             fig = plotter.plot_prediction_triangle(
@@ -175,7 +177,7 @@ def get_state_plots(states, num_cars) -> Figure:
     names = []
     units = []
     for k in range(num_cars):
-        for state_var in params.s_idx:
+        for state_var in params.x_idx:
             names.append(var_descriptions[state_var].title)
             units.append(var_descriptions[state_var].units)
 
@@ -211,7 +213,7 @@ def get_input_plots(inputs, num_cars) -> Figure:
     names = []
     units = []
     for k in range(num_cars):
-        for input_var in params.i_idx:
+        for input_var in params.u_idx:
             names.append(var_descriptions[input_var].title)
             units.append(var_descriptions[input_var].units)
 

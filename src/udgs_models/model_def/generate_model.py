@@ -2,7 +2,7 @@ from udgs_models.model_def.dynamics_car import _dynamics_car, dynamics_cars
 
 import numpy as np
 
-from . import params
+from . import *
 from .indices import input_constraints, state_constraints
 from .objective import objective_car
 from .nlconstraints import nlconst_car, nlconst_carN
@@ -25,22 +25,12 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, co
     model.neq = params.n_states * num_cars
 
     # Number of parameters
-    model.npar = params.n_param + 3 * num_cars * params.n_bspline_points
-    model.eq = lambda z, p: nlp.integrate(
-        dynamics_cars[num_cars],
-        z[params.n_inputs * num_cars: params.n_var * num_cars],
-        z[0: params.n_inputs * num_cars],
-        p,
-        integrator=nlp.integrators.RK4,
-        stepsize=params.dt_integrator_step,
-    )  # todo dynamics integrator interstagedx_HC
-
-    # model.continuous_dynamics = lambda x, u, p: dynamics_HC
-
+    model.npar = params.n_opt_param + 3 * num_cars * params.n_bspline_points
     # indices of the left hand side of the dynamical constraint
     model.E = np.concatenate(
         [np.zeros((num_cars * params.n_states, num_cars * params.n_inputs)), np.eye(num_cars * params.n_states)],
         axis=1)
+    model.continuous_dynamics = dynamics_cars[num_cars]
 
     coll_constraints = int(num_cars * (num_cars - 1) / 2)
     obs_constraints = num_cars
@@ -76,32 +66,32 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, co
         upd_s_idx = k * params.n_states + (num_cars - 1) * params.n_inputs
         upd_i_idx = k * params.n_inputs
 
-        model.lb[params.i_idx.dS + upd_i_idx] = input_constraints.dS[0]
-        model.ub[params.i_idx.dS + upd_i_idx] = input_constraints.dS[1]
+        model.lb[params.u_idx.dS + upd_i_idx] = input_constraints.dS[0]
+        model.ub[params.u_idx.dS + upd_i_idx] = input_constraints.dS[1]
 
         # Forward force lower bound
-        model.lb[params.i_idx.dAcc + upd_i_idx] = input_constraints.dAcc[0]
-        model.ub[params.i_idx.dAcc + upd_i_idx] = input_constraints.dAcc[1]
+        model.lb[params.u_idx.dAcc + upd_i_idx] = input_constraints.dAcc[0]
+        model.ub[params.u_idx.dAcc + upd_i_idx] = input_constraints.dAcc[1]
 
         # slack limit
-        model.lb[params.i_idx.Slack_Lat + upd_i_idx] = 0
-        model.lb[params.i_idx.Slack_Coll + upd_i_idx] = 0
-        model.lb[params.i_idx.Slack_Obs + upd_i_idx] = 0
+        model.lb[params.u_idx.Slack_Lat + upd_i_idx] = 0
+        model.lb[params.u_idx.Slack_Coll + upd_i_idx] = 0
+        model.lb[params.u_idx.Slack_Obs + upd_i_idx] = 0
         # Forward force lower bound
-        model.lb[params.s_idx.Acc + upd_s_idx] = state_constraints.Acc[0]
-        model.ub[params.s_idx.Acc + upd_s_idx] = state_constraints.Acc[1]
+        model.lb[params.x_idx.Acc + upd_s_idx] = state_constraints.Acc[0]
+        model.ub[params.x_idx.Acc + upd_s_idx] = state_constraints.Acc[1]
 
         # Speed lower bound
-        model.lb[params.s_idx.Vx + upd_s_idx] = state_constraints.Vx[0]
-        model.ub[params.s_idx.Vx + upd_s_idx] = state_constraints.Vx[1]
+        model.lb[params.x_idx.Vx + upd_s_idx] = state_constraints.Vx[0]
+        model.ub[params.x_idx.Vx + upd_s_idx] = state_constraints.Vx[1]
 
         # Steering Angle Bounds
-        model.lb[params.s_idx.Delta + upd_s_idx] = state_constraints.Delta[0]
-        model.ub[params.s_idx.Delta + upd_s_idx] = state_constraints.Delta[1]
+        model.lb[params.x_idx.Delta + upd_s_idx] = state_constraints.Delta[0]
+        model.ub[params.x_idx.Delta + upd_s_idx] = state_constraints.Delta[1]
 
         # Path  Progress  Bounds
-        model.lb[params.s_idx.S + upd_s_idx] = state_constraints.S[0]
-        model.ub[params.s_idx.S + upd_s_idx] = state_constraints.S[1]
+        model.lb[params.x_idx.S + upd_s_idx] = state_constraints.S[0]
+        model.ub[params.x_idx.S + upd_s_idx] = state_constraints.S[1]
 
     # CodeOptions  for FORCES solver
     codeoptions = CodeOptions(solver_name)
@@ -110,7 +100,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, co
     # 0: no optimization, 1: optimize for size, 2: optimize for speed, 3: optimize for size & speed
     codeoptions.optlevel = 2
     codeoptions.printlevel = 0  # optional, on some platforms printing is not supported
-    codeoptions.cleanup = 0  # to keep necessary files for target compile
+    codeoptions.cleanup = 1  # to keep necessary files for target compile
     codeoptions.timing = 1
     codeoptions.overwrite = 1  # 1: overwrite existing solver
     codeoptions.BuildSimulinkBlock = 0

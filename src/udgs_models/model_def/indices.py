@@ -80,27 +80,41 @@ state_constraints = StateConstraints()
 @unique
 class IdxParams(IntEnum):
     SpeedLimit = 0
+    """max longitudinal speed in allowed [m/s]"""
     TargetSpeed = 1
+    """target longitudinal speed in [m/s] """
     OptCost1 = 2
     """Optimal cost achieved by the first lexicographic optimization"""
     OptCost2 = 3
     """Optimal cost achieved by the second lexicographic optimization"""
     Xobstacle = 4
+    """X position of the obstacle"""
     Yobstacle = 5
+    """Y position of the obstacle"""
     TargetProg = 6
     """Progress goal for the agent after which the game can be considered terminated"""
     kAboveTargetSpeedCost = 7
+    """weight penalizing speed Above reference"""
     kBelowTargetSpeedCost = 8
+    """weight penalizing speed Below reference"""
     kAboveSpeedLimit = 9
+    """weight penalizing speed above SpeedLimit"""
     kLag = 10
+    """weight penalizing lag error"""
     kLat = 11
+    """weight penalizing lat error w.r.t center of the lane"""
     pLeftLane = 12
+    """weight penalizing going towards the other lane"""
     kReg_dAb = 13
+    """weight penalizing variations in accelerations"""
     kReg_dDelta = 14
+    """weight penalizing variations in steering angle"""
     kSlack = 15
+    """weight penalizing going out of the track"""
     minSafetyDistance = 16
     """Minimum safety distance"""
     carLength = 17
+    """carLength"""
 
 
 @dataclass(frozen=True)
