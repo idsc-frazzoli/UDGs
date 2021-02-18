@@ -10,3 +10,5 @@ venv
 *.forces
 MPCCgokart
 Forces_udgs_solver/
+src/udgs_models/Forces_udgs_solver_model.h
+src/udgs_models/Forces_udgs_solver_model.c

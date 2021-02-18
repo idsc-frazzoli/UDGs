@@ -86,7 +86,6 @@ nlconst_car = []
 for i in range(5):
     nlconst_car.append(partial(_nlconst_car, n=i))
 
-
 def _nlconst_carN(z, p, n):
     """
     Computes the nonlinear inequality constraints.
@@ -174,3 +173,127 @@ def _nlconst_carN(z, p, n):
 nlconst_carN = []
 for i in range(5):
     nlconst_carN.append(partial(_nlconst_carN, n=i))
+
+
+def _nlconst_car_ibr(z, p, n):
+    """
+    Computes the nonlinear inequality constraints.
+
+    :param z: States and inputs of the system dynamics
+    :param p: Parameters of the system dynamics
+    :param n: Number of players
+    :return: List containing the constraints #todo
+    """
+
+    pointsO = params.n_opt_param + (n-1) * 2
+    pointsN = params.n_bspline_points
+
+    minSafetyDistance = p[p_idx.minSafetyDistance]
+
+    points = getPointsFromParameters(p, pointsO, pointsN)
+    radii = getRadiiFromParameters(p, pointsO, pointsN)
+
+    splx, sply = casadiDynamicBSPLINE(z[x_idx.S], points)
+    splsx, splsy = casadiDynamicBSPLINEsidewards(z[x_idx.S], points)
+    r = casadiDynamicBSPLINERadius(z[x_idx.S], radii)
+
+    wantedpos = vertcat(splx, sply)
+    sidewards = vertcat(splsx, splsy)
+
+    realPos = np.array([z[x_idx.X], z[x_idx.Y]])
+    centerPos = realPos
+    error = centerPos - wantedpos
+    laterror = mtimes(sidewards.T, error)
+
+    slack = z[u_idx.Slack_Lat]
+
+    # non-collision constraint with an obstacle
+    distance_x = (z[x_idx.X] - p[p_idx.Xobstacle])
+    distance_y = (z[x_idx.Y] - p[p_idx.Yobstacle])
+    slack_obs = z[u_idx.Slack_Obs]
+
+    v1 = laterror - r - slack
+    v2 = -laterror - r - slack
+    v3 = -sqrt(distance_x ** 2 + distance_y ** 2) + minSafetyDistance - slack_obs
+
+    v = np.array([v1, v2, v3])
+
+    # non-collision constraints with other vehicles
+
+    for i in range(n-1):
+        update_pidx_x = i * 2 + params.n_opt_param + 3 * params.n_bspline_points
+        update_pidx_y = i * 2 + 1 + params.n_opt_param + 3 * params.n_bspline_points
+        distance_x = (z[x_idx.X] - p[update_pidx_x])
+        distance_y = (z[x_idx.Y] - p[update_pidx_y])
+        eucl_dist = sqrt(distance_x ** 2 + distance_y ** 2)
+        slack_coll = z[u_idx.Slack_Coll]
+        v3 = -eucl_dist + minSafetyDistance - slack_coll
+        v = np.append(v, np.array([v3]))
+
+    return v
+
+
+nlconst_car_ibr = []
+for i in range(5):
+    nlconst_car.append(partial(_nlconst_car_ibr, n=i))
+
+
+def _nlconst_car_ibrN(z, p, n):
+    """
+    Computes the nonlinear inequality constraints.
+
+    :param z: States and inputs of the system dynamics
+    :param p: Parameters of the system dynamics
+    :return: List containing the constraints #todo
+    """
+    minSafetyDistance = p[p_idx.minSafetyDistance]
+    pointsO = params.n_opt_param
+    pointsN = params.n_bspline_points
+
+    points = getPointsFromParameters(p, pointsO, pointsN)
+    radii = getRadiiFromParameters(p, pointsO, pointsN)
+
+    splx, sply = casadiDynamicBSPLINE(z[x_idx.S], points)
+    splsx, splsy = casadiDynamicBSPLINEsidewards(z[x_idx.S], points)
+    r = casadiDynamicBSPLINERadius(z[x_idx.S], radii)
+
+    wantedpos = vertcat(splx, sply)
+    sidewards = vertcat(splsx, splsy)
+
+    realPos = np.array([z[x_idx.X], z[x_idx.Y]])
+    centerPos = realPos
+    error = centerPos - wantedpos
+    laterror = mtimes(sidewards.T, error)
+
+    slack = z[u_idx.Slack_Lat]
+
+    # non-collision constraint with an obstacle
+    distance_x = (z[x_idx.X] - p[p_idx.Xobstacle])
+    distance_y = (z[x_idx.Y] - p[p_idx.Yobstacle])
+    slack_obs = z[u_idx.Slack_Obs]
+
+    v1 = laterror - r - slack
+    v2 = -laterror - r - slack
+    v3 = -z[x_idx.S] + p[p_idx.TargetProg]
+    v4 = z[x_idx.CumSlackCost] - p[p_idx.OptCost1]
+    v5 = z[x_idx.CumLatSpeedCost] - p[p_idx.OptCost2]
+    v6 = -sqrt(distance_x ** 2 + distance_y ** 2) + minSafetyDistance - slack_obs
+
+    v = np.array([v1, v2, v3, v4, v5, v6])
+
+    for i in range(n-1):
+        update_pidx_x = i * 2 + params.n_opt_param + 3 * params.n_bspline_points
+        update_pidx_y = i * 2 + 1 + params.n_opt_param + 3 * params.n_bspline_points
+        distance_x = (z[x_idx.X] - p[update_pidx_x])
+        distance_y = (z[x_idx.Y] - p[update_pidx_y])
+        eucl_dist = sqrt(distance_x ** 2 + distance_y ** 2)
+        slack_coll = z[u_idx.Slack_Coll]
+        v7 = -eucl_dist + minSafetyDistance - slack_coll
+        v = np.append(v, np.array([v7]))
+
+    return v
+
+
+nlconst_car_ibrN = []
+for i in range(5):
+    nlconst_carN.append(partial(_nlconst_car_ibrN, n=i))

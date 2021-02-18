@@ -8,9 +8,7 @@ def make_report(sim_data: SimData):
     # r = Report("vis")
     n_players = len(sim_data.players)
 
-    cars_viz = get_car_plot(
-        sim_data.players
-    )
+    cars_viz = get_car_plot(sim_data.players)
     cars_viz.show()
 
     solver_stats = get_solver_stats(sim_data.solver_it, sim_data.solver_time)
