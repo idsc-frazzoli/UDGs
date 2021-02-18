@@ -235,7 +235,7 @@ def _nlconst_car_ibr(z, p, n):
 
 nlconst_car_ibr = []
 for i in range(5):
-    nlconst_car.append(partial(_nlconst_car_ibr, n=i))
+    nlconst_car_ibr .append(partial(_nlconst_car_ibr, n=i))
 
 
 def _nlconst_car_ibrN(z, p, n):
@@ -296,4 +296,4 @@ def _nlconst_car_ibrN(z, p, n):
 
 nlconst_car_ibrN = []
 for i in range(5):
-    nlconst_carN.append(partial(_nlconst_car_ibrN, n=i))
+    nlconst_car_ibrN.append(partial(_nlconst_car_ibrN, n=i))

@@ -12,7 +12,8 @@ from tracks import Track
 
 from tracks.zoo import straightLineR2L, straightLineN2S, straightLineL2R
 from udgs_models.model_def.dynamics_car import dynamics_cars
-from udgs_models.model_def.sim_lexicographic import solve_lexicographic, solve_optimization
+from udgs_models.model_def.solve_lexicographic_ibr import solve_optimization_br, solve_lexicographic_ibr
+from udgs_models.model_def.solve_lexicographic_pg import solve_lexicographic, solve_optimization
 
 
 @dataclass(frozen=True)
@@ -168,7 +169,9 @@ def sim_car_model(
                             [0, params.dt_integrator_step],
                             x[:, k])
             x[:, k + 1] = sol.y[:, -1]
+            # todo split solutions of each player from unified solution x, u...
     else:  # IBR and Lexicographic IBR
+        # todo find a way to store multiple players information
         # Variables for storing simulation data
         x = np.zeros((n_states, sim_length + 1))  # states
         u = np.zeros((n_inputs, sim_length))  # inputs
@@ -196,15 +199,15 @@ def sim_car_model(
         theta_pos = []
         xinit = np.zeros(n_states)
 
-        for i in range(n_players):
+        for i in range(n_players):  # todo do proper initialization for each player
             x_pos[i], y_pos[i] = casadiDynamicBSPLINE(init_progress, tracks[i].spline.as_np_array())
             dx[i], dy[i] = casadiDynamicBSPLINEforward(init_progress, tracks[i].spline.as_np_array())
             dx_s[i], dy_s[i] = casadiDynamicBSPLINEsidewards(init_progress, tracks[i].spline.as_np_array())
             theta_pos[i] = atan2(dy[i], dx[i])
 
             theta_pos[i] = atan2(dy[i], dx[i])
-            x_pos[i] = x_pos[i] + 1.75 * dx_s[i]
-            y_pos[i] = y_pos[i] + 1.75 * dy_s[i]
+            x_pos[i] = x_pos[i] + 1.75 * dx_s[i]  # move player to the right lane
+            y_pos[i] = y_pos[i] + 1.75 * dy_s[i]  # move player to the right lane
             xinit[x_idx.X] = x_pos[i]
             xinit[x_idx.Y] = y_pos[i]
             xinit[x_idx.Theta] = theta_pos[i]
@@ -217,7 +220,7 @@ def sim_car_model(
         x[:, 0] = xinit
         problem = {}
         initialization = np.tile(np.append(np.zeros(n_inputs), xinit), model.N)
-        problem["x0"] = initialization
+        problem["x0"] = initialization  # todo each player has its own problem
         spline_start_idx = np.zeros(n_players)
         for k in range(sim_length):
 
@@ -236,9 +239,10 @@ def sim_car_model(
                 # Limit acceleration
                 x[x_idx.Acc + upd_s_idx, k] = min(2, x[x_idx.Acc + upd_s_idx, k])
 
+            # todo create a proper optimization procedure that considers different order of players
             if condition == 2:  # IBR only
                 # Set initial state
-                output, problem, p_vector = solve_optimization(
+                output, problem, p_vector = solve_optimization_br(
                     model, solver, n_players, problem, behavior_pg, x, k, 0,
                     next_spline_points, solver_it, solver_time,
                     solver_cost, behavior_pg[p_idx.OptCost1], behavior_pg[p_idx.OptCost2])
@@ -255,7 +259,7 @@ def sim_car_model(
                 u[:, k] = u_pred[:, 0, k]
 
             elif condition == 3:  # PG lexicographic
-                temp, problem, p_vector = solve_lexicographic(
+                temp, problem, p_vector = solve_lexicographic_ibr(
                     model, solver, n_players, problem,
                     behavior_init,
                     behavior_first,

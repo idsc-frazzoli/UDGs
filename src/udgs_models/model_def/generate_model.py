@@ -11,7 +11,7 @@ from forcespro import nlp, CodeOptions
 __all__ = ["generate_car_model"]
 
 
-def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, condition: int):
+def generate_car_model(generate_solver: bool, to_deploy: bool, n_players: int, condition: int):
     """
     This model assumes:
         - a state given by ...
@@ -22,22 +22,22 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, co
     if condition == 0 or condition == 1:  # PG or Lexicographic PG
         solver_name: str = "Forces_udgs_solver"
         model = nlp.SymbolicModel(params.N)
-        model.nvar = params.n_var * num_cars
-        model.neq = params.n_states * num_cars
+        model.nvar = params.n_var * n_players
+        model.neq = params.n_states * n_players
 
         # Number of parameters
-        model.npar = params.n_opt_param + 3 * num_cars * params.n_bspline_points
+        model.npar = params.n_opt_param + 3 * n_players * params.n_bspline_points
         # indices of the left hand side of the dynamical constraint
         model.E = np.concatenate(
-            [np.zeros((num_cars * params.n_states, num_cars * params.n_inputs)), np.eye(num_cars * params.n_states)],
+            [np.zeros((n_players * params.n_states, n_players * params.n_inputs)), np.eye(n_players * params.n_states)],
             axis=1)
-        model.continuous_dynamics = dynamics_cars[num_cars]
+        model.continuous_dynamics = dynamics_cars[n_players]
 
-        collision_constraints = int(num_cars * (num_cars - 1) / 2)
-        obstacle_constraints = num_cars
+        collision_constraints = int(n_players * (n_players - 1) / 2)
+        obstacle_constraints = n_players
         # inequality constraints
-        model.nh = 2 * num_cars + collision_constraints + obstacle_constraints  # Number of inequality constraints
-        model.ineq = nlconst_car[num_cars]
+        model.nh = 2 * n_players + collision_constraints + obstacle_constraints  # Number of inequality constraints
+        model.ineq = nlconst_car[n_players]
         model.hu = []
         model.hl = []
         for k in range(model.nh):
@@ -45,8 +45,8 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, co
             model.hl = np.append(model.hl, np.array(-np.inf))  # lower bound for nonlinear constraints
 
         # Terminal State Constraints
-        model.nhN = 3 * num_cars + collision_constraints + obstacle_constraints + 2  # Number of inequality constraints
-        model.ineqN = nlconst_carN[num_cars]
+        model.nhN = 3 * n_players + collision_constraints + obstacle_constraints + 2  # Number of inequality constraints
+        model.ineqN = nlconst_carN[n_players]
         model.huN = []
         model.hlN = []
         for k in range(model.nhN):
@@ -54,17 +54,17 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, co
             model.hlN = np.append(model.hlN, np.array(-np.inf))  # lower bound for nonlinear constraints
 
         for i in range(params.N):
-            model.objective[i] = objective_car[num_cars]
+            model.objective[i] = objective_car[n_players]
 
-        model.xinitidx = range(params.n_inputs * num_cars, params.n_var * num_cars)
+        model.xinitidx = range(params.n_inputs * n_players, params.n_var * n_players)
 
         # Equality constraints
-        model.ub = np.ones(params.n_var * num_cars) * np.inf
-        model.lb = -np.ones(params.n_var * num_cars) * np.inf
+        model.ub = np.ones(params.n_var * n_players) * np.inf
+        model.lb = -np.ones(params.n_var * n_players) * np.inf
 
-        for k in range(num_cars):
+        for k in range(n_players):
             # delta path progress
-            upd_s_idx = k * params.n_states + (num_cars - 1) * params.n_inputs
+            upd_s_idx = k * params.n_states + (n_players - 1) * params.n_inputs
             upd_i_idx = k * params.n_inputs
 
             model.lb[params.u_idx.dS + upd_i_idx] = input_constraints.dS[0]
@@ -100,16 +100,16 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, co
         model.neq = params.n_states
 
         # Number of parameters
-        model.npar = params.n_opt_param + 3 * params.n_bspline_points
+        model.npar = params.n_opt_param + 3 * params.n_bspline_points + 2 * (n_players - 1)
         # indices of the left hand side of the dynamical constraint
         model.E = np.concatenate([np.zeros((params.n_states, params.n_inputs)), np.eye(params.n_states)], axis=1)
         model.continuous_dynamics = dynamics_cars[1]
 
-        collision_constraints = num_cars - 1
+        collision_constraints = n_players - 1
         obstacle_constraints = 1
         # inequality constraints
         model.nh = 2 + collision_constraints + obstacle_constraints  # Number of inequality constraints
-        model.ineq = nlconst_car_ibr[num_cars]
+        model.ineq = nlconst_car_ibr[n_players]
         model.hu = []
         model.hl = []
         for k in range(model.nh):
@@ -118,7 +118,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, co
 
         # Terminal State Constraints
         model.nhN = 5 + collision_constraints + obstacle_constraints  # Number of inequality constraints
-        model.ineqN = nlconst_car_ibrN[num_cars]
+        model.ineqN = nlconst_car_ibrN[n_players]
         model.huN = []
         model.hlN = []
         for k in range(model.nhN):
@@ -188,7 +188,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, num_cars: int, co
     if generate_solver:
         # necessary to have all the zs stack in one vector
         if condition == 0 or condition == 1:  # PG or Lexicographic PG
-            output_all = ("all_var", list(range(0, params.N)), list(range(0, params.n_var * num_cars)))
+            output_all = ("all_var", list(range(0, params.N)), list(range(0, params.n_var * n_players)))
         else:  # IBR or Lexicographic IBR
             output_all = ("all_var", list(range(0, params.N)), list(range(0, params.n_var)))
 
