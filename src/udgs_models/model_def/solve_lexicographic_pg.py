@@ -5,12 +5,10 @@ from udgs_models.model_def import params, p_idx
 from udgs_models.model_def.car_util import set_p_car
 
 
-def solve_optimization(model, solver, n_players, problem, behavior, x, k, jj, next_spline_points, solver_it,
+def solve_optimization(model, solver, n_players, problem, behavior, k, jj, next_spline_points, solver_it,
                        solver_time, solver_cost, optCost1, optCost2):
     """
     """
-    # Set initial state
-    problem["xinit"] = x[:, k]
     # Set runtime parameters (the only really changing between stages are the next control points of the spline)
     p_vector = set_p_car(
         SpeedLimit=behavior[p_idx.SpeedLimit],
@@ -56,18 +54,23 @@ def solve_lexicographic(model, solver, num_players, problem,
                         behavior_second,
                         behavior_third,
                         x, k, next_spline_points, solver_it_lexi, solver_time_lexi, solver_cost_lexi):
+
     if k == 0:
+        # Set initial state
+        problem["xinit"] = x[:, k]
         output, problem, p_vector = solve_optimization(
-            model, solver, num_players, problem, behavior_init, x, k, 0,
+            model, solver, num_players, problem, behavior_init, k, 0,
             next_spline_points, solver_it_lexi, solver_time_lexi,
             solver_cost_lexi, behavior_init[p_idx.OptCost1],
             behavior_init[p_idx.OptCost2])
         problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
 
     for lex_level in range(3):
+        # Set initial state
+        problem["xinit"] = x[:, k]
         if lex_level == 0:
             output, problem, p_vector = solve_optimization(
-                model, solver, num_players, problem, behavior_first, x,
+                model, solver, num_players, problem, behavior_first,
                 k, lex_level, next_spline_points, solver_it_lexi,
                 solver_time_lexi, solver_cost_lexi,
                 behavior_first[p_idx.OptCost1],
@@ -82,7 +85,7 @@ def solve_lexicographic(model, solver, num_players, problem,
 
         elif lex_level == 1:
             output, problem, p_vector = solve_optimization(
-                model, solver, num_players, problem, behavior_second, x,
+                model, solver, num_players, problem, behavior_second,
                 k, lex_level, next_spline_points, solver_it_lexi,
                 solver_time_lexi, solver_cost_lexi,
                 slackcost + 0.03 * slackcost,
@@ -100,7 +103,7 @@ def solve_lexicographic(model, solver, num_players, problem,
                 slackcost = slackcost + temp[params.x_idx.CumSlackCost + upd_s_idx, col - 1]
         else:
             output, problem, p_vector = solve_optimization(
-                model, solver, num_players, problem, behavior_third, x,
+                model, solver, num_players, problem, behavior_third,
                 k, lex_level, next_spline_points, solver_it_lexi,
                 solver_time_lexi, solver_cost_lexi,
                 slackcost + 0.1, cumlatcost + 1)

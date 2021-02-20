@@ -11,7 +11,7 @@ def _parse_args():
     p.add_argument("--mpc_model", default="human-constraints", help="todo", type=str)
     p.add_argument(
         "--generate_solver",
-        default=True,
+        default=False,
         help="If set to false does not regenerate the solver but it looks for an existing one",
         type=bool,
     )
@@ -23,7 +23,7 @@ def _parse_args():
     )
     p.add_argument(
         "--num_cars",
-        default=3,
+        default=2,
         help="todo",
         type=int,
     )

@@ -154,10 +154,10 @@ def set_p_car_ibr(
     p[p_idx.kSlack] = kSlack
     p[p_idx.minSafetyDistance] = minSafetyDistance
     p[p_idx.carLength] = carLength
-    p[params.n_opt_param: params.n_opt_param + 3 * params.n_bspline_points] = points.flatten(order="f")
+    p[opt_params: opt_params + 3 * params.n_bspline_points] = points.flatten(order="f")
     for i in range(n_players-1):
-        updateX = 2*i + 3 * params.n_bspline_points
-        updateY = 1 + 2*i + 3 * params.n_bspline_points
+        updateX = 2*i
+        updateY = 1 + 2*i
         p[params.n_opt_param + updateX] = coordinateX_car
         p[params.n_opt_param + updateY] = coordinateY_car
 

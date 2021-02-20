@@ -1,18 +1,15 @@
 from udgs_models.forces_utils import ForcesException
 import numpy as np
 
-from udgs_models.model_def import params, p_idx
+from udgs_models.model_def import params, p_idx, x_idx
 from udgs_models.model_def.car_util import set_p_car_ibr
 
 
-def solve_optimization_br(model, solver, n_players, problem, behavior, x, k, jj, next_spline_points, solver_it,
-                          solver_time, solver_cost, optCost1, optCost2, playerstrajX, playerstrajY):
+def solve_optimization_br(model, solver, currentplayer, n_players, problem, behavior, k, jj, next_spline_points,
+                          solver_it, solver_time, solver_cost, optCost1, optCost2, playerstrajX, playerstrajY):
     """
 
     """
-    # Set initial state
-    problem["xinit"] = x[:, k]
-    # Set runtime parameters (the only really changing between stages are the next control points of the spline)
     p_vector = set_p_car_ibr(
         SpeedLimit=behavior[p_idx.SpeedLimit],
         TargetSpeed=behavior[p_idx.TargetSpeed],
@@ -37,13 +34,22 @@ def solve_optimization_br(model, solver, n_players, problem, behavior, x, k, jj,
         coordinateY_car=0,
         n_players=n_players
     )
-    problem["all_parameters"] = np.tile(p_vector, (model.N,))
-    # todo put correct indices
-    problem["all_parameters"][params.n_opt_param + 3 * params.n_bspline_points:-1:model.npar] = playerstrajX
-    problem["all_parameters"][params.n_opt_param + 3 * params.n_bspline_points + 1:-1:model.npar] = playerstrajY
+    problem["all_parameters"] = np.tile(p_vector, model.N)
+    jj = 0  # index that updates only when i is not equal to current player index
+    for i in range(n_players):
+        if i == currentplayer:
+            continue
+
+        problem["all_parameters"][params.n_opt_param + 2 * jj:
+                                  len(problem["all_parameters"]):model.npar] = playerstrajX[i]
+        problem["all_parameters"][params.n_opt_param + 1 + 2 * jj:
+                                  len(problem["all_parameters"]):model.npar] = playerstrajY[i]
+        jj += 1
+
     # Time to solve the NLP!
     output, exitflag, info = solver.solve(problem)
     # Make sure the solver has exited properly.
+    temp = output["all_var"].reshape(model.nvar, model.N, order='F')
     if exitflag < 0:
         print(f"At simulation step {k}")
         raise ForcesException(exitflag)
@@ -56,60 +62,49 @@ def solve_optimization_br(model, solver, n_players, problem, behavior, x, k, jj,
 
 
 # todo this function iterates best response optimization
-def iterated_best_response(model, solver, n_players, problem, behavior, x, k, jj, next_spline_points, solver_it,
-                        solver_time, solver_cost, optCost1, optCost2):
+def iterated_best_response(model, solver, order, n_players, problem_list, behavior, k, jj, next_spline_points,
+                           solver_it, solver_time, solver_cost, optCost1, optCost2, outputOld, playerstrajX,
+                           playerstrajY):
     """
     """
-    # Set initial state
-    problem["xinit"] = x[:, k]
-    # Set runtime parameters (the only really changing between stages are the next control points of the spline)
-    p_vector = set_p_car_ibr(
-        SpeedLimit=behavior[p_idx.SpeedLimit],
-        TargetSpeed=behavior[p_idx.TargetSpeed],
-        OptCost1=optCost1,
-        OptCost2=optCost2,
-        Xobstacle=behavior[p_idx.Xobstacle],
-        Yobstacle=behavior[p_idx.Yobstacle],
-        TargetProg=behavior[p_idx.TargetProg],
-        kAboveTargetSpeedCost=behavior[p_idx.kAboveTargetSpeedCost],
-        kBelowTargetSpeedCost=behavior[p_idx.kBelowTargetSpeedCost],
-        kAboveSpeedLimit=behavior[p_idx.kAboveSpeedLimit],
-        kLag=behavior[p_idx.kLag],
-        kLat=behavior[p_idx.kLat],
-        pLeftLane=behavior[p_idx.pLeftLane],
-        kReg_dAb=behavior[p_idx.kReg_dAb],
-        kReg_dDelta=behavior[p_idx.kReg_dDelta],
-        carLength=behavior[p_idx.carLength],
-        minSafetyDistance=behavior[p_idx.minSafetyDistance],
-        kSlack=behavior[p_idx.kSlack],
-        points=next_spline_points[:, :, k],
-        coordinateX_car=0,
-        coordinateY_car=0,
-        n_players=n_players
-    )
-    problem["all_parameters"] = np.tile(p_vector, (model.N,))
+    iter = 0
+    output = {}
+    outputNew = np.zeros((n_players, model.nvar, model.N))
+    p_vector = np.zeros((n_players, model.npar))
+    playerstrajX_old = np.copy(playerstrajX)
+    playerstrajY_old = np.copy(playerstrajY)
+    eucl_dist = []
+    while iter <= 10:
+        iter += 1
+        for case in range(len(order)):
+                output[order[case]], problem_list[order[case]], p_vector[order[case], :] =\
+                    solve_optimization_br(model, solver, case, n_players, problem_list[order[case]], behavior, k, 0,
+                                          next_spline_points[order[case]], solver_it, solver_time, solver_cost,
+                                          optCost1, optCost2, playerstrajX[order[case]], playerstrajY[order[case]])
+                outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N, order='F')
+                playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
+                playerstrajY[order[case]] = outputNew[order[case], x_idx.Y, :]
+                problem_list[order[case]]["x0"][0: model.nvar * (model.N - 1)] =\
+                    output[order[case]]["all_var"][model.nvar: model.nvar * model.N]
 
-    # Time to solve the NLP!
-    output, exitflag, info = solver.solve(problem)
-    # Make sure the solver has exited properly.
-    if exitflag < 0:
-        print(f"At simulation step {k}")
-        raise ForcesException(exitflag)
-    else:
-        solver_it[k, jj] = info.it
-        solver_time[k, jj] = info.solvetime
-        solver_cost[k, jj] = info.pobj
+        # verify convergence
+        for i in range(n_players):
+            for j in range(i, n_players):
+                eucl_dist[i] = np.sqrt(np.square(playerstrajX[i] - playerstrajX_old[i]) +
+                                       np.square(playerstrajY[i] - playerstrajY_old[i]))
 
-    return output, problem, p_vector
+        if all(i >= 0.05 for i in eucl_dist):
+            return output, problem_list, p_vector
+        else:
+            playerstrajX_old = np.copy(playerstrajX)
+            playerstrajY_old = np.copy(playerstrajY)
+
+    return output, problem_list, p_vector
 
 
 # todo call three times best response ibr
-def solve_lexicographic_ibr(model, solver, num_players, problem,
-                        behavior_init,
-                        behavior_first,
-                        behavior_second,
-                        behavior_third,
-                        x, k, next_spline_points, solver_it_lexi, solver_time_lexi, solver_cost_lexi):
+def solve_lexicographic_ibr(model, solver, num_players, problem, behavior_init, behavior_first, behavior_second,
+                        behavior_third, x, k, next_spline_points, solver_it_lexi, solver_time_lexi, solver_cost_lexi):
     if k == 0:
         output, problem, p_vector = solve_optimization_br(
             model, solver, num_players, problem, behavior_init, x, k, 0,
