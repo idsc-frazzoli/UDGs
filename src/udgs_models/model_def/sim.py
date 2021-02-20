@@ -288,8 +288,8 @@ def sim_car_model(
                                                                                               model.nvar * (model.N - 1)
                                                                                               :model.nvar * model.N]
                     temp = output[i]["all_var"].reshape(model.nvar, model.N, order='F')
-                    u_pred[i, :, :, k] = temp[0:n_inputs * n_players, :]  # predicted inputs
-                    x_pred[i, :, :, k] = temp[n_inputs * n_players: params.n_var * n_players, :]  # predicted states
+                    u_pred[i, :, :, k] = temp[0:n_inputs, :]  # predicted inputs
+                    x_pred[i, :, :, k] = temp[n_inputs: params.n_var, :]  # predicted states
 
                     # Apply optimized input u of first stage to system and save simulation data
                     u[i, :, k] = u_pred[i, :, 0, k]
@@ -317,18 +317,18 @@ def sim_car_model(
                     behavior_third, x, k, next_spline_points,
                     solver_it, solver_time, solver_cost)
 
-                u_pred[:, :, k] = temp[0:n_inputs * n_players, :]  # predicted inputs
-                x_pred[:, :, k] = temp[n_inputs * n_players: params.n_var * n_players, :]  # predicted states
+                u_pred[:, :, k] = temp[0:n_inputs, :]  # predicted inputs
+                x_pred[:, :, k] = temp[n_inputs: params.n_var, :]  # predicted states
 
                 # Apply optimized input u of first stage to system and save simulation data
                 u[:, k] = u_pred[:, 0, k]
 
             for i in range(n_players):
                 # "simulate" state evolution
-                sol = solve_ivp(lambda t, states: dynamics_cars[n_players](states, u[i, :, k], p_vector[i]),
+                sol = solve_ivp(lambda t, states: dynamics_cars[1](states, u[i, :, k], p_vector[i]),
                                 [0, params.dt_integrator_step],
                                 x[i, :, k])
-                x[i, :, k + 1] = sol.y[i, :, -1]
+                x[i, :, k + 1] = sol.y[:, -1]
 
     # extract trajectories and values from simulation for each player
     sim_data_players = []

@@ -73,7 +73,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, behavi
     p_vector = np.zeros((n_players, model.npar))
     playerstrajX_old = np.copy(playerstrajX)
     playerstrajY_old = np.copy(playerstrajY)
-    eucl_dist = []
+    eucl_dist = np.zeros((n_players))
     while iter <= 10:
         iter += 1
         for case in range(len(order)):
@@ -89,11 +89,10 @@ def iterated_best_response(model, solver, order, n_players, problem_list, behavi
 
         # verify convergence
         for i in range(n_players):
-            for j in range(i, n_players):
-                eucl_dist[i] = np.sqrt(np.square(playerstrajX[i] - playerstrajX_old[i]) +
-                                       np.square(playerstrajY[i] - playerstrajY_old[i]))
+                eucl_dist[i] = np.sum(np.sqrt(np.square(playerstrajX[i] - playerstrajX_old[i]) +
+                                       np.square(playerstrajY[i] - playerstrajY_old[i])))
 
-        if all(i >= 0.05 for i in eucl_dist):
+        if all(i <= 0.1 for i in eucl_dist):
             return output, problem_list, p_vector
         else:
             playerstrajX_old = np.copy(playerstrajX)
