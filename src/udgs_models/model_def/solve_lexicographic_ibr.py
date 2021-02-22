@@ -5,8 +5,9 @@ from udgs_models.model_def import params, p_idx, x_idx
 from udgs_models.model_def.car_util import set_p_car_ibr
 
 
-def solve_optimization_br(model, solver, currentplayer, n_players, problem, behavior, k, jj, next_spline_points,
-                          solver_it, solver_time, solver_cost, optCost1, optCost2, playerstrajX, playerstrajY):
+def solve_optimization_br(model, solver, currentplayer, n_players, problem, behavior, optCost1, optCost2, k, jj,
+                          lex_level, next_spline_points, solver_it, solver_time, solver_cost, playerstrajX,
+                          playerstrajY):
     """
 
     """
@@ -35,16 +36,16 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
         n_players=n_players
     )
     problem["all_parameters"] = np.tile(p_vector, model.N)
-    jj = 0  # index that updates only when i is not equal to current player index
+    kk = 0  # index that updates only when i is not equal to current player index
     for i in range(n_players):
         if i == currentplayer:
             continue
 
-        problem["all_parameters"][params.n_opt_param + 2 * jj:
+        problem["all_parameters"][params.n_opt_param + 2 * kk:
                                   len(problem["all_parameters"]):model.npar] = playerstrajX[i]
-        problem["all_parameters"][params.n_opt_param + 1 + 2 * jj:
+        problem["all_parameters"][params.n_opt_param + 1 + 2 * kk:
                                   len(problem["all_parameters"]):model.npar] = playerstrajY[i]
-        jj += 1
+        kk += 1
 
     # Time to solve the NLP!
     output, exitflag, info = solver.solve(problem)
@@ -54,17 +55,17 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
         print(f"At simulation step {k}")
         raise ForcesException(exitflag)
     else:
-        solver_it[k, jj] = info.it
-        solver_time[k, jj] = info.solvetime
-        solver_cost[k, jj] = info.pobj
+        solver_it[k, jj, lex_level] = info.it
+        solver_time[k, jj, lex_level] = info.solvetime
+        solver_cost[k, jj, lex_level] = info.pobj
 
     return output, problem, p_vector
 
 
 # todo this function iterates best response optimization
-def iterated_best_response(model, solver, order, n_players, problem_list, behavior, k, jj, next_spline_points,
-                           solver_it, solver_time, solver_cost, optCost1, optCost2, outputOld, playerstrajX,
-                           playerstrajY):
+def iterated_best_response(model, solver, order, n_players, problem_list, condition, behavior, behavior_first,
+                           behavior_second, k, next_spline_points, solver_it, solver_time, solver_cost,
+                           playerstrajX, playerstrajY):
     """
     """
     iter = 0
@@ -77,15 +78,63 @@ def iterated_best_response(model, solver, order, n_players, problem_list, behavi
     while iter <= 10:
         iter += 1
         for case in range(len(order)):
+            if condition == 2:  # normal ibr
                 output[order[case]], problem_list[order[case]], p_vector[order[case], :] =\
-                    solve_optimization_br(model, solver, case, n_players, problem_list[order[case]], behavior, k, 0,
-                                          next_spline_points[order[case]], solver_it, solver_time, solver_cost,
-                                          optCost1, optCost2, playerstrajX[order[case]], playerstrajY[order[case]])
+                    solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
+                                          behavior, behavior[p_idx.OptCost1],
+                                          behavior[p_idx.OptCost2], k, order[case], 0, next_spline_points[order[case]],
+                                          solver_it, solver_time, solver_cost, playerstrajX[order[case]],
+                                          playerstrajY[order[case]])
                 outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N, order='F')
                 playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
                 playerstrajY[order[case]] = outputNew[order[case], x_idx.Y, :]
-                problem_list[order[case]]["x0"][0: model.nvar * (model.N - 1)] =\
-                    output[order[case]]["all_var"][model.nvar: model.nvar * model.N]
+                problem_list[order[case]]["x0"][0: model.nvar * model.N] =\
+                    output[order[case]]["all_var"][0: model.nvar * model.N]
+            else:  # lexi ibr
+                for lex_level in range(3):
+                    if lex_level == 0:
+                        output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
+                            solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
+                                                  behavior_first, behavior_first[p_idx.OptCost1],
+                                                  behavior_first[p_idx.OptCost2], k, order[case], lex_level,
+                                                  next_spline_points[order[case]], solver_it, solver_time, solver_cost,
+                                                  playerstrajX[order[case]], playerstrajY[order[case]])
+                        outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
+                                                                                              order='F')
+                        # playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
+                        # playerstrajY[order[case]] = outputNew[order[case], x_idx.Y, :]
+                        problem_list[order[case]]["x0"][0: model.nvar * model.N] = \
+                            output[order[case]]["all_var"][0: model.nvar * model.N]
+                        slackcost = outputNew[order[case], :, :][params.x_idx.CumSlackCost, - 1]
+
+                    elif lex_level == 1:
+                        output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
+                            solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
+                                                  behavior_second, slackcost,
+                                                  behavior_second[p_idx.OptCost2], k, order[case],lex_level,
+                                                  next_spline_points[order[case]], solver_it, solver_time, solver_cost,
+                                                  playerstrajX[order[case]], playerstrajY[order[case]])
+                        outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
+                                                                                              order='F')
+                        # playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
+                        # playerstrajY[order[case]] = outputNew[order[case], x_idx.Y, :]
+                        problem_list[order[case]]["x0"][0: model.nvar * model.N] = \
+                            output[order[case]]["all_var"][0: model.nvar * model.N]
+                        slackcost = outputNew[order[case], :, :][params.x_idx.CumSlackCost, - 1]
+                        cumlatcost = outputNew[order[case], :, :][params.x_idx.CumLatSpeedCost, - 1]
+
+                    else:
+                        output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
+                            solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
+                                                  behavior_second, slackcost, cumlatcost, k, order[case],lex_level,
+                                                  next_spline_points[order[case]], solver_it, solver_time, solver_cost,
+                                                  playerstrajX[order[case]], playerstrajY[order[case]])
+                        outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
+                                                                                              order='F')
+                        playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
+                        playerstrajY[order[case]] = outputNew[order[case], x_idx.Y, :]
+                        problem_list[order[case]]["x0"][0: model.nvar * model.N] = \
+                            output[order[case]]["all_var"][0: model.nvar * model.N]
 
         # verify convergence
         for i in range(n_players):
@@ -99,64 +148,3 @@ def iterated_best_response(model, solver, order, n_players, problem_list, behavi
             playerstrajY_old = np.copy(playerstrajY)
 
     return output, problem_list, p_vector
-
-
-# todo call three times best response ibr
-def solve_lexicographic_ibr(model, solver, num_players, problem, behavior_init, behavior_first, behavior_second,
-                        behavior_third, x, k, next_spline_points, solver_it_lexi, solver_time_lexi, solver_cost_lexi):
-    if k == 0:
-        output, problem, p_vector = solve_optimization_br(
-            model, solver, num_players, problem, behavior_init, x, k, 0,
-            next_spline_points, solver_it_lexi, solver_time_lexi,
-            solver_cost_lexi, behavior_init[p_idx.OptCost1],
-            behavior_init[p_idx.OptCost2])
-        problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
-
-    for lex_level in range(3):
-        if lex_level == 0:
-            output, problem, p_vector = solve_optimization_br(
-                model, solver, num_players, problem, behavior_first, x,
-                k, lex_level, next_spline_points, solver_it_lexi,
-                solver_time_lexi, solver_cost_lexi,
-                behavior_first[p_idx.OptCost1],
-                behavior_first[p_idx.OptCost2])
-            problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
-            temp = output["all_var"].reshape(model.nvar, model.N, order='F')
-            row, col = temp.shape
-            slackcost = 0
-            for zz in range(num_players):
-                upd_s_idx = zz * params.n_states + (num_players - 1) * params.n_inputs
-                slackcost = slackcost + temp[params.x_idx.CumSlackCost + upd_s_idx, col - 1]
-
-        elif lex_level == 1:
-            output, problem, p_vector = solve_optimization_br(
-                model, solver, num_players, problem, behavior_second, x,
-                k, lex_level, next_spline_points, solver_it_lexi,
-                solver_time_lexi, solver_cost_lexi,
-                slackcost + 0.03 * slackcost,
-                behavior_second[p_idx.OptCost2])
-            problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
-            temp = output["all_var"].reshape(model.nvar, model.N, order='F')
-            row, col = temp.shape
-            cumlatcost = 0
-            for zz in range(num_players):
-                upd_s_idx = zz * params.n_states + (num_players - 1) * params.n_inputs
-                cumlatcost = cumlatcost + temp[params.x_idx.CumLatSpeedCost + upd_s_idx, col - 1]
-            slackcost = 0
-            for zz in range(num_players):
-                upd_s_idx = zz * params.n_states + (num_players - 1) * params.n_inputs
-                slackcost = slackcost + temp[params.x_idx.CumSlackCost + upd_s_idx, col - 1]
-        else:
-            output, problem, p_vector = solve_optimization_br(
-                model, solver, num_players, problem, behavior_third, x,
-                k, lex_level, next_spline_points, solver_it_lexi,
-                solver_time_lexi, solver_cost_lexi,
-                slackcost + 0.1, cumlatcost + 1)
-
-    # Extract output and initialize next iteration with current solution shifted by one stage
-    problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
-    problem["x0"][model.nvar * (model.N - 1): model.nvar * model.N] = output["all_var"][model.nvar * (
-            model.N - 1):model.nvar * model.N]
-
-    temp = output["all_var"].reshape(model.nvar, model.N, order='F')
-    return temp, problem, p_vector
