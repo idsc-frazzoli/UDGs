@@ -14,8 +14,9 @@ def make_report(sim_data: SimData):
     solver_stats = get_solver_stats(sim_data.solver_it, sim_data.solver_time)
     solver_stats.show()
 
-    states = get_state_plots(sim_data.x, n_players)
-    states.show()
-
-    inputs = get_input_plots(sim_data.u, n_players)
-    inputs.show()
+    for i in range(n_players):
+        states = get_state_plots(sim_data.players[i].x)
+        states.show()
+    
+        inputs = get_input_plots(sim_data.players[i].u)
+        inputs.show()
