@@ -74,7 +74,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
     p_vector = np.zeros((n_players, model.npar))
     playerstrajX_old = np.copy(playerstrajX)
     playerstrajY_old = np.copy(playerstrajY)
-    eucl_dist = np.zeros((n_players))
+    eucl_dist = np.zeros(n_players)
     while iter <= 10:
         iter += 1
         for case in range(len(order)):

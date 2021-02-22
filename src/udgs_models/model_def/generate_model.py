@@ -53,8 +53,8 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, n_players: int, c
             model.huN = np.append(model.huN, np.array(0))  # upper bound for nonlinear constraints
             model.hlN = np.append(model.hlN, np.array(-np.inf))  # lower bound for nonlinear constraints
 
-        for i in range(params.N):
-            model.objective[i] = objective_car[n_players]
+        for k in range(params.N):
+            model.objective[k] = objective_car[n_players]
 
         model.xinitidx = range(params.n_inputs * n_players, params.n_var * n_players)
 
@@ -62,10 +62,10 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, n_players: int, c
         model.ub = np.ones(params.n_var * n_players) * np.inf
         model.lb = -np.ones(params.n_var * n_players) * np.inf
 
-        for k in range(n_players):
+        for i in range(n_players):
             # delta path progress
-            upd_s_idx = k * params.n_states + (n_players - 1) * params.n_inputs
-            upd_i_idx = k * params.n_inputs
+            upd_s_idx = i * params.n_states + (n_players - 1) * params.n_inputs
+            upd_i_idx = i * params.n_inputs
 
             model.lb[params.u_idx.dS + upd_i_idx] = input_constraints.dS[0]
             model.ub[params.u_idx.dS + upd_i_idx] = input_constraints.dS[1]
@@ -125,8 +125,8 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, n_players: int, c
             model.huN = np.append(model.huN, np.array(0))  # upper bound for nonlinear constraints
             model.hlN = np.append(model.hlN, np.array(-np.inf))  # lower bound for nonlinear constraints
 
-        for i in range(params.N):
-            model.objective[i] = objective_car[1]
+        for k in range(params.N):
+            model.objective[k] = objective_car[1]
 
         model.xinitidx = range(params.n_inputs, params.n_var)
 

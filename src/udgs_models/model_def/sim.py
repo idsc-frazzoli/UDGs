@@ -64,6 +64,7 @@ def sim_car_model(
     n_states = params.n_states
     n_inputs = params.n_inputs
     x_idx = params.x_idx
+    sim_data_players = []
 
     if condition == 0 or condition == 1:
         # Variables for storing simulation data
@@ -172,7 +173,21 @@ def sim_car_model(
                             [0, params.dt_integrator_step],
                             x[:, k])
             x[:, k + 1] = sol.y[:, -1]
-            # todo split solutions of each player from unified solution x, u...
+
+        # extract trajectories and values from simulation for each player
+
+        for i in range(n_players):
+            upd_s_idx = (i + 1) * params.n_states
+            upd_i_idx = (i + 1) * params.n_inputs
+            upd_i_spline = (i + 1) * params.n_bspline_points
+            sim_data_players.append(SimPlayer(
+                x=x[range(i * params.n_states, upd_s_idx), :],
+                x_pred=x_pred[range(i * params.n_states, upd_s_idx), :],
+                u=u[range(i * params.n_inputs, upd_i_idx), :],
+                u_pred=u_pred[range(i * params.n_inputs, upd_i_idx), :],
+                next_spline_points=next_spline_points[range(i * params.n_bspline_points, upd_i_spline), :],
+                track=tracks[i]))
+
     else:  # IBR and Lexicographic IBR
         # todo find a way to store multiple players information
         # Variables for storing simulation data
@@ -296,16 +311,15 @@ def sim_car_model(
                                 x[i, :, k])
                 x[i, :, k + 1] = sol.y[:, -1]
 
-    # extract trajectories and values from simulation for each player
-    sim_data_players = []
-    for i in range(n_players):
-        sim_data_players.append(SimPlayer(
-            x=x,
-            x_pred=x_pred,
-            u=u,
-            u_pred=u_pred,
-            next_spline_points=next_spline_points,
-            track=tracks[i]))
+        # extract trajectories and values from simulation for each player
+        for i in range(n_players):
+            sim_data_players.append(SimPlayer(
+                x=x[i],
+                x_pred=x_pred[i],
+                u=u[i],
+                u_pred=u_pred[i],
+                next_spline_points=next_spline_points[i],
+                track=tracks[i]))
 
     return SimData(
         players=dict(zip(range(n_players), sim_data_players)),

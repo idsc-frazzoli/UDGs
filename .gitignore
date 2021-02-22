@@ -40,3 +40,4 @@ src/udgs_models/Forces_udgs_solver_IBR/Forces_udgs_solver_IBR_model.c
 src/udgs_models/Forces_udgs_solver_IBR/Forces_udgs_solver_IBR_interface.obj
 src/udgs_models/Forces_udgs_solver_IBR/Forces_udgs_solver_IBR_interface.c
 src/udgs_models/Forces_udgs_solver_IBR/Forces_udgs_solver_IBR.m
+src/udgs_models/Forces_udgs_solver.mat
