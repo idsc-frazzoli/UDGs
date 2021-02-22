@@ -53,6 +53,8 @@ def sim_car_model(
     :return:
     """
     # Load some parameters
+    offset_from_road_center = 1.75
+    init_vx = 8.3
 
     behavior_init = behaviors_zoo["initConfig"].config
     behavior_first = behaviors_zoo["firstOptim"].config
@@ -99,13 +101,13 @@ def sim_car_model(
             dx[i], dy[i] = casadiDynamicBSPLINEforward(init_progress, tracks[i].spline.as_np_array())
             dx_s[i], dy_s[i] = casadiDynamicBSPLINEsidewards(init_progress, tracks[i].spline.as_np_array())
             theta_pos[i] = atan2(dy[i], dx[i])
-            x_pos[i] = x_pos[i] + 1.75 * dx_s[i]
-            y_pos[i] = y_pos[i] + 1.75 * dy_s[i]
+            x_pos[i] += offset_from_road_center * dx_s[i]
+            y_pos[i] += offset_from_road_center * dy_s[i]
             upd_s_idx = - n_inputs + i * n_states
             xinit[x_idx.X + upd_s_idx] = x_pos[i]
             xinit[x_idx.Y + upd_s_idx] = y_pos[i]
             xinit[x_idx.Theta + upd_s_idx] = theta_pos[i]
-            xinit[x_idx.Vx + upd_s_idx] = 8.3
+            xinit[x_idx.Vx + upd_s_idx] = init_vx
 
             # totally arbitrary
             xinit[x_idx.Delta + upd_s_idx] = 0  # totally arbitrary
@@ -198,13 +200,13 @@ def sim_car_model(
         next_spline_points = np.zeros((n_players, params.n_bspline_points, 3, sim_length))
 
         if condition == 2:
-            solver_it = np.zeros((sim_length, n_players,  1))
-            solver_time = np.zeros((sim_length, n_players,  1))
-            solver_cost = np.zeros((sim_length, n_players,  1))
+            solver_it = np.zeros((sim_length, n_players, 1))
+            solver_time = np.zeros((sim_length, n_players, 1))
+            solver_cost = np.zeros((sim_length, n_players, 1))
         else:
-            solver_it = np.zeros((sim_length, n_players,  3))
+            solver_it = np.zeros((sim_length, n_players, 3))
             solver_time = np.zeros((sim_length, n_players, 3))
-            solver_cost = np.zeros((sim_length, n_players,  3))
+            solver_cost = np.zeros((sim_length, n_players, 3))
         # Set initial condition
 
         init_progress = 0.01
@@ -229,12 +231,12 @@ def sim_car_model(
             theta_pos[i] = atan2(dy[i], dx[i])
 
             theta_pos[i] = atan2(dy[i], dx[i])
-            x_pos[i] = x_pos[i] + 1.75 * dx_s[i]  # move player to the right lane
-            y_pos[i] = y_pos[i] + 1.75 * dy_s[i]  # move player to the right lane
+            x_pos[i] += offset_from_road_center * dx_s[i]  # move player to the right lane
+            y_pos[i] += offset_from_road_center * dy_s[i]  # move player to the right lane
             xinit[i, x_idx.X - n_inputs] = x_pos[i]
             xinit[i, x_idx.Y - n_inputs] = y_pos[i]
             xinit[i, x_idx.Theta - n_inputs] = theta_pos[i]
-            xinit[i, x_idx.Vx - n_inputs] = 8.3
+            xinit[i, x_idx.Vx - n_inputs] = init_vx
 
             # totally arbitrary
             xinit[i, x_idx.Delta - n_inputs] = 0  # totally arbitrary
@@ -289,7 +291,7 @@ def sim_car_model(
                                                                                           model.nvar * (model.N - 1)
                                                                                           :model.nvar * model.N]
 
-            output, problem, p_vector =\
+            output, problem, p_vector = \
                 iterated_best_response(model, solver, playerorderlist[0], n_players, problem_list, condition,
                                        behavior_ibr, behavior_first, behavior_second, k,
                                        next_spline_points, solver_it, solver_time, solver_cost,
