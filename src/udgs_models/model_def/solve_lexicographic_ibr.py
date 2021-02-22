@@ -52,8 +52,12 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
     # Make sure the solver has exited properly.
     temp = output["all_var"].reshape(model.nvar, model.N, order='F')
     if exitflag < 0:
-        print(f"At simulation step {k}")
-        raise ForcesException(exitflag)
+
+        if exitflag == -7:
+            print(f"Stalled line search at simulation step {k}, agent {currentplayer+1}")
+        else:
+            print(f"At simulation step {k}")
+            raise ForcesException(exitflag)
     else:
         solver_it[k, jj, lex_level] = info.it
         solver_time[k, jj, lex_level] = info.solvetime

@@ -116,14 +116,14 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, n_players: int, c
             model.hu = np.append(model.hu, np.array(0))  # upper bound for nonlinear constraints
             model.hl = np.append(model.hl, np.array(-np.inf))  # lower bound for nonlinear constraints
 
-        # # Terminal State Constraints
-        # model.nhN = 5 + collision_constraints + obstacle_constraints  # Number of inequality constraints
-        # model.ineqN = nlconst_car_ibrN[n_players]
-        # model.huN = []
-        # model.hlN = []
-        # for k in range(model.nhN):
-        #     model.huN = np.append(model.huN, np.array(0))  # upper bound for nonlinear constraints
-        #     model.hlN = np.append(model.hlN, np.array(-np.inf))  # lower bound for nonlinear constraints
+        # Terminal State Constraints
+        model.nhN = 5 + collision_constraints + obstacle_constraints  # Number of inequality constraints
+        model.ineqN = nlconst_car_ibrN[n_players]
+        model.huN = []
+        model.hlN = []
+        for k in range(model.nhN):
+            model.huN = np.append(model.huN, np.array(0))  # upper bound for nonlinear constraints
+            model.hlN = np.append(model.hlN, np.array(-np.inf))  # lower bound for nonlinear constraints
 
         for k in range(params.N):
             model.objective[k] = objective_car[1]
