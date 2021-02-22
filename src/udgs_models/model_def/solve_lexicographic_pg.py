@@ -38,8 +38,11 @@ def solve_optimization(model, solver, n_players, problem, behavior, k, jj, next_
     output, exitflag, info = solver.solve(problem)
     # Make sure the solver has exited properly.
     if exitflag < 0:
-        print(f"At simulation step {k}")
-        raise ForcesException(exitflag)
+        if exitflag == -7:
+            print(f"Stalled line search at simulation step {k}")
+        else:
+            print(f"At simulation step {k}")
+            raise ForcesException(exitflag)
     else:
         solver_it[k, jj] = info.it
         solver_time[k, jj] = info.solvetime

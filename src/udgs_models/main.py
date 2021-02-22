@@ -40,8 +40,7 @@ def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: boo
                     condition: int = 2):
     if mpc_model == "human-constraints":
         model, solver = generate_car_model(generate_solver, to_deploy, num_cars, condition)
-        sim_data = sim_car_model(model, solver, num_cars, condition,
-                                 sim_length=20)
+        sim_data = sim_car_model(model, solver, num_cars, condition, sim_length=45)
         make_report(sim_data)
     else:
         raise ValueError(f'The requested model "{mpc_model}" is not recognized.')

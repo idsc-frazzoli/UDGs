@@ -114,7 +114,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                         output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
                             solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
                                                   behavior_second, slackcost,
-                                                  behavior_second[p_idx.OptCost2], k, order[case],lex_level,
+                                                  behavior_second[p_idx.OptCost2], k, order[case], lex_level,
                                                   next_spline_points[order[case]], solver_it, solver_time, solver_cost,
                                                   playerstrajX, playerstrajY)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
@@ -124,12 +124,12 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                         problem_list[order[case]]["x0"][0: model.nvar * model.N] = \
                             output[order[case]]["all_var"][0: model.nvar * model.N]
                         slackcost = outputNew[order[case], :, :][params.x_idx.CumSlackCost, - 1]
-                        cumlatcost = outputNew[order[case], :, :][params.x_idx.CumLatSpeedCost, - 1]
+                        cumlatcost = outputNew[order[case], :, :][params.x_idx.CumLatSpeedCost, - 1] + 0.1
 
                     else:
                         output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
                             solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
-                                                  behavior_second, slackcost, cumlatcost, k, order[case],lex_level,
+                                                  behavior_second, slackcost, cumlatcost, k, order[case], lex_level,
                                                   next_spline_points[order[case]], solver_it, solver_time, solver_cost,
                                                   playerstrajX, playerstrajY)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
