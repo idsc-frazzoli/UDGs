@@ -185,7 +185,7 @@ def _nlconst_car_ibr(z, p, n):
     :return: List containing the constraints #todo
     """
 
-    pointsO = params.n_opt_param + (n-1) * 2
+    pointsO = params.n_opt_param
     pointsN = params.n_bspline_points
 
     minSafetyDistance = p[p_idx.minSafetyDistance]
@@ -227,8 +227,8 @@ def _nlconst_car_ibr(z, p, n):
         distance_y = (z[x_idx.Y] - p[update_pidx_y])
         eucl_dist = sqrt(distance_x ** 2 + distance_y ** 2)
         slack_coll = z[u_idx.Slack_Coll]
-        v3 = -eucl_dist + minSafetyDistance - slack_coll
-        v = np.append(v, np.array([v3]))
+        v4 = -eucl_dist + minSafetyDistance - slack_coll
+        v = np.append(v, np.array([v4]))
 
     return v
 

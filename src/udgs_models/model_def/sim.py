@@ -234,7 +234,7 @@ def sim_car_model(
             xinit[i, x_idx.X - n_inputs] = x_pos[i]
             xinit[i, x_idx.Y - n_inputs] = y_pos[i]
             xinit[i, x_idx.Theta - n_inputs] = theta_pos[i]
-            xinit[i, x_idx.Vx - n_inputs] = 2
+            xinit[i, x_idx.Vx - n_inputs] = 8.3
 
             # totally arbitrary
             xinit[i, x_idx.Delta - n_inputs] = 0  # totally arbitrary
@@ -279,10 +279,15 @@ def sim_car_model(
                     solve_optimization_br(model, solver, i, n_players, problem_list[i], behavior_init,
                                           behavior_init[p_idx.OptCost1], behavior_init[p_idx.OptCost2],
                                           k, i, 0, next_spline_points[i], solver_it,
-                                          solver_time, solver_cost, playerstrajX[i], playerstrajY[i])
+                                          solver_time, solver_cost, playerstrajX, playerstrajY)
                 outputOld[i, :, :] = output[i]["all_var"].reshape(model.nvar, model.N, order='F')
                 playerstrajX[i] = outputOld[i, x_idx.X, :]
                 playerstrajY[i] = outputOld[i, x_idx.Y, :]
+                problem_list[i]["x0"][0: model.nvar * (model.N - 1)] = output[i]["all_var"][model.nvar:
+                                                                                            model.nvar * model.N]
+                problem_list[i]["x0"][model.nvar * (model.N - 1): model.nvar * model.N] = output[i]["all_var"][
+                                                                                          model.nvar * (model.N - 1)
+                                                                                          :model.nvar * model.N]
 
             output, problem, p_vector =\
                 iterated_best_response(model, solver, playerorderlist[0], n_players, problem_list, condition,

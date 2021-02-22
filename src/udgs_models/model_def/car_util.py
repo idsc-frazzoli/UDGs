@@ -133,8 +133,8 @@ def set_p_car_ibr(
         coordinateY_car,
         n_players):
     num_coordinates_other_players = (n_players - 1) * 2
-    opt_params = params.n_opt_param + num_coordinates_other_players
-    p = np.zeros((opt_params + 3 * params.n_bspline_points))
+    opt_params = params.n_opt_param
+    p = np.zeros((opt_params + num_coordinates_other_players + 3 * params.n_bspline_points))
 
     p[p_idx.SpeedLimit] = SpeedLimit
     p[p_idx.TargetSpeed] = TargetSpeed
@@ -158,7 +158,7 @@ def set_p_car_ibr(
     for i in range(n_players-1):
         updateX = 2*i
         updateY = 1 + 2*i
-        p[params.n_opt_param + updateX] = coordinateX_car
-        p[params.n_opt_param + updateY] = coordinateY_car
+        p[params.n_opt_param + 3 * params.n_bspline_points + updateX] = coordinateX_car
+        p[params.n_opt_param + 3 * params.n_bspline_points + updateY] = coordinateY_car
 
     return p

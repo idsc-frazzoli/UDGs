@@ -41,9 +41,9 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
         if i == currentplayer:
             continue
 
-        problem["all_parameters"][params.n_opt_param + 2 * kk:
+        problem["all_parameters"][params.n_opt_param + 3 * params.n_bspline_points + 2 * kk:
                                   len(problem["all_parameters"]):model.npar] = playerstrajX[i]
-        problem["all_parameters"][params.n_opt_param + 1 + 2 * kk:
+        problem["all_parameters"][params.n_opt_param + 3 * params.n_bspline_points + 1 + 2 * kk:
                                   len(problem["all_parameters"]):model.npar] = playerstrajY[i]
         kk += 1
 
@@ -83,8 +83,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                     solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
                                           behavior, behavior[p_idx.OptCost1],
                                           behavior[p_idx.OptCost2], k, order[case], 0, next_spline_points[order[case]],
-                                          solver_it, solver_time, solver_cost, playerstrajX[order[case]],
-                                          playerstrajY[order[case]])
+                                          solver_it, solver_time, solver_cost, playerstrajX, playerstrajY)
                 outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N, order='F')
                 playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
                 playerstrajY[order[case]] = outputNew[order[case], x_idx.Y, :]
@@ -98,7 +97,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                                                   behavior_first, behavior_first[p_idx.OptCost1],
                                                   behavior_first[p_idx.OptCost2], k, order[case], lex_level,
                                                   next_spline_points[order[case]], solver_it, solver_time, solver_cost,
-                                                  playerstrajX[order[case]], playerstrajY[order[case]])
+                                                  playerstrajX, playerstrajY)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
                                                                                               order='F')
                         # playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
@@ -113,7 +112,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                                                   behavior_second, slackcost,
                                                   behavior_second[p_idx.OptCost2], k, order[case],lex_level,
                                                   next_spline_points[order[case]], solver_it, solver_time, solver_cost,
-                                                  playerstrajX[order[case]], playerstrajY[order[case]])
+                                                  playerstrajX, playerstrajY)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
                                                                                               order='F')
                         # playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
@@ -128,7 +127,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                             solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
                                                   behavior_second, slackcost, cumlatcost, k, order[case],lex_level,
                                                   next_spline_points[order[case]], solver_it, solver_time, solver_cost,
-                                                  playerstrajX[order[case]], playerstrajY[order[case]])
+                                                  playerstrajX, playerstrajY)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
                                                                                               order='F')
                         playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
