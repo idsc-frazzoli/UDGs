@@ -4,7 +4,6 @@ from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
 
 from udgs_models.model_def import params
-from tracks import Track
 from vehicle import gokart_pool, KITT
 from visualisation.vis import Visualization
 from .indices import var_descriptions

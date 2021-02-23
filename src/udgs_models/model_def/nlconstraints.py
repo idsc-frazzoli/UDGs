@@ -86,6 +86,7 @@ nlconst_car = []
 for i in range(5):
     nlconst_car.append(partial(_nlconst_car, n=i))
 
+
 def _nlconst_carN(z, p, n):
     """
     Computes the nonlinear inequality constraints.
@@ -220,7 +221,7 @@ def _nlconst_car_ibr(z, p, n):
 
     # non-collision constraints with other vehicles
 
-    for i in range(n-1):
+    for i in range(n - 1):
         update_pidx_x = i * 2 + params.n_opt_param + 3 * params.n_bspline_points
         update_pidx_y = i * 2 + 1 + params.n_opt_param + 3 * params.n_bspline_points
         distance_x = (z[x_idx.X] - p[update_pidx_x])
@@ -235,7 +236,7 @@ def _nlconst_car_ibr(z, p, n):
 
 nlconst_car_ibr = []
 for i in range(5):
-    nlconst_car_ibr .append(partial(_nlconst_car_ibr, n=i))
+    nlconst_car_ibr.append(partial(_nlconst_car_ibr, n=i))
 
 
 def _nlconst_car_ibrN(z, p, n):
@@ -281,7 +282,7 @@ def _nlconst_car_ibrN(z, p, n):
 
     v = np.array([v1, v2, v3, v4, v5, v6])
 
-    for i in range(n-1):
+    for i in range(n - 1):
         update_pidx_x = i * 2 + params.n_opt_param + 3 * params.n_bspline_points
         update_pidx_y = i * 2 + 1 + params.n_opt_param + 3 * params.n_bspline_points
         distance_x = (z[x_idx.X] - p[update_pidx_x])
