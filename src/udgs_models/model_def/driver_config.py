@@ -28,11 +28,11 @@ _default[IdxParams.kBelowTargetSpeedCost] = 0.5
 _default[IdxParams.kAboveSpeedLimit] = 4
 _default[IdxParams.kLag] = 1
 _default[IdxParams.kLat] = 1
-_default[IdxParams.pLeftLane] = 1
+_default[IdxParams.pLeftLane] = 2
 _default[IdxParams.kReg_dAb] = 0.006
 _default[IdxParams.kReg_dDelta] = 2
 _default[IdxParams.kSlack] = 10000
-_default[IdxParams.minSafetyDistance] = 4  # 3
+_default[IdxParams.minSafetyDistance] = 3.5  # 3
 _default[IdxParams.carLength] = 2.5
 
 cautious_spec = BehaviorSpec(desc="PG", config=_default)
@@ -65,6 +65,7 @@ thirdOptim_spec = BehaviorSpec(desc="thirdOptim", config=_thirdOptim)
 behaviors_zoo: Mapping[str, BehaviorSpec] = frozendict(
     {
         "PG": cautious_spec,
+        "ibr": cautious_spec,
         "initConfig": initialization_spec,
         "firstOptim": firstOptim_spec,
         "secondOptim": secondOptim_spec,

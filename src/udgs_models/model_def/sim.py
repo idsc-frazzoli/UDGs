@@ -59,7 +59,7 @@ def sim_car_model(
     behavior_second = behaviors_zoo["secondOptim"].config
     behavior_third = behaviors_zoo["thirdOptim"].config
     behavior_pg = behaviors_zoo["PG"].config
-    behavior_ibr = behaviors_zoo["PG"].config
+    behavior_ibr = behaviors_zoo["Ibr"].config
 
     n_states = params.n_states
     n_inputs = params.n_inputs

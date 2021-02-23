@@ -29,7 +29,7 @@ def _parse_args():
     )
     p.add_argument(
         "--condition",
-        default=3,
+        default=0,
         help="0: PG, 1:LexiPG, 2:IBR, 3:LexiIBR",
         type=int,
     )

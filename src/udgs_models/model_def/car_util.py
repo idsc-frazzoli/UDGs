@@ -53,10 +53,10 @@ def laterrorPunisher(laterror, cc):
     """
 
     :param laterror:
-    :param cc:
-    :return:
+    :param cc: reference for laterror
+    :return: penalty term for laterror
     """
-    x = fmin(laterror, 0)
+    x = fmin(laterror-cc, 0)
     return x ** 2
 
 
@@ -156,8 +156,8 @@ def set_p_car_ibr(
     p[p_idx.carLength] = carLength
     p[opt_params: opt_params + 3 * params.n_bspline_points] = points.flatten(order="f")
     for i in range(n_players-1):
-        updateX = 2*i
-        updateY = 1 + 2*i
+        updateX = 2 * i
+        updateY = 1 + 2 * i
         p[params.n_opt_param + 3 * params.n_bspline_points + updateX] = coordinateX_car
         p[params.n_opt_param + 3 * params.n_bspline_points + updateY] = coordinateY_car
 

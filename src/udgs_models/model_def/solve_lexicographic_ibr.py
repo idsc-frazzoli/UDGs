@@ -104,8 +104,6 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                                                   playerstrajX, playerstrajY)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
                                                                                               order='F')
-                        # playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
-                        # playerstrajY[order[case]] = outputNew[order[case], x_idx.Y, :]
                         problem_list[order[case]]["x0"][0: model.nvar * model.N] = \
                             output[order[case]]["all_var"][0: model.nvar * model.N]
                         slackcost = outputNew[order[case], :, :][params.x_idx.CumSlackCost, - 1]
@@ -119,8 +117,6 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                                                   playerstrajX, playerstrajY)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
                                                                                               order='F')
-                        # playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
-                        # playerstrajY[order[case]] = outputNew[order[case], x_idx.Y, :]
                         problem_list[order[case]]["x0"][0: model.nvar * model.N] = \
                             output[order[case]]["all_var"][0: model.nvar * model.N]
                         slackcost = outputNew[order[case], :, :][params.x_idx.CumSlackCost, - 1]
@@ -142,7 +138,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
         # verify convergence
         for i in range(n_players):
                 eucl_dist[i] = np.sum(np.sqrt(np.square(playerstrajX[i] - playerstrajX_old[i]) +
-                                       np.square(playerstrajY[i] - playerstrajY_old[i])))
+                                      np.square(playerstrajY[i] - playerstrajY_old[i])))
 
         if all(i <= 0.1 for i in eucl_dist):
             return output, problem_list, p_vector
