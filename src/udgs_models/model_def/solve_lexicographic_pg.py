@@ -65,7 +65,8 @@ def solve_optimization(model, solver, n_players, problem, behavior, k, lex_level
 
 
 def solve_lexicographic(model, solver, num_players, problem, behavior_init, behavior_first, behavior_second,
-                        behavior_third, k, next_spline_points, solver_it_lexi, solver_time_lexi, solver_cost_lexi):
+                        behavior_third, k, lexi_iter, next_spline_points, solver_it_lexi, solver_time_lexi,
+                        solver_cost_lexi):
 
     safety_slack = 0.01
     safety_lat = 1
@@ -77,7 +78,7 @@ def solve_lexicographic(model, solver, num_players, problem, behavior_init, beha
             behavior_init[p_idx.OptCost2])
         problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
 
-    for lex_level in range(3):
+    for lex_level in range(lexi_iter):
         if lex_level == 0:
             output, problem, p_vector = solve_optimization(
                 model, solver, num_players, problem, behavior_first,

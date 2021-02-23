@@ -128,12 +128,12 @@ def get_car_plot(sim_data) -> Figure:
     return fig
 
 
-def get_solver_stats(solver_it, solver_time) -> Figure:
+def get_solver_stats(solver_it, solver_time, solver_cost) -> Figure:
     n_sim_steps = solver_time.shape[0]
     sim_steps = np.arange(0, n_sim_steps)
 
     fig = make_subplots(
-        rows=2, cols=2, column_widths=[0.7, 0.3], subplot_titles=("# Iterations", "", "Solving time", "")
+        rows=3, cols=2, column_widths=[0.7, 0.3], subplot_titles=("# Iterations", "", "Solving time", "", "Cost", "")
     )
 
     # stats about solver iterations
@@ -166,6 +166,21 @@ def get_solver_stats(solver_it, solver_time) -> Figure:
     )
     fig.add_trace(go.Histogram(y=solver_time[:, -1], marker_color=time_color, opacity=0.75), row=2, col=2)
     print(f"Average solving time: {np.average(solver_time):.4f}")
+
+    # stats about solving time
+    time_color = "cyan"
+    fig.add_trace(
+        go.Scatter(
+            x=sim_steps,
+            y=solver_cost[:, -1],
+            line=dict(color=time_color, width=1, dash="dot"),
+            mode="lines+markers",
+            name="Solver costs",
+        ),
+        row=3,
+        col=1,
+    )
+    fig.add_trace(go.Histogram(y=solver_cost[:, -1], marker_color=time_color, opacity=0.75), row=3, col=2)
     # general layout
     fig.update_layout(title_text="Solver stats")
     return fig

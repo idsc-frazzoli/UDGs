@@ -55,6 +55,11 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
     init_vx = 8.3
     playerorderlist = list(itertools.permutations(range(0, n_players)))
     chosen_permutation = 5  # IBR only
+    n_iter = 10
+    lexi_iter = 3
+    if lexi_iter > 3 or lexi_iter < 1:
+        lexi_iter = 3
+
     if chosen_permutation >= len(playerorderlist):
         print("The chosen permutation does not exist. First Selected")
         chosen_permutation = 0
@@ -84,9 +89,9 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
             solver_time = np.zeros((sim_length, 1))
             solver_cost = np.zeros((sim_length, 1))
         else:
-            solver_it = np.zeros((sim_length, 3))
-            solver_time = np.zeros((sim_length, 3))
-            solver_cost = np.zeros((sim_length, 3))
+            solver_it = np.zeros((sim_length, lexi_iter))
+            solver_time = np.zeros((sim_length, lexi_iter))
+            solver_cost = np.zeros((sim_length, lexi_iter))
         # Set initial condition
 
         init_progress = 0.01
@@ -162,7 +167,8 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
                 problem["xinit"] = x[:, k]
                 temp, problem, p_vector = solve_lexicographic(model, solver, n_players, problem, behavior_init,
                                                               behavior_first, behavior_second, behavior_third, k,
-                                                              next_spline_points, solver_it, solver_time, solver_cost)
+                                                              lexi_iter, next_spline_points, solver_it, solver_time,
+                                                              solver_cost)
 
                 u_pred[:, :, k] = temp[0:n_inputs * n_players, :]  # predicted inputs
                 x_pred[:, :, k] = temp[n_inputs * n_players: params.n_var * n_players, :]  # predicted states
@@ -200,13 +206,13 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
         next_spline_points = np.zeros((n_players, params.n_bspline_points, 3, sim_length))
 
         if condition == 2:
-            solver_it = np.zeros((sim_length, 1, n_players))
-            solver_time = np.zeros((sim_length, 1, n_players))
-            solver_cost = np.zeros((sim_length, 1, n_players))
+            solver_it = np.zeros((sim_length, 1, n_players, n_iter))
+            solver_time = np.zeros((sim_length, 1, n_players, n_iter))
+            solver_cost = np.zeros((sim_length, 1, n_players, n_iter))
         else:
-            solver_it = np.zeros((sim_length, 3, n_players))
-            solver_time = np.zeros((sim_length, 3, n_players))
-            solver_cost = np.zeros((sim_length, 3, n_players))
+            solver_it = np.zeros((sim_length, lexi_iter, n_players, n_iter))
+            solver_time = np.zeros((sim_length, lexi_iter, n_players, n_iter))
+            solver_cost = np.zeros((sim_length, lexi_iter, n_players, n_iter))
         # Set initial condition
 
         init_progress = 0.01
@@ -294,7 +300,7 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
 
             output, problem, p_vector = \
                 iterated_best_response(model, solver, playerorderlist[chosen_permutation], n_players, problem_list,
-                                       condition, behavior_ibr, behavior_first, behavior_second, k,
+                                       condition, behavior_ibr, behavior_first, behavior_second, k, n_iter, lexi_iter,
                                        next_spline_points, solver_it, solver_time, solver_cost,
                                        playerstrajX, playerstrajY)
             # Extract output and initialize next iteration with current solution shifted by one stage

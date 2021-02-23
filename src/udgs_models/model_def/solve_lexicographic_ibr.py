@@ -70,24 +70,24 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
         if exitflag == -7:
             print(f"Stalled line search at simulation step {k}, agent {currentplayer+1}, iter: {iter},"
                   f" lexlevel: {lex_level}")
-            solver_it[k, lex_level, currentplayer] = info.it
-            solver_time[k, lex_level, currentplayer] = info.solvetime
-            solver_cost[k, lex_level, currentplayer] = info.pobj
+            solver_it[k, lex_level, currentplayer, iter] = info.it
+            solver_time[k, lex_level, currentplayer, iter] = info.solvetime
+            solver_cost[k, lex_level, currentplayer, iter] = info.pobj
         else:
             print(f"At simulation step {k}")
             raise ForcesException(exitflag)
     else:
-        solver_it[k, lex_level, currentplayer] = info.it
-        solver_time[k, lex_level, currentplayer] = info.solvetime
-        solver_cost[k, lex_level, currentplayer] = info.pobj
+        solver_it[k, lex_level, currentplayer, iter] = info.it
+        solver_time[k, lex_level, currentplayer, iter] = info.solvetime
+        solver_cost[k, lex_level, currentplayer, iter] = info.pobj
 
     return output, problem, p_vector
 
 
 # todo this function iterates best response optimization
 def iterated_best_response(model, solver, order, n_players, problem_list, condition, behavior, behavior_first,
-                           behavior_second, k, next_spline_points, solver_it, solver_time, solver_cost, playerstrajX,
-                           playerstrajY):
+                           behavior_second, k, max_iter, lexi_iter, next_spline_points, solver_it, solver_time, solver_cost,
+                           playerstrajX, playerstrajY):
     """
         model: model settings
         solver: compiled solver
@@ -98,6 +98,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
         behaviour_first: parameters for cost function
         behaviour_second: parameters for cost function
         k: current index in simulation
+        max_iters: max number of iterations allowed
         next_spline_points: spline points for the player
         solver_it, solver_time, solver_cost: array for keep track of info
         playerstrajX : trajectories on X axis of each player
@@ -106,14 +107,13 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
     iter = 0
     safety_slack = 0.0  # to prevent numerical issues
     safety_lat = 0.1   # to prevent numerical issues
-    max_iters = 10
     output = {}
     outputNew = np.zeros((n_players, model.nvar, model.N))
     p_vector = np.zeros((n_players, model.npar))
     playerstrajX_old = np.copy(playerstrajX)
     playerstrajY_old = np.copy(playerstrajY)
     eucl_dist = np.zeros(n_players)
-    while iter <= max_iters:
+    while iter <= max_iter:
         iter += 1
         for case in range(len(order)):
             if condition == 2:  # normal ibr
@@ -128,7 +128,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                 problem_list[order[case]]["x0"][0: model.nvar * model.N] =\
                     output[order[case]]["all_var"][0: model.nvar * model.N]
             else:  # lexi ibr
-                for lex_level in range(3):
+                for lex_level in range(lexi_iter):
                     if lex_level == 0:
                         output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
                             solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
