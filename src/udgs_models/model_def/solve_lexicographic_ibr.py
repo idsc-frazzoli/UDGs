@@ -112,8 +112,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
     playerstrajX_old = np.copy(playerstrajX)
     playerstrajY_old = np.copy(playerstrajY)
     eucl_dist = np.zeros(n_players)
-    while iter <= max_iter:
-        iter += 1
+    while iter < max_iter:
         for case in range(len(order)):
             if condition == 2:  # normal ibr
                 output[order[case]], problem_list[order[case]], p_vector[order[case], :] =\
@@ -180,6 +179,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
             playerstrajX_old = np.copy(playerstrajX)
             playerstrajY_old = np.copy(playerstrajY)
 
+        iter += 1
     print(f"convergence not reached after {iter} iterations")
     convergence_iter[k] = iter+1
     return output, problem_list, p_vector

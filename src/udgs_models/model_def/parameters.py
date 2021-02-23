@@ -1,12 +1,11 @@
 from dataclasses import dataclass
 from enum import IntEnum
-from numbers import Real
 from .indices import IdxState, IdxInput, IdxParams
 
 
 @dataclass(frozen=True)
 class CarParams:
-    N: int = 31
+    N: int = 60
     """The mpc horizon """
     dt_integrator_step: float = 0.1
     x_idx: IntEnum = IdxState
