@@ -53,6 +53,7 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
     # Load some parameters
     offset_from_road_center = 1.75
     init_vx = 8.3
+    init_progress = 0.01
     playerorderlist = list(itertools.permutations(range(0, n_players)))
     chosen_permutation = 5  # IBR only
     n_iter = 10
@@ -94,7 +95,7 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
             solver_cost = np.zeros((sim_length, lexi_iter))
         # Set initial condition
 
-        init_progress = 0.01
+
         x_pos = np.zeros(n_players)
         y_pos = np.zeros(n_players)
         dx = np.zeros(n_players)
@@ -197,7 +198,6 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
                 track=tracks[i]))
 
     else:  # IBR and Lexicographic IBR
-        # todo find a way to store multiple players information
         # Variables for storing simulation data
         x = np.zeros((n_players, n_states, sim_length + 1))  # states
         u = np.zeros((n_players, n_inputs, sim_length))  # inputs
@@ -215,7 +215,6 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
             solver_cost = np.zeros((sim_length, lexi_iter, n_players, n_iter))
         # Set initial condition
 
-        init_progress = 0.01
         x_pos = np.zeros(n_players)
         y_pos = np.zeros(n_players)
         dx = np.zeros(n_players)
