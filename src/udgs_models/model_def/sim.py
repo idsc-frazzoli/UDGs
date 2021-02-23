@@ -33,6 +33,7 @@ class SimData:
     solver_it: np.ndarray
     solver_time: np.ndarray
     solver_cost: np.ndarray
+    convergence_iter: np.ndarray
 
 
 def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, seed: int = 1,
@@ -72,6 +73,7 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
     behavior_pg = behaviors_zoo["PG"].config
     behavior_ibr = behaviors_zoo["ibr"].config
 
+    convergence_iter = np.zeros(sim_length)  # ibr
     n_states = params.n_states
     n_inputs = params.n_inputs
     x_idx = params.x_idx
@@ -94,7 +96,6 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
             solver_time = np.zeros((sim_length, lexi_iter))
             solver_cost = np.zeros((sim_length, lexi_iter))
         # Set initial condition
-
 
         x_pos = np.zeros(n_players)
         y_pos = np.zeros(n_players)
@@ -300,7 +301,7 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
             output, problem, p_vector = \
                 iterated_best_response(model, solver, playerorderlist[chosen_permutation], n_players, problem_list,
                                        condition, behavior_ibr, behavior_first, behavior_second, k, n_iter, lexi_iter,
-                                       next_spline_points, solver_it, solver_time, solver_cost,
+                                       next_spline_points, solver_it, solver_time, solver_cost, convergence_iter,
                                        playerstrajX, playerstrajY)
             # Extract output and initialize next iteration with current solution shifted by one stage
 
@@ -339,4 +340,5 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
         solver_it=solver_it,
         solver_time=solver_time,
         solver_cost=solver_cost,
+        convergence_iter=convergence_iter,
     )

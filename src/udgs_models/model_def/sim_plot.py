@@ -187,6 +187,67 @@ def get_solver_stats(solver_it, solver_time, solver_cost) -> Figure:
     return fig
 
 
+def get_solver_stats_ibr(solver_it, solver_time, solver_cost, convergence_iter) -> Figure:
+    n_sim_steps = solver_time.shape[0]
+    n_lexi_calls = solver_time.shape[1]
+    n_players = solver_time.shape[2]
+    n_iter = solver_time.shape[3]
+    sim_steps = np.arange(0, n_sim_steps)
+
+    fig = make_subplots(
+        rows=3*n_lexi_calls, cols=2, column_widths=[0.7, 0.3], subplot_titles=("# Iterations", "", "Solving time", "", "Cost", "")
+    )
+    for jj in range(n_lexi_calls):
+        # stats about solver iterations
+        it_color = "firebrick"
+        fig.add_trace(
+            go.Scatter(
+                x=sim_steps,
+                y=solver_it[:, jj],
+                line=dict(color=it_color, width=1, dash="dot"),
+                mode="lines+markers",
+                name="Solver iterations",
+            ),
+            row=1+jj*3,
+            col=1,
+        )
+        fig.add_trace(go.Histogram(y=solver_it[:, jj], marker_color=it_color, opacity=0.75), row=1+jj*3, col=2)
+
+        # stats about solving time
+        time_color = "blueviolet"
+        fig.add_trace(
+            go.Scatter(
+                x=sim_steps,
+                y=solver_time[:, jj],
+                line=dict(color=time_color, width=1, dash="dot"),
+                mode="lines+markers",
+                name="Solver time",
+            ),
+            row=2+jj*3,
+            col=1,
+        )
+        fig.add_trace(go.Histogram(y=solver_time[:, jj], marker_color=time_color, opacity=0.75), row=2+jj*3, col=2)
+        print(f"Average solving time: {np.average(solver_time[:, jj]):.4f}")
+
+        # stats about solving time
+        time_color = "cyan"
+        fig.add_trace(
+            go.Scatter(
+                x=sim_steps,
+                y=solver_cost[:, jj],
+                line=dict(color=time_color, width=1, dash="dot"),
+                mode="lines+markers",
+                name="Solver costs",
+            ),
+            row=3+jj*3,
+            col=1,
+        )
+        fig.add_trace(go.Histogram(y=solver_cost[:, jj], marker_color=time_color, opacity=0.75), row=3+jj*3, col=2)
+    # general layout
+    fig.update_layout(title_text="Solver stats")
+    return fig
+
+
 def get_state_plots(states) -> Figure:
     n_sim_steps = states.shape[1]
     sim_steps = np.arange(0, n_sim_steps)

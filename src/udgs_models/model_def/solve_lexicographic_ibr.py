@@ -64,7 +64,6 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
     # Time to solve the NLP!
     output, exitflag, info = solver.solve(problem)
     # Make sure the solver has exited properly.
-    temp = output["all_var"].reshape(model.nvar, model.N, order='F')
     if exitflag < 0:
 
         if exitflag == -7:
@@ -86,8 +85,8 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
 
 # todo this function iterates best response optimization
 def iterated_best_response(model, solver, order, n_players, problem_list, condition, behavior, behavior_first,
-                           behavior_second, k, max_iter, lexi_iter, next_spline_points, solver_it, solver_time, solver_cost,
-                           playerstrajX, playerstrajY):
+                           behavior_second, k, max_iter, lexi_iter, next_spline_points, solver_it, solver_time,
+                           solver_cost, convergence_iter, playerstrajX, playerstrajY):
     """
         model: model settings
         solver: compiled solver
@@ -175,10 +174,12 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
 
         if all(i <= 0.05 for i in eucl_dist):
             print(f"iterations required for convergence: {iter}")
+            convergence_iter[k] = iter
             return output, problem_list, p_vector
         else:
             playerstrajX_old = np.copy(playerstrajX)
             playerstrajY_old = np.copy(playerstrajY)
 
     print(f"convergence not reached after {iter} iterations")
+    convergence_iter[k] = iter+1
     return output, problem_list, p_vector
