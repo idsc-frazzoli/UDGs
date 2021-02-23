@@ -1,9 +1,11 @@
-from tracks import straightLineR2L, winti_002
+from tracks import straightLineR2L
 from PIL import Image
 from numpy import asarray
 import numpy as np
 from matplotlib import pyplot as plt
 import os
+
+from tracks.utils import load_scenario
 
 path = os.path.dirname(__file__)
 
@@ -21,3 +23,7 @@ def test_load_tracks():
     img.show()
     print(img.format, img.size, img.mode)
     print("so far so good")
+
+
+def test_load_scenario():
+    load_scenario()

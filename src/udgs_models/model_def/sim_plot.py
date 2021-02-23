@@ -4,13 +4,12 @@ from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
 
 from udgs_models.model_def import params
-from tracks import Track
 from vehicle import gokart_pool, KITT
 from visualisation.vis import Visualization
 from .indices import var_descriptions
 
 
-def get_car_plot(x, x_pred, u, u_pred, controlpoints, num_cars, track: Track) -> Figure:
+def get_car_plot(sim_data) -> Figure:
     """
 
     :param x: np.ndarray[n_states,sim_step]
@@ -22,14 +21,16 @@ def get_car_plot(x, x_pred, u, u_pred, controlpoints, num_cars, track: Track) ->
     :param track
     :return:
     """
+
     # some parameters
-    sim_steps = x.shape[-1]
-    N = x_pred.shape[1]
-    plotter = Visualization(track=track, gokarts=gokart_pool)
+    n_players = len(sim_data)
+    sim_steps = sim_data[0].x.shape[-1]
+    N = sim_data[0].x_pred.shape[1]
+    plotter = Visualization(track=sim_data[0].track, gokarts=gokart_pool)
     n_inputs = params.n_inputs
     n_states = params.n_states
-    x_idx = params.s_idx
-    u_idx = params.i_idx
+    x_idx = params.x_idx
+    u_idx = params.u_idx
 
     # create background traces
     fig = plotter.plot_map()
@@ -39,17 +40,19 @@ def get_car_plot(x, x_pred, u, u_pred, controlpoints, num_cars, track: Track) ->
 
     # add traces that change during simulation steps (gokart and predictions)
     for k in range(sim_steps):  # sim_steps:
-        for jj in range(num_cars):
-            upd_s_idx = - n_inputs + jj * params.n_states
+        for jj in range(n_players):
+            upd_s_idx = - n_inputs
             state_k = (
-                x[x_idx.X + upd_s_idx, k], x[x_idx.Y + upd_s_idx, k], x[x_idx.Theta + upd_s_idx, k],
-                x[x_idx.Delta + upd_s_idx, k])
+                sim_data[jj].x[x_idx.X + upd_s_idx, k],
+                sim_data[jj].x[x_idx.Y + upd_s_idx, k],
+                sim_data[jj].x[x_idx.Theta + upd_s_idx, k],
+                sim_data[jj].x[x_idx.Delta + upd_s_idx, k])
 
             fig = plotter.plot_prediction_triangle(
-                x=x_pred[x_idx.X + upd_s_idx, :, k],
-                y=x_pred[x_idx.Y + upd_s_idx, :, k],
-                psi=x_pred[x_idx.Theta + upd_s_idx, :, k],
-                ab=x_pred[x_idx.Acc + upd_s_idx, :, k],
+                x=sim_data[jj].x_pred[x_idx.X + upd_s_idx, :, k],
+                y=sim_data[jj].x_pred[x_idx.Y + upd_s_idx, :, k],
+                psi=sim_data[jj].x_pred[x_idx.Theta + upd_s_idx, :, k],
+                ab=sim_data[jj].x_pred[x_idx.Acc + upd_s_idx, :, k],
                 fig=fig,
             )
             fig = plotter.plot_gokart(state_k[0], state_k[1], state_k[2], state_k[3], fig, KITT)
@@ -125,12 +128,12 @@ def get_car_plot(x, x_pred, u, u_pred, controlpoints, num_cars, track: Track) ->
     return fig
 
 
-def get_solver_stats(solver_it, solver_time) -> Figure:
+def get_solver_stats(solver_it, solver_time, solver_cost) -> Figure:
     n_sim_steps = solver_time.shape[0]
     sim_steps = np.arange(0, n_sim_steps)
 
     fig = make_subplots(
-        rows=2, cols=2, column_widths=[0.7, 0.3], subplot_titles=("# Iterations", "", "Solving time", "")
+        rows=3, cols=2, column_widths=[0.7, 0.3], subplot_titles=("# Iterations", "", "Solving time", "", "Cost", "")
     )
 
     # stats about solver iterations
@@ -163,25 +166,40 @@ def get_solver_stats(solver_it, solver_time) -> Figure:
     )
     fig.add_trace(go.Histogram(y=solver_time[:, -1], marker_color=time_color, opacity=0.75), row=2, col=2)
     print(f"Average solving time: {np.average(solver_time):.4f}")
+
+    # stats about solving time
+    time_color = "cyan"
+    fig.add_trace(
+        go.Scatter(
+            x=sim_steps,
+            y=solver_cost[:, -1],
+            line=dict(color=time_color, width=1, dash="dot"),
+            mode="lines+markers",
+            name="Solver costs",
+        ),
+        row=3,
+        col=1,
+    )
+    fig.add_trace(go.Histogram(y=solver_cost[:, -1], marker_color=time_color, opacity=0.75), row=3, col=2)
     # general layout
     fig.update_layout(title_text="Solver stats")
     return fig
 
 
-def get_state_plots(states, num_cars) -> Figure:
+def get_state_plots(states) -> Figure:
     n_sim_steps = states.shape[1]
     sim_steps = np.arange(0, n_sim_steps)
-    n_states = params.n_states * num_cars
+    n_states = params.n_states
     names = []
     units = []
-    for k in range(num_cars):
-        for state_var in params.s_idx:
-            names.append(var_descriptions[state_var].title)
-            units.append(var_descriptions[state_var].units)
 
-        fig = make_subplots(
-            rows=int(np.ceil(n_states / 2)), cols=2, column_widths=[0.5, 0.5], subplot_titles=names
-        )
+    for state_var in params.x_idx:
+        names.append(var_descriptions[state_var].title)
+        units.append(var_descriptions[state_var].units)
+
+    fig = make_subplots(
+        rows=int(np.ceil(n_states / 2)), cols=2, column_widths=[0.5, 0.5], subplot_titles=names
+    )
 
     for i in range(n_states):
         row = int(np.floor(i / 2)) + 1
@@ -204,20 +222,20 @@ def get_state_plots(states, num_cars) -> Figure:
     return fig
 
 
-def get_input_plots(inputs, num_cars) -> Figure:
+def get_input_plots(inputs) -> Figure:
     n_sim_steps = inputs.shape[1]
     sim_steps = np.arange(0, n_sim_steps)
-    n_inputs = params.n_inputs * num_cars
+    n_inputs = params.n_inputs
     names = []
     units = []
-    for k in range(num_cars):
-        for input_var in params.i_idx:
-            names.append(var_descriptions[input_var].title)
-            units.append(var_descriptions[input_var].units)
 
-        fig = make_subplots(
-            rows=int(np.ceil(n_inputs / 2)), cols=2, column_widths=[0.5, 0.5], subplot_titles=names
-        )
+    for input_var in params.u_idx:
+        names.append(var_descriptions[input_var].title)
+        units.append(var_descriptions[input_var].units)
+
+    fig = make_subplots(
+        rows=int(np.ceil(n_inputs / 2)), cols=2, column_widths=[0.5, 0.5], subplot_titles=names
+    )
 
     for i in range(n_inputs):
         row = int(np.floor(i / 2)) + 1

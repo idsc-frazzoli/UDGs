@@ -5,8 +5,13 @@ test-results/
 out
 out-docker
 out-target
+# pycharm +venv
 .idea
 venv
-*.forces
-MPCCgokart
+# forces generated
 Forces_udgs_solver/
+Forces_udgs_solver_IBR/
+*.forces
+*.c
+*.h
+src/udgs_models/Forces_udgs_solver_IBR.mat

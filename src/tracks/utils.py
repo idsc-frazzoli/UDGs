@@ -1,8 +1,11 @@
 # from geometry import SE2
-import numpy as np
+import os
+import yaml
+
 from bspline import *
 
 from tracks import SplineTrack
+from tracks.structures import Scenario
 
 
 def spline_progress_from_pose(spline_track: SplineTrack, pose: np.ndarray) -> float:
@@ -25,3 +28,16 @@ def spline_progress_from_pose(spline_track: SplineTrack, pose: np.ndarray) -> fl
     r = float(casadiDynamicBSPLINERadius([progress], spline_track.as_np_array()[:, -1:np.newaxis]))
     assert min_dist < r
     return progress
+
+
+def load_scenario():
+    file_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
+    file_name = "intersection01.yaml"
+    abs_file_path = os.path.join(file_dir, file_name)
+    with open(abs_file_path) as file:
+        intersection_dict = yaml.load(file, Loader=yaml.FullLoader)
+
+    scenario = Scenario(intersection_dict)
+
+
+    print(scenario)
