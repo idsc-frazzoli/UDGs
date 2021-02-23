@@ -5,11 +5,24 @@ from udgs_models.model_def import params, p_idx, x_idx
 from udgs_models.model_def.car_util import set_p_car_ibr
 
 
-def solve_optimization_br(model, solver, currentplayer, n_players, problem, behavior, optCost1, optCost2, k, jj,
+def solve_optimization_br(model, solver, currentplayer, n_players, problem, behavior, optCost1, optCost2, k,
                           lex_level, next_spline_points, solver_it, solver_time, solver_cost, playerstrajX,
-                          playerstrajY):
+                          playerstrajY, iter):
     """
-
+        model: model settings
+        solver: compiled solver
+        currentplayer: the player which is computing the solution
+        n_players: number of players involved in the game
+        problem: problem definition contains xinit, x0, all_params for the solver
+        behaviour: parameters for cost function
+        optCost1, optcost2: terminal cost for cumulative slack and cumulative rules
+        k: current index in simulation
+        jj: current player depending from order of players
+        lex_level: lexicographic level
+        next_spline_points: spline points for the player
+        solver_it, solver_time, solver_cost: array for keep track of info
+        playerstrajX : trajectories on X axis of each player
+        playerstrrajY: trajectories on Y axis of each player
     """
     p_vector = set_p_car_ibr(
         SpeedLimit=behavior[p_idx.SpeedLimit],
@@ -40,7 +53,6 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
     for i in range(n_players):
         if i == currentplayer:
             continue
-
         problem["all_parameters"][params.n_opt_param + 3 * params.n_bspline_points + 2 * kk:
                                   len(problem["all_parameters"]):model.npar] = playerstrajX[i]
         problem["all_parameters"][params.n_opt_param + 3 * params.n_bspline_points + 1 + 2 * kk:
@@ -54,14 +66,15 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
     if exitflag < 0:
 
         if exitflag == -7:
-            print(f"Stalled line search at simulation step {k}, agent {currentplayer+1}")
+            print(f"Stalled line search at simulation step {k}, agent {currentplayer+1}, iter: {iter},"
+                  f" lexlevel: {lex_level}")
         else:
             print(f"At simulation step {k}")
             raise ForcesException(exitflag)
     else:
-        solver_it[k, jj, lex_level] = info.it
-        solver_time[k, jj, lex_level] = info.solvetime
-        solver_cost[k, jj, lex_level] = info.pobj
+        solver_it[k, lex_level, currentplayer] = info.it
+        solver_time[k, lex_level, currentplayer] = info.solvetime
+        solver_cost[k, lex_level, currentplayer] = info.pobj
 
     return output, problem, p_vector
 
@@ -84,10 +97,10 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
         for case in range(len(order)):
             if condition == 2:  # normal ibr
                 output[order[case]], problem_list[order[case]], p_vector[order[case], :] =\
-                    solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
+                    solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
                                           behavior, behavior[p_idx.OptCost1],
-                                          behavior[p_idx.OptCost2], k, order[case], 0, next_spline_points[order[case]],
-                                          solver_it, solver_time, solver_cost, playerstrajX, playerstrajY)
+                                          behavior[p_idx.OptCost2], k, 0, next_spline_points[order[case]],
+                                          solver_it, solver_time, solver_cost, playerstrajX, playerstrajY, iter)
                 outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N, order='F')
                 playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
                 playerstrajY[order[case]] = outputNew[order[case], x_idx.Y, :]
@@ -97,11 +110,11 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                 for lex_level in range(3):
                     if lex_level == 0:
                         output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
-                            solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
+                            solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
                                                   behavior_first, behavior_first[p_idx.OptCost1],
-                                                  behavior_first[p_idx.OptCost2], k, order[case], lex_level,
+                                                  behavior_first[p_idx.OptCost2], k,  lex_level,
                                                   next_spline_points[order[case]], solver_it, solver_time, solver_cost,
-                                                  playerstrajX, playerstrajY)
+                                                  playerstrajX, playerstrajY, iter)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
                                                                                               order='F')
                         problem_list[order[case]]["x0"][0: model.nvar * model.N] = \
@@ -110,11 +123,10 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
 
                     elif lex_level == 1:
                         output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
-                            solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
-                                                  behavior_second, slackcost,
-                                                  behavior_second[p_idx.OptCost2], k, order[case], lex_level,
-                                                  next_spline_points[order[case]], solver_it, solver_time, solver_cost,
-                                                  playerstrajX, playerstrajY)
+                            solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
+                                                  behavior_second, slackcost, behavior_second[p_idx.OptCost2], k,
+                                                  lex_level, next_spline_points[order[case]], solver_it, solver_time,
+                                                  solver_cost, playerstrajX, playerstrajY, iter)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
                                                                                               order='F')
                         problem_list[order[case]]["x0"][0: model.nvar * model.N] = \
@@ -124,10 +136,10 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
 
                     else:
                         output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
-                            solve_optimization_br(model, solver, case, n_players, problem_list[order[case]],
-                                                  behavior_second, slackcost, cumlatcost, k, order[case], lex_level,
+                            solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
+                                                  behavior_second, slackcost, cumlatcost, k, lex_level,
                                                   next_spline_points[order[case]], solver_it, solver_time, solver_cost,
-                                                  playerstrajX, playerstrajY)
+                                                  playerstrajX, playerstrajY, iter)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
                                                                                               order='F')
                         playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
@@ -140,7 +152,8 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                 eucl_dist[i] = np.sum(np.sqrt(np.square(playerstrajX[i] - playerstrajX_old[i]) +
                                       np.square(playerstrajY[i] - playerstrajY_old[i])))
 
-        if all(i <= 0.1 for i in eucl_dist):
+        if all(i <= 0.05 for i in eucl_dist):
+            print(f"iterations required for convergence: {iter}")
             return output, problem_list, p_vector
         else:
             playerstrajX_old = np.copy(playerstrajX)

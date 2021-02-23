@@ -14,3 +14,4 @@ Forces_udgs_solver_IBR/
 *.forces
 *.c
 *.h
+src/udgs_models/Forces_udgs_solver_IBR.mat

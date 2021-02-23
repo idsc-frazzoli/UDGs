@@ -55,13 +55,18 @@ def sim_car_model(
     # Load some parameters
     offset_from_road_center = 1.75
     init_vx = 8.3
+    playerorderlist = list(itertools.permutations(range(0, n_players)))
+    chosen_permutation = 5  # IBR only
+    if chosen_permutation >= len(playerorderlist):
+        print("The chosen permutation does not exist. First Selected")
+        chosen_permutation = 0
 
     behavior_init = behaviors_zoo["initConfig"].config
     behavior_first = behaviors_zoo["firstOptim"].config
     behavior_second = behaviors_zoo["secondOptim"].config
     behavior_third = behaviors_zoo["thirdOptim"].config
     behavior_pg = behaviors_zoo["PG"].config
-    behavior_ibr = behaviors_zoo["Ibr"].config
+    behavior_ibr = behaviors_zoo["ibr"].config
 
     n_states = params.n_states
     n_inputs = params.n_inputs
@@ -200,13 +205,13 @@ def sim_car_model(
         next_spline_points = np.zeros((n_players, params.n_bspline_points, 3, sim_length))
 
         if condition == 2:
-            solver_it = np.zeros((sim_length, n_players, 1))
-            solver_time = np.zeros((sim_length, n_players, 1))
-            solver_cost = np.zeros((sim_length, n_players, 1))
+            solver_it = np.zeros((sim_length, 1, n_players))
+            solver_time = np.zeros((sim_length, 1, n_players))
+            solver_cost = np.zeros((sim_length, 1, n_players))
         else:
-            solver_it = np.zeros((sim_length, n_players, 3))
-            solver_time = np.zeros((sim_length, n_players, 3))
-            solver_cost = np.zeros((sim_length, n_players, 3))
+            solver_it = np.zeros((sim_length, 3, n_players))
+            solver_time = np.zeros((sim_length, 3, n_players))
+            solver_cost = np.zeros((sim_length, 3, n_players))
         # Set initial condition
 
         init_progress = 0.01
@@ -256,7 +261,6 @@ def sim_car_model(
             new["x0"] = initialization
             problem_list.append(new)
 
-        playerorderlist = list(itertools.permutations(range(0, n_players)))
         # todo implement a loop that considers all orders of players
         spline_start_idx = np.zeros(n_players)
         for k in range(sim_length):
@@ -280,8 +284,8 @@ def sim_car_model(
                 output[i], problem_list[i], p_vector[i, :] = \
                     solve_optimization_br(model, solver, i, n_players, problem_list[i], behavior_init,
                                           behavior_init[p_idx.OptCost1], behavior_init[p_idx.OptCost2],
-                                          k, i, 0, next_spline_points[i], solver_it,
-                                          solver_time, solver_cost, playerstrajX, playerstrajY)
+                                          k, 0, next_spline_points[i], solver_it,
+                                          solver_time, solver_cost, playerstrajX, playerstrajY, 0)
                 outputOld[i, :, :] = output[i]["all_var"].reshape(model.nvar, model.N, order='F')
                 playerstrajX[i] = outputOld[i, x_idx.X, :]
                 playerstrajY[i] = outputOld[i, x_idx.Y, :]
@@ -292,8 +296,8 @@ def sim_car_model(
                                                                                           :model.nvar * model.N]
 
             output, problem, p_vector = \
-                iterated_best_response(model, solver, playerorderlist[0], n_players, problem_list, condition,
-                                       behavior_ibr, behavior_first, behavior_second, k,
+                iterated_best_response(model, solver, playerorderlist[chosen_permutation], n_players, problem_list,
+                                       condition, behavior_ibr, behavior_first, behavior_second, k,
                                        next_spline_points, solver_it, solver_time, solver_cost,
                                        playerstrajX, playerstrajY)
             # Extract output and initialize next iteration with current solution shifted by one stage
