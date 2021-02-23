@@ -35,14 +35,12 @@ class SimData:
     solver_cost: np.ndarray
 
 
-def sim_car_model(
-        model, solver, n_players, condition, sim_length: int = 200, seed: int = 1,
-        tracks: Tuple[Track] = (straightLineL2R,
-                                straightLineN2S,
-                                straightLineR2L,
-                                straightLineR2L,
-                                straightLineR2L)
-) -> SimData:
+def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, seed: int = 1,
+                  tracks: Tuple[Track] = (straightLineL2R,
+                                          straightLineN2S,
+                                          straightLineR2L,
+                                          straightLineR2L,
+                                          straightLineR2L)) -> SimData:
     """
 
     :param seed:
@@ -161,13 +159,10 @@ def sim_car_model(
                 u[:, k] = u_pred[:, 0, k]
 
             elif condition == 1:  # PG lexicographic
-                temp, problem, p_vector = solve_lexicographic(
-                    model, solver, n_players, problem,
-                    behavior_init,
-                    behavior_first,
-                    behavior_second,
-                    behavior_third, x, k, next_spline_points,
-                    solver_it, solver_time, solver_cost)
+                problem["xinit"] = x[:, k]
+                temp, problem, p_vector = solve_lexicographic(model, solver, n_players, problem, behavior_init,
+                                                              behavior_first, behavior_second, behavior_third, k,
+                                                              next_spline_points, solver_it, solver_time, solver_cost)
 
                 u_pred[:, :, k] = temp[0:n_inputs * n_players, :]  # predicted inputs
                 x_pred[:, :, k] = temp[n_inputs * n_players: params.n_var * n_players, :]  # predicted states
@@ -229,7 +224,7 @@ def sim_car_model(
         outputOld = np.zeros((n_players, n_states + n_inputs, model.N))
         output = {}
         p_vector = np.zeros((n_players, model.npar))
-        for i in range(n_players):  # todo do proper initialization for each player
+        for i in range(n_players):
             x_pos[i], y_pos[i] = casadiDynamicBSPLINE(init_progress, tracks[i].spline.as_np_array())
             dx[i], dy[i] = casadiDynamicBSPLINEforward(init_progress, tracks[i].spline.as_np_array())
             dx_s[i], dy_s[i] = casadiDynamicBSPLINEsidewards(init_progress, tracks[i].spline.as_np_array())
@@ -261,7 +256,7 @@ def sim_car_model(
             new["x0"] = initialization
             problem_list.append(new)
 
-        # todo implement a loop that considers all orders of players
+        # todo implement a loop that considers all possible permutations of players
         spline_start_idx = np.zeros(n_players)
         for k in range(sim_length):
             # find bspline
@@ -278,22 +273,24 @@ def sim_car_model(
                     next_spline_points[i, j, :, k] = next_point
                 # Limit acceleration
                 x[i, x_idx.Acc + upd_s_idx, k] = min(2, x[i, x_idx.Acc + upd_s_idx, k])
+            # initialization
 
             for i in range(n_players):
                 problem_list[i]["xinit"] = x[i, :, k]
-                output[i], problem_list[i], p_vector[i, :] = \
-                    solve_optimization_br(model, solver, i, n_players, problem_list[i], behavior_init,
-                                          behavior_init[p_idx.OptCost1], behavior_init[p_idx.OptCost2],
-                                          k, 0, next_spline_points[i], solver_it,
-                                          solver_time, solver_cost, playerstrajX, playerstrajY, 0)
-                outputOld[i, :, :] = output[i]["all_var"].reshape(model.nvar, model.N, order='F')
-                playerstrajX[i] = outputOld[i, x_idx.X, :]
-                playerstrajY[i] = outputOld[i, x_idx.Y, :]
-                problem_list[i]["x0"][0: model.nvar * (model.N - 1)] = output[i]["all_var"][model.nvar:
-                                                                                            model.nvar * model.N]
-                problem_list[i]["x0"][model.nvar * (model.N - 1): model.nvar * model.N] = output[i]["all_var"][
-                                                                                          model.nvar * (model.N - 1)
-                                                                                          :model.nvar * model.N]
+                if k == 0:
+                    output[i], problem_list[i], p_vector[i, :] = \
+                        solve_optimization_br(model, solver, i, n_players, problem_list[i], behavior_init,
+                                              behavior_init[p_idx.OptCost1], behavior_init[p_idx.OptCost2],
+                                              k, 0, next_spline_points[i], solver_it,
+                                              solver_time, solver_cost, playerstrajX, playerstrajY, 0)
+                    outputOld[i, :, :] = output[i]["all_var"].reshape(model.nvar, model.N, order='F')
+                    playerstrajX[i] = outputOld[i, x_idx.X, :]
+                    playerstrajY[i] = outputOld[i, x_idx.Y, :]
+                    problem_list[i]["x0"][0: model.nvar * (model.N - 1)] = output[i]["all_var"][model.nvar:
+                                                                                                model.nvar * model.N]
+                    problem_list[i]["x0"][model.nvar * (model.N - 1): model.nvar * model.N] = output[i]["all_var"][
+                                                                                              model.nvar * (model.N - 1)
+                                                                                              :model.nvar * model.N]
 
             output, problem, p_vector = \
                 iterated_best_response(model, solver, playerorderlist[chosen_permutation], n_players, problem_list,

@@ -104,33 +104,33 @@ class Visualization:
         right_bound = centerline + width[:, np.newaxis] * normal_unit
 
         # Constants
-        fig.add_trace(
-            go.Scatter(
-                x=centerline[:, 0],
-                y=centerline[:, 1],
-                line=dict(color="firebrick", width=1, dash="dot"),
-                mode="lines",
-                name="Centerline",
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=left_bound[:, 0],
-                y=left_bound[:, 1],
-                line=dict(color="firebrick", width=4),
-                mode="lines",
-                name="Left bound",
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=right_bound[:, 0],
-                y=right_bound[:, 1],
-                line=dict(color="firebrick", width=4),
-                mode="lines",
-                name="Right bound",
-            )
-        )
+        # fig.add_trace(
+        #     go.Scatter(
+        #         x=centerline[:, 0],
+        #         y=centerline[:, 1],
+        #         line=dict(color="firebrick", width=1, dash="dot"),
+        #         mode="lines",
+        #         name="Centerline",
+        #     )
+        # )
+        # fig.add_trace(
+        #     go.Scatter(
+        #         x=left_bound[:, 0],
+        #         y=left_bound[:, 1],
+        #         line=dict(color="firebrick", width=4),
+        #         mode="lines",
+        #         name="Left bound",
+        #     )
+        # )
+        # fig.add_trace(
+        #     go.Scatter(
+        #         x=right_bound[:, 0],
+        #         y=right_bound[:, 1],
+        #         line=dict(color="firebrick", width=4),
+        #         mode="lines",
+        #         name="Right bound",
+        #     )
+        # )
         return fig
 
     def plot_gokart(self, x, y, psi, beta, fig: Figure, gk_name: GokartName) -> Figure:

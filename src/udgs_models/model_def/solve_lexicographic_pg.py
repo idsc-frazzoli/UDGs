@@ -5,9 +5,19 @@ from udgs_models.model_def import params, p_idx
 from udgs_models.model_def.car_util import set_p_car
 
 
-def solve_optimization(model, solver, n_players, problem, behavior, k, jj, next_spline_points, solver_it,
+def solve_optimization(model, solver, n_players, problem, behavior, k, lex_level, next_spline_points, solver_it,
                        solver_time, solver_cost, optCost1, optCost2):
     """
+        model: model settings
+        solver: compiled solver
+        n_players: number of players involved in the game
+        problem: problem definition contains xinit, x0, all_params for the solver
+        behaviour: parameters for cost function
+        k: current index in simulation
+        lex_level: lexicographic level
+        next_spline_points: spline points for the player
+        solver_it, solver_time, solver_cost: array for keeping track of info
+        optCost1, optcost2: terminal cost for cumulative slack and cumulative rules
     """
     # Set runtime parameters (the only really changing between stages are the next control points of the spline)
     p_vector = set_p_car(
@@ -40,27 +50,26 @@ def solve_optimization(model, solver, n_players, problem, behavior, k, jj, next_
     if exitflag < 0:
         if exitflag == -7:
             print(f"Stalled line search at simulation step {k}")
+            solver_it[k, lex_level] = info.it
+            solver_time[k, lex_level] = info.solvetime
+            solver_cost[k, lex_level] = info.pobj
         else:
             print(f"At simulation step {k}")
             raise ForcesException(exitflag)
     else:
-        solver_it[k, jj] = info.it
-        solver_time[k, jj] = info.solvetime
-        solver_cost[k, jj] = info.pobj
+        solver_it[k, lex_level] = info.it
+        solver_time[k, lex_level] = info.solvetime
+        solver_cost[k, lex_level] = info.pobj
 
     return output, problem, p_vector
 
 
-def solve_lexicographic(model, solver, num_players, problem,
-                        behavior_init,
-                        behavior_first,
-                        behavior_second,
-                        behavior_third,
-                        x, k, next_spline_points, solver_it_lexi, solver_time_lexi, solver_cost_lexi):
+def solve_lexicographic(model, solver, num_players, problem, behavior_init, behavior_first, behavior_second,
+                        behavior_third, k, next_spline_points, solver_it_lexi, solver_time_lexi, solver_cost_lexi):
 
+    safety_slack = 0.01
+    safety_lat = 1
     if k == 0:
-        # Set initial state
-        problem["xinit"] = x[:, k]
         output, problem, p_vector = solve_optimization(
             model, solver, num_players, problem, behavior_init, k, 0,
             next_spline_points, solver_it_lexi, solver_time_lexi,
@@ -69,8 +78,6 @@ def solve_lexicographic(model, solver, num_players, problem,
         problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
 
     for lex_level in range(3):
-        # Set initial state
-        problem["xinit"] = x[:, k]
         if lex_level == 0:
             output, problem, p_vector = solve_optimization(
                 model, solver, num_players, problem, behavior_first,
@@ -91,7 +98,7 @@ def solve_lexicographic(model, solver, num_players, problem,
                 model, solver, num_players, problem, behavior_second,
                 k, lex_level, next_spline_points, solver_it_lexi,
                 solver_time_lexi, solver_cost_lexi,
-                slackcost + 0.03 * slackcost,
+                slackcost + safety_slack,
                 behavior_second[p_idx.OptCost2])
             problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
             temp = output["all_var"].reshape(model.nvar, model.N, order='F')
@@ -109,7 +116,7 @@ def solve_lexicographic(model, solver, num_players, problem,
                 model, solver, num_players, problem, behavior_third,
                 k, lex_level, next_spline_points, solver_it_lexi,
                 solver_time_lexi, solver_cost_lexi,
-                slackcost + 0.1, cumlatcost + 1)
+                slackcost + safety_slack, cumlatcost + safety_lat)
 
     # Extract output and initialize next iteration with current solution shifted by one stage
     problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
