@@ -1,18 +1,19 @@
 from reprep import Report
 
+from udgs_models.model_def import PG, LexicographicPG
 from udgs_models.model_def.sim import SimData
 from udgs_models.model_def.sim_plot import get_car_plot, get_solver_stats, get_state_plots, get_input_plots, \
     get_solver_stats_ibr
 
 
-def make_report(sim_data: SimData, condition):
+def make_report(sim_data: SimData, solution_method):
     # r = Report("vis")
     n_players = len(sim_data.players)
 
     cars_viz = get_car_plot(sim_data.players)
     cars_viz.show()
 
-    if condition == 0 or condition == 1:
+    if solution_method in (PG, LexicographicPG):
         solver_stats = get_solver_stats(sim_data.solver_it, sim_data.solver_time, sim_data.solver_cost)
         solver_stats.show()
     # else:
