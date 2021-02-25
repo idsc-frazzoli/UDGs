@@ -1,17 +1,18 @@
 import argparse
+
 import forcespro
 
 from udgs_models.model_def.sim import sim_car_model
 from udgs_models.model_def.sim_report import make_report
-from model_def.generate_model import generate_car_model
+from model_def.generate_model import _generate_forces_model, AVAILABLE_METHODS, generate_forces_models, SolutionMethod, \
+    LexicographicPG
 
 
 def _parse_args():
     p = argparse.ArgumentParser()
-    p.add_argument("--mpc_model", default="udgs", help="todo", type=str)
     p.add_argument(
         "--generate_solver",
-        default=False,
+        default=True,
         help="If set to false does not regenerate the solver but it looks for an existing one",
         type=bool,
     )
@@ -28,24 +29,26 @@ def _parse_args():
         type=int,
     )
     p.add_argument(
-        "--condition",
-        default=2,
-        help="0: PG, 1:LexiPG, 2:IBR, 3:LexiIBR",
-        type=int,
+        "--solution_method",
+        default="LexicographicPG",
+        help="PG, LexicographicPG,IBR,LexicographicIBR",
+        type=str,
     )
     return p.parse_args()
 
 
-def _generate_model(mpc_model: str, generate_solver: bool = True, to_deploy: bool = False, num_cars: int = 3,
-                    condition: int = 2):
-    if mpc_model == "udgs":
-        model, solver = generate_car_model(generate_solver, to_deploy, num_cars, condition)
-        sim_data = sim_car_model(model, solver, num_cars, condition, sim_length=45)
-        make_report(sim_data, condition)
-    else:
-        raise ValueError(f'The requested model "{mpc_model}" is not recognized.')
+def main(generate_solver: bool = True,
+         to_deploy: bool = False,
+         n_players: int = 3,
+         solution_method: SolutionMethod = LexicographicPG):
+    assert solution_method in AVAILABLE_METHODS, solution_method
+    forces_models = generate_forces_models(generate_solver, to_deploy, n_players)
+    # extract the model for the solution method
+    model, solver = forces_models[solution_method]
+    sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=2)
+    make_report(sim_data, solution_method)
 
 
 if __name__ == "__main__":
     args = _parse_args()
-    _generate_model(args.mpc_model, args.generate_solver, args.to_deploy, args.num_cars, args.condition)
+    main(args.generate_solver, args.to_deploy, args.num_cars, args.solution_method)

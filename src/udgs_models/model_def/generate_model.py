@@ -1,4 +1,6 @@
-from udgs_models.model_def.dynamics_car import _dynamics_car, dynamics_cars
+from typing import Tuple, MutableMapping
+
+from udgs_models.model_def.dynamics_car import dynamics_cars
 
 import numpy as np
 
@@ -8,10 +10,29 @@ from .objective import objective_car
 from .nlconstraints import nlconst_car, nlconst_carN, nlconst_car_ibr, nlconst_car_ibrN
 from forcespro import nlp, CodeOptions
 
-__all__ = ["generate_car_model"]
+__all__ = ["generate_forces_models"]
 
 
-def generate_car_model(generate_solver: bool, to_deploy: bool, n_players: int, condition: int):
+def generate_forces_models(generate_solver: bool, to_deploy: bool, n_players: int):
+    """
+    It defines and creates all the solver for the solution methods,
+    it returns a dictionary with key SolutionType
+    :param generate_solver:
+    :param to_deploy:
+    :param n_players:
+    :return:
+    """
+    forces_models: MutableMapping[SolutionMethod, Tuple] = {}
+    methods2models = {(PG, LexicographicPG): ForcesPG,
+                      (IBR, LexicographicIBR): ForcesIBR}
+    for keys, forces_model in methods2models.items():
+        model, solver = _generate_forces_model(generate_solver, to_deploy, n_players, forces_model)
+        for method in keys:
+            forces_models[method] = (model, solver)
+    return forces_models
+
+
+def _generate_forces_model(generate_solver: bool, to_deploy: bool, n_players: int, forces_model: ForcesModel):
     """
     This model assumes:
         - a state given by ...
@@ -19,18 +40,14 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, n_players: int, c
 
     :return:
     """
-    if condition == 0 or condition == 1:  # PG or Lexicographic PG
-        solver_name: str = "Forces_udgs_solver"
-        n_players_model = n_players
-    else:  # IBR
-        solver_name: str = "Forces_udgs_solver_IBR"
-        n_players_model = 1
+    solver_name = "solver_" + forces_model
+    n_players_model = n_players if forces_model == ForcesPG else 1
 
     model = nlp.SymbolicModel(params.N)
     model.nvar = params.n_var * n_players_model
     model.neq = params.n_states * n_players_model
 
-    if condition == 0 or condition == 1:  # PG or Lexicographic PG
+    if forces_model == ForcesPG:  # PG or Lexicographic PG
         # Number of parameters
         model.npar = params.n_opt_param + 3 * n_players_model * params.n_bspline_points
         collision_constraints = int(n_players_model * (n_players_model - 1) / 2)
@@ -46,9 +63,9 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, n_players: int, c
     model.continuous_dynamics = dynamics_cars[n_players_model]
 
     # inequality constraints
-    model.nh = 2 * n_players_model + obstacle_constraints + collision_constraints   # Number of inequality constraints
+    model.nh = 2 * n_players_model + obstacle_constraints + collision_constraints  # Number of inequality constraints
 
-    if condition == 0 or condition == 1:  # PG or Lexicographic PG
+    if forces_model == ForcesPG:  # PG or Lexicographic PG
         model.ineq = nlconst_car[n_players]
     else:  # IBR
         model.ineq = nlconst_car_ibr[n_players]
@@ -61,7 +78,7 @@ def generate_car_model(generate_solver: bool, to_deploy: bool, n_players: int, c
 
     # Terminal State Constraints
     model.nhN = 3 * n_players_model + 2 + collision_constraints + obstacle_constraints
-    if condition == 0 or condition == 1:  # PG or Lexicographic PG
+    if forces_model == ForcesPG:  # PG or Lexicographic PG
         model.ineqN = nlconst_carN[n_players]
     else:  # IBR
         model.ineqN = nlconst_car_ibrN[n_players]

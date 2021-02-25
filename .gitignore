@@ -11,6 +11,8 @@ venv
 # forces generated
 Forces_udgs_solver/
 Forces_udgs_solver_IBR/
+solver_ForcesPG/
+solver_ForcesIBR/
 *.forces
 *.c
 *.h

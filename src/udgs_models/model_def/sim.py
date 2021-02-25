@@ -4,7 +4,7 @@ from typing import Tuple, Mapping
 from scipy.integrate import solve_ivp
 
 from bspline.bspline import casadiDynamicBSPLINE, atan2, casadiDynamicBSPLINEforward, casadiDynamicBSPLINEsidewards
-from udgs_models.model_def import params, p_idx
+from udgs_models.model_def import params, p_idx, SolutionMethod, LexicographicPG, PG, IBR
 import numpy as np
 import itertools
 
@@ -36,7 +36,12 @@ class SimData:
     convergence_iter: np.ndarray
 
 
-def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, seed: int = 1,
+def sim_car_model(model,
+                  solver,
+                  n_players: int,
+                  solution_method: SolutionMethod,
+                  sim_length: int = 1,
+                  seed: int = 1,
                   tracks: Tuple[Track] = (straightLineL2R,
                                           straightLineN2S,
                                           straightLineR2L,
@@ -57,14 +62,10 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
     init_progress = 0.01
     playerorderlist = list(itertools.permutations(range(0, n_players)))
     chosen_permutation = 5  # IBR only
-    n_iter = 10
+    max_n_iter_ibr = 10
     lexi_iter = 3
-    if lexi_iter > 3 or lexi_iter < 1:
-        lexi_iter = 3
-
-    if chosen_permutation >= len(playerorderlist):
-        print("The chosen permutation does not exist. First Selected")
-        chosen_permutation = 0
+    assert (1 <= lexi_iter <= 3)
+    assert (0 <= chosen_permutation <= len(playerorderlist))
 
     behavior_init = behaviors_zoo["initConfig"].config
     behavior_first = behaviors_zoo["firstOptim"].config
@@ -79,7 +80,7 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
     x_idx = params.x_idx
     sim_data_players = []
 
-    if condition == 0 or condition == 1:
+    if solution_method in (PG, LexicographicPG):
         # Variables for storing simulation data
         x = np.zeros((n_states * n_players, sim_length + 1))  # states
         u = np.zeros((n_inputs * n_players, sim_length))  # inputs
@@ -87,7 +88,7 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
         u_pred = np.zeros((n_inputs * n_players, model.N, sim_length))  # inputs
         next_spline_points = np.zeros((params.n_bspline_points * n_players, 3, sim_length))
 
-        if condition == 0:
+        if solution_method == PG:
             solver_it = np.zeros((sim_length, 1))
             solver_time = np.zeros((sim_length, 1))
             solver_cost = np.zeros((sim_length, 1))
@@ -145,7 +146,7 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
                 # Limit acceleration
                 x[x_idx.Acc + upd_s_idx, k] = min(2, x[x_idx.Acc + upd_s_idx, k])
 
-            if condition == 0:  # PG only
+            if solution_method == PG:  # PG only
                 # Set initial state
                 problem["xinit"] = x[:, k]
 
@@ -165,7 +166,7 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
                 # Apply optimized input u of first stage to system and save simulation data
                 u[:, k] = u_pred[:, 0, k]
 
-            elif condition == 1:  # PG lexicographic
+            elif solution_method == LexicographicPG:  # PG lexicographic
                 problem["xinit"] = x[:, k]
                 temp, problem, p_vector = solve_lexicographic(model, solver, n_players, problem, behavior_init,
                                                               behavior_first, behavior_second, behavior_third, k,
@@ -206,14 +207,14 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
         u_pred = np.zeros((n_players, n_inputs, model.N, sim_length))  # inputs
         next_spline_points = np.zeros((n_players, params.n_bspline_points, 3, sim_length))
 
-        if condition == 2:
-            solver_it = np.zeros((sim_length, 1, n_players, n_iter))
-            solver_time = np.zeros((sim_length, 1, n_players, n_iter))
-            solver_cost = np.zeros((sim_length, 1, n_players, n_iter))
+        if solution_method == IBR:
+            solver_it = np.zeros((sim_length, 1, n_players, max_n_iter_ibr))
+            solver_time = np.zeros((sim_length, 1, n_players, max_n_iter_ibr))
+            solver_cost = np.zeros((sim_length, 1, n_players, max_n_iter_ibr))
         else:
-            solver_it = np.zeros((sim_length, lexi_iter, n_players, n_iter))
-            solver_time = np.zeros((sim_length, lexi_iter, n_players, n_iter))
-            solver_cost = np.zeros((sim_length, lexi_iter, n_players, n_iter))
+            solver_it = np.zeros((sim_length, lexi_iter, n_players, max_n_iter_ibr))
+            solver_time = np.zeros((sim_length, lexi_iter, n_players, max_n_iter_ibr))
+            solver_cost = np.zeros((sim_length, lexi_iter, n_players, max_n_iter_ibr))
         # Set initial condition
 
         x_pos = np.zeros(n_players)
@@ -300,7 +301,8 @@ def sim_car_model(model, solver, n_players, condition, sim_length: int = 200, se
 
             output, problem, p_vector = \
                 iterated_best_response(model, solver, playerorderlist[chosen_permutation], n_players, problem_list,
-                                       condition, behavior_ibr, behavior_first, behavior_second, k, n_iter, lexi_iter,
+                                       solution_method, behavior_ibr, behavior_first, behavior_second, k, max_n_iter_ibr,
+                                       lexi_iter,
                                        next_spline_points, solver_it, solver_time, solver_cost, convergence_iter,
                                        playerstrajX, playerstrajY)
             # Extract output and initialize next iteration with current solution shifted by one stage
