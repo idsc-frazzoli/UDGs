@@ -31,8 +31,8 @@ _default[IdxParams.kLat] = 1
 _default[IdxParams.pLeftLane] = 2
 _default[IdxParams.kReg_dAb] = 0.004
 _default[IdxParams.kReg_dDelta] = 2
-_default[IdxParams.kSlack] = 10000
-_default[IdxParams.minSafetyDistance] = 3.3  # 3
+_default[IdxParams.kSlack] = 1000
+_default[IdxParams.minSafetyDistance] = 4  # 3
 _default[IdxParams.carLength] = 2.5
 
 cautious_spec = BehaviorSpec(desc="PG", config=_default)

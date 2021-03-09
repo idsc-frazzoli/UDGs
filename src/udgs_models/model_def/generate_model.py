@@ -85,6 +85,7 @@ def _generate_forces_model(generate_solver: bool, to_deploy: bool, n_players: in
 
     model.huN = []
     model.hlN = []
+
     for k in range(model.nhN):
         model.huN = np.append(model.huN, np.array(0))  # upper bound for nonlinear constraints
         model.hlN = np.append(model.hlN, np.array(-np.inf))  # lower bound for nonlinear constraints

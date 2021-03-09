@@ -11,8 +11,8 @@ import numpy as np
 def _dynamics_car(x, u, p, n):
     """todo
 
-    :param x: state variables
-    :param u: control inputs variables
+    :param x: state variables X, Y, theta, Vx, Acc_x, Delta, S, CumSlackCost, CumLatSpeedCost
+    :param u: control inputs variables dAcc, dDelta, dS, slack, slack_coll, slack_obs
     :param p: parameter variables
     :return:
     """

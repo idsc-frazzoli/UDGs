@@ -11,7 +11,7 @@ import itertools
 from udgs_models.model_def.driver_config import behaviors_zoo
 from tracks import Track
 
-from tracks.zoo import straightLineR2L, straightLineN2S, straightLineL2R
+from tracks.zoo import straightLineW2E, straightLineN2S, straightLineE2W, straightLineN2W
 from udgs_models.model_def.dynamics_car import dynamics_cars
 from udgs_models.model_def.solve_lexicographic_ibr import solve_optimization_br, iterated_best_response
 from udgs_models.model_def.solve_lexicographic_pg import solve_lexicographic, solve_optimization
@@ -42,11 +42,11 @@ def sim_car_model(model,
                   solution_method: SolutionMethod,
                   sim_length: int = 1,
                   seed: int = 1,
-                  tracks: Tuple[Track] = (straightLineL2R,
-                                          straightLineN2S,
-                                          straightLineR2L,
-                                          straightLineR2L,
-                                          straightLineR2L)) -> SimData:
+                  tracks: Tuple[Track] = (straightLineE2W,
+                                          straightLineN2W,
+                                          straightLineW2E,
+                                          straightLineW2E,
+                                          straightLineW2E)) -> SimData:
     """
 
     :param seed:
@@ -146,10 +146,10 @@ def sim_car_model(model,
                 # Limit acceleration
                 x[x_idx.Acc + upd_s_idx, k] = min(2, x[x_idx.Acc + upd_s_idx, k])
 
-            if solution_method == PG:  # PG only
-                # Set initial state
-                problem["xinit"] = x[:, k]
+            # Set initial state
+            problem["xinit"] = x[:, k]
 
+            if solution_method == PG:  # PG only
                 output, problem, p_vector = solve_optimization(
                     model, solver, n_players, problem, behavior_pg, k, 0,
                     next_spline_points, solver_it, solver_time,
@@ -167,7 +167,6 @@ def sim_car_model(model,
                 u[:, k] = u_pred[:, 0, k]
 
             elif solution_method == LexicographicPG:  # PG lexicographic
-                problem["xinit"] = x[:, k]
                 temp, problem, p_vector = solve_lexicographic(model, solver, n_players, problem, behavior_init,
                                                               behavior_first, behavior_second, behavior_third, k,
                                                               lexi_iter, next_spline_points, solver_it, solver_time,

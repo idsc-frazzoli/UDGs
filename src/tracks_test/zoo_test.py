@@ -1,4 +1,4 @@
-from tracks import straightLineR2L
+from tracks import straightLineW2E
 from PIL import Image
 from numpy import asarray
 import numpy as np
@@ -17,7 +17,7 @@ def test_load_tracks():
     # image2.show()
     # img1.show()
     print(img2.format, img2.size, img2.mode)
-    track = straightLineR2L
+    track = straightLineW2E
     data2 = asarray(track.background*255)
     img = Image.fromarray(data2.astype(np.uint8))
     img.show()

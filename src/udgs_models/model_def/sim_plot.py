@@ -56,6 +56,7 @@ def get_car_plot(sim_data) -> Figure:
                 fig=fig,
             )
             fig = plotter.plot_gokart(state_k[0], state_k[1], state_k[2], state_k[3], fig, KITT)
+            fig = plotter.plot_gokart(50, 37, 0, 0, fig, KITT)
 
     n_step_traces = int((len(fig["data"]) - n_background_traces) / sim_steps)
     for k in range(sim_steps):

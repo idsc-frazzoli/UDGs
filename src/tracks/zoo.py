@@ -5,8 +5,8 @@ from matplotlib import pyplot as plt
 
 path = os.path.dirname(__file__)
 
-straightLineR2L = Track(
-    desc="Right to left",
+straightLineW2E = Track(
+    desc="West to East",
     spline=SplineTrack(
         x=[70,
            65,
@@ -143,8 +143,8 @@ straightLineN2S = Track(
     scale_factor=1 / 20
 )
 
-straightLineL2R = Track(
-    desc="North to South",
+straightLineE2W = Track(
+    desc="East to West",
     spline=SplineTrack(
         x=[0,
            5,
@@ -185,6 +185,75 @@ straightLineL2R = Track(
            35,
            35,
            35
+           ],
+        radius=[
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5,
+            3.5
+        ],
+    ),
+    background=plt.imread(os.path.join(path, "road06.png")),
+    scale_factor=1 / 20
+)
+
+straightLineN2W = Track(
+    desc="North to West",
+    spline=SplineTrack(
+        x=[35,
+           35,
+           35,
+           35,
+           35,
+           35,
+           35,
+           35,
+           40,
+           45,
+           50,
+           55,
+           60,
+           65,
+           70,
+           75,
+           80,
+           85,
+           90
+           ],
+        y=[70,
+           65,
+           60,
+           55,
+           50,
+           45,
+           40,
+           35,
+           35,
+           35,
+           35,
+           35,
+           35,
+           35,
+           35,
+           35,
+           35,
+           35,
+           35,
            ],
         radius=[
             3.5,

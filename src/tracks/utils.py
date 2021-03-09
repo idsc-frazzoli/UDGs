@@ -39,5 +39,4 @@ def load_scenario():
 
     scenario = Scenario(intersection_dict)
 
-
     print(scenario)
