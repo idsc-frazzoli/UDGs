@@ -46,8 +46,6 @@ class Lane:
         return ctrl_pnts
 
 
-
-
 class Scenario:
     def __init__(self, yaml_dict: dict):
         self.background_: str = yaml_dict["background"]

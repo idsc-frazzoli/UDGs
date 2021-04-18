@@ -9,9 +9,9 @@ def _objective_car(z, p, n):
     """
     Computes the objective for the solver
 
-    :param z: States and inputs of the model
-    :param n:
-    :return: Objective to be minimized by the solver
+    :param z: States and inputs of the model (forces)
+    :param p: Parameters vector of the model (forces)
+    :param n: number of vehicles
     """
     speed_limit = p[p_idx.SpeedLimit]
     target_speed = p[p_idx.TargetSpeed]

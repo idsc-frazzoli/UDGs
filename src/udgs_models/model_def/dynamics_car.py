@@ -14,6 +14,7 @@ def _dynamics_car(x, u, p, n):
     :param x: state variables X, Y, theta, Vx, Acc_x, Delta, S, CumSlackCost, CumLatSpeedCost
     :param u: control inputs variables dAcc, dDelta, dS, slack, slack_coll, slack_obs
     :param p: parameter variables
+    :param n: number of vehicles
     :return:
     """
     speed_limit = p[params.p_idx.SpeedLimit]

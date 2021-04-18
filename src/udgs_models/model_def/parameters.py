@@ -6,8 +6,9 @@ from .indices import IdxState, IdxInput, IdxParams
 @dataclass(frozen=True)
 class CarParams:
     N: int = 60
-    """The mpc horizon """
+    """ # of steps in the prediction horizon """
     dt_integrator_step: float = 0.1
+    """ step length in seconds """
     x_idx: IntEnum = IdxState
     u_idx: IntEnum = IdxInput
     p_idx: IntEnum = IdxParams

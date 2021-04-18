@@ -1,17 +1,7 @@
-from collections import namedtuple
 from dataclasses import dataclass
 from enum import IntEnum, unique
 from math import pi
 from typing import Tuple
-
-"""
-All indices in the problem formulation are expected to be 0-based in Python, as is usual in this language. 
-This does not include the indices of the generated solver, however, where outputs are named x01, x02, … as in MATLAB. 
-Thus, the problem formulation before generation requires 0-based indices, whereas the returned solver from the 
-server uses 1-based indices. This also does not apply to the low-level Python interface, where indices are 1-based 
-even in the model formulation.
-"""
-
 
 # todo description for every parameter
 
@@ -19,11 +9,11 @@ even in the model formulation.
 @unique
 class IdxInput(IntEnum):
     dAcc = 0
-    """desired change of acceleration"""
+    """derivative of the acceleration"""
     dDelta = 1
-    """rate of change steering angle"""
+    """derivative of the steering angle"""
     dS = 2
-    """Derivative of the progress along the track"""
+    """derivative of the progress along the lane"""
     Slack_Lat = 3
     """TODO"""
     Slack_Coll = 4

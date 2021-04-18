@@ -9,9 +9,9 @@ import numpy as np
 import itertools
 
 from udgs_models.model_def.driver_config import behaviors_zoo
-from tracks import Track
+from map import Track
 
-from tracks.zoo import straightLineW2E, straightLineN2S, straightLineE2W, straightLineN2W
+from map.zoo import straightLineW2E, straightLineN2S, straightLineE2W, straightLineN2W
 from udgs_models.model_def.dynamics_car import dynamics_cars
 from udgs_models.model_def.solve_lexicographic_ibr import solve_optimization_br, iterated_best_response
 from udgs_models.model_def.solve_lexicographic_pg import solve_lexicographic, solve_optimization
@@ -24,7 +24,8 @@ class SimPlayer:
     u: np.ndarray
     u_pred: np.ndarray
     next_spline_points: np.ndarray
-    track: Track
+    # todo modify this Track
+    lane: Track
 
 
 @dataclass(frozen=True)
@@ -42,15 +43,15 @@ def sim_car_model(model,
                   solution_method: SolutionMethod,
                   sim_length: int = 1,
                   seed: int = 1,
-                  tracks: Tuple[Track] = (straightLineE2W,
-                                          straightLineN2W,
-                                          straightLineW2E,
-                                          straightLineW2E,
-                                          straightLineW2E)) -> SimData:
+                  lanes: Tuple[Track] = (straightLineE2W,
+                                         straightLineN2W,
+                                         straightLineW2E,
+                                         straightLineW2E,
+                                         straightLineW2E)) -> SimData:
     """
 
     :param seed:
-    :param tracks:
+    :param lanes:
     :param model:
     :param solver:
     :param sim_length:
@@ -108,9 +109,9 @@ def sim_car_model(model,
         xinit = np.zeros(n_states * n_players)
 
         for i in range(n_players):
-            x_pos[i], y_pos[i] = casadiDynamicBSPLINE(init_progress, tracks[i].spline.as_np_array())
-            dx[i], dy[i] = casadiDynamicBSPLINEforward(init_progress, tracks[i].spline.as_np_array())
-            dx_s[i], dy_s[i] = casadiDynamicBSPLINEsidewards(init_progress, tracks[i].spline.as_np_array())
+            x_pos[i], y_pos[i] = casadiDynamicBSPLINE(init_progress, lanes[i].spline.as_np_array())
+            dx[i], dy[i] = casadiDynamicBSPLINEforward(init_progress, lanes[i].spline.as_np_array())
+            dx_s[i], dy_s[i] = casadiDynamicBSPLINEsidewards(init_progress, lanes[i].spline.as_np_array())
             theta_pos[i] = atan2(dy[i], dx[i])
             x_pos[i] += offset_from_road_center * dx_s[i]
             y_pos[i] += offset_from_road_center * dy_s[i]
@@ -138,10 +139,9 @@ def sim_car_model(model,
                 while x[x_idx.S + upd_s_idx, k] >= 1:
                     # spline step forward
                     spline_start_idx[i] += 1
-                    # fixme some module operation (number of control points) is probably needed
                     x[x_idx.S + upd_s_idx, k] -= 1
                 for j in range(params.n_bspline_points):
-                    next_point = tracks[i].spline.get_control_point(spline_start_idx[i].astype(int) + j)
+                    next_point = lanes[i].spline.get_control_point(spline_start_idx[i].astype(int) + j)
                     next_spline_points[j + i * params.n_bspline_points, :, k] = next_point
                 # Limit acceleration
                 x[x_idx.Acc + upd_s_idx, k] = min(2, x[x_idx.Acc + upd_s_idx, k])
@@ -166,7 +166,7 @@ def sim_car_model(model,
                 # Apply optimized input u of first stage to system and save simulation data
                 u[:, k] = u_pred[:, 0, k]
 
-            elif solution_method == LexicographicPG:  # PG lexicographic
+            elif solution_method == LexicographicPG:
                 temp, problem, p_vector = solve_lexicographic(model, solver, n_players, problem, behavior_init,
                                                               behavior_first, behavior_second, behavior_third, k,
                                                               lexi_iter, next_spline_points, solver_it, solver_time,
@@ -196,7 +196,7 @@ def sim_car_model(model,
                 u=u[range(i * params.n_inputs, upd_i_idx), :],
                 u_pred=u_pred[range(i * params.n_inputs, upd_i_idx), :],
                 next_spline_points=next_spline_points[range(i * params.n_bspline_points, upd_i_spline), :],
-                track=tracks[i]))
+                lane=lanes[i]))
 
     else:  # IBR and Lexicographic IBR
         # Variables for storing simulation data
@@ -231,9 +231,9 @@ def sim_car_model(model,
         output = {}
         p_vector = np.zeros((n_players, model.npar))
         for i in range(n_players):
-            x_pos[i], y_pos[i] = casadiDynamicBSPLINE(init_progress, tracks[i].spline.as_np_array())
-            dx[i], dy[i] = casadiDynamicBSPLINEforward(init_progress, tracks[i].spline.as_np_array())
-            dx_s[i], dy_s[i] = casadiDynamicBSPLINEsidewards(init_progress, tracks[i].spline.as_np_array())
+            x_pos[i], y_pos[i] = casadiDynamicBSPLINE(init_progress, lanes[i].spline.as_np_array())
+            dx[i], dy[i] = casadiDynamicBSPLINEforward(init_progress, lanes[i].spline.as_np_array())
+            dx_s[i], dy_s[i] = casadiDynamicBSPLINEsidewards(init_progress, lanes[i].spline.as_np_array())
             theta_pos[i] = atan2(dy[i], dx[i])
 
             theta_pos[i] = atan2(dy[i], dx[i])
@@ -272,10 +272,9 @@ def sim_car_model(model,
                 while x[i, x_idx.S + upd_s_idx, k] >= 1:
                     # spline step forward
                     spline_start_idx[i] += 1
-                    # fixme some module operation (number of control points) is probably needed
                     x[i, x_idx.S + upd_s_idx, k] -= 1
                 for j in range(params.n_bspline_points):
-                    next_point = tracks[i].spline.get_control_point(spline_start_idx[i].astype(int) + j)
+                    next_point = lanes[i].spline.get_control_point(spline_start_idx[i].astype(int) + j)
                     next_spline_points[i, j, :, k] = next_point
                 # Limit acceleration
                 x[i, x_idx.Acc + upd_s_idx, k] = min(2, x[i, x_idx.Acc + upd_s_idx, k])
@@ -334,7 +333,7 @@ def sim_car_model(model,
                 u=u[i],
                 u_pred=u_pred[i],
                 next_spline_points=next_spline_points[i],
-                track=tracks[i]))
+                lane=lanes[i]))
 
     return SimData(
         players=dict(zip(range(n_players), sim_data_players)),

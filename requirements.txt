@@ -7,7 +7,7 @@ matplotlib
 frozendict
 PyGeometry-z6
 reprep-z6
-
+duckietown-world-daffy==6.2.14
 pandas
 plotly
 kaleido

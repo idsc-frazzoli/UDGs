@@ -4,8 +4,8 @@ import yaml
 
 from bspline import *
 
-from tracks import SplineTrack
-from tracks.structures import Scenario
+from map import SplineTrack
+from map.structures import Scenario
 
 
 def spline_progress_from_pose(spline_track: SplineTrack, pose: np.ndarray) -> float:

@@ -1,6 +1,6 @@
 import os
 
-from tracks.structures import Track, SplineTrack
+from map.structures import Track, SplineTrack
 from matplotlib import pyplot as plt
 
 path = os.path.dirname(__file__)

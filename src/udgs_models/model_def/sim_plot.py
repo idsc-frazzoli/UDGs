@@ -1,24 +1,21 @@
+from typing import Mapping
+
 import plotly.graph_objects as go
 import numpy as np
 from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
 
 from udgs_models.model_def import params
-from vehicle import gokart_pool, KITT
+from vehicle import vehicles_pool, VEHICLE1
 from visualisation.vis import Visualization
 from .indices import var_descriptions
+from .sim import  SimPlayer
 
 
-def get_car_plot(sim_data) -> Figure:
+def get_car_plot(sim_data: Mapping[int, SimPlayer]) -> Figure:
     """
 
-    :param x: np.ndarray[n_states,sim_step]
-    :param x_pred: np.ndarray[n_states,mpc_horizon, sim_step]
-    :param u: np.ndarray[n_inputs,sim_step]
-    :param u_pred: np.ndarray[n_inputs,mpc_horizon, sim_step]
-    :param controlpoints: np.ndarray[n_bspline_points, 3, sim_length]
-    :param num_cars
-    :param track
+    :param sim_data:
     :return:
     """
 
@@ -26,7 +23,8 @@ def get_car_plot(sim_data) -> Figure:
     n_players = len(sim_data)
     sim_steps = sim_data[0].x.shape[-1]
     N = sim_data[0].x_pred.shape[1]
-    plotter = Visualization(track=sim_data[0].track, gokarts=gokart_pool)
+    # todo sim data needs a better structuring, it should not be map=sim_data[0].lane
+    plotter = Visualization(map=sim_data[0].lane, vehicles=vehicles_pool)
     n_inputs = params.n_inputs
     n_states = params.n_states
     x_idx = params.x_idx
@@ -55,8 +53,8 @@ def get_car_plot(sim_data) -> Figure:
                 ab=sim_data[jj].x_pred[x_idx.Acc + upd_s_idx, :, k],
                 fig=fig,
             )
-            fig = plotter.plot_gokart(state_k[0], state_k[1], state_k[2], state_k[3], fig, KITT)
-            fig = plotter.plot_gokart(50, 37, 0, 0, fig, KITT)
+            fig = plotter.plot_vehicle(state_k[0], state_k[1], state_k[2], state_k[3], fig, VEHICLE1)
+            fig = plotter.plot_vehicle(50, 37, 0, 0, fig, VEHICLE1)
 
     n_step_traces = int((len(fig["data"]) - n_background_traces) / sim_steps)
     for k in range(sim_steps):
@@ -135,7 +133,8 @@ def get_solver_stats(solver_it, solver_time, solver_cost) -> Figure:
     sim_steps = np.arange(0, n_sim_steps)
 
     fig = make_subplots(
-        rows=3*n_lexi_calls, cols=2, column_widths=[0.7, 0.3], subplot_titles=("# Iterations", "", "Solving time", "", "Cost", "")
+        rows=3 * n_lexi_calls, cols=2, column_widths=[0.7, 0.3],
+        subplot_titles=("# Iterations", "", "Solving time", "", "Cost", "")
     )
     for jj in range(n_lexi_calls):
         # stats about solver iterations
@@ -148,10 +147,10 @@ def get_solver_stats(solver_it, solver_time, solver_cost) -> Figure:
                 mode="lines+markers",
                 name="Solver iterations",
             ),
-            row=1+jj*3,
+            row=1 + jj * 3,
             col=1,
         )
-        fig.add_trace(go.Histogram(y=solver_it[:, jj], marker_color=it_color, opacity=0.75), row=1+jj*3, col=2)
+        fig.add_trace(go.Histogram(y=solver_it[:, jj], marker_color=it_color, opacity=0.75), row=1 + jj * 3, col=2)
 
         # stats about solving time
         time_color = "blueviolet"
@@ -163,10 +162,10 @@ def get_solver_stats(solver_it, solver_time, solver_cost) -> Figure:
                 mode="lines+markers",
                 name="Solver time",
             ),
-            row=2+jj*3,
+            row=2 + jj * 3,
             col=1,
         )
-        fig.add_trace(go.Histogram(y=solver_time[:, jj], marker_color=time_color, opacity=0.75), row=2+jj*3, col=2)
+        fig.add_trace(go.Histogram(y=solver_time[:, jj], marker_color=time_color, opacity=0.75), row=2 + jj * 3, col=2)
         print(f"Average solving time: {np.average(solver_time[:, jj]):.4f}")
 
         # stats about solving time
@@ -179,10 +178,10 @@ def get_solver_stats(solver_it, solver_time, solver_cost) -> Figure:
                 mode="lines+markers",
                 name="Solver costs",
             ),
-            row=3+jj*3,
+            row=3 + jj * 3,
             col=1,
         )
-        fig.add_trace(go.Histogram(y=solver_cost[:, jj], marker_color=time_color, opacity=0.75), row=3+jj*3, col=2)
+        fig.add_trace(go.Histogram(y=solver_cost[:, jj], marker_color=time_color, opacity=0.75), row=3 + jj * 3, col=2)
     # general layout
     fig.update_layout(title_text="Solver stats")
     return fig
@@ -196,7 +195,8 @@ def get_solver_stats_ibr(solver_it, solver_time, solver_cost, convergence_iter) 
     sim_steps = np.arange(0, n_sim_steps)
 
     fig = make_subplots(
-        rows=3*n_lexi_calls, cols=2, column_widths=[0.7, 0.3], subplot_titles=("# Iterations", "", "Solving time", "", "Cost", "")
+        rows=3 * n_lexi_calls, cols=2, column_widths=[0.7, 0.3],
+        subplot_titles=("# Iterations", "", "Solving time", "", "Cost", "")
     )
     for jj in range(n_lexi_calls):
         # stats about solver iterations
@@ -209,10 +209,10 @@ def get_solver_stats_ibr(solver_it, solver_time, solver_cost, convergence_iter) 
                 mode="lines+markers",
                 name="Solver iterations",
             ),
-            row=1+jj*3,
+            row=1 + jj * 3,
             col=1,
         )
-        fig.add_trace(go.Histogram(y=solver_it[:, jj], marker_color=it_color, opacity=0.75), row=1+jj*3, col=2)
+        fig.add_trace(go.Histogram(y=solver_it[:, jj], marker_color=it_color, opacity=0.75), row=1 + jj * 3, col=2)
 
         # stats about solving time
         time_color = "blueviolet"
@@ -224,10 +224,10 @@ def get_solver_stats_ibr(solver_it, solver_time, solver_cost, convergence_iter) 
                 mode="lines+markers",
                 name="Solver time",
             ),
-            row=2+jj*3,
+            row=2 + jj * 3,
             col=1,
         )
-        fig.add_trace(go.Histogram(y=solver_time[:, jj], marker_color=time_color, opacity=0.75), row=2+jj*3, col=2)
+        fig.add_trace(go.Histogram(y=solver_time[:, jj], marker_color=time_color, opacity=0.75), row=2 + jj * 3, col=2)
         print(f"Average solving time: {np.average(solver_time[:, jj]):.4f}")
 
         # stats about solving time
@@ -240,10 +240,10 @@ def get_solver_stats_ibr(solver_it, solver_time, solver_cost, convergence_iter) 
                 mode="lines+markers",
                 name="Solver costs",
             ),
-            row=3+jj*3,
+            row=3 + jj * 3,
             col=1,
         )
-        fig.add_trace(go.Histogram(y=solver_cost[:, jj], marker_color=time_color, opacity=0.75), row=3+jj*3, col=2)
+        fig.add_trace(go.Histogram(y=solver_cost[:, jj], marker_color=time_color, opacity=0.75), row=3 + jj * 3, col=2)
     # general layout
     fig.update_layout(title_text="Solver stats")
     return fig

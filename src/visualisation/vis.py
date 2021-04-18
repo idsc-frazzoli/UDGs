@@ -6,11 +6,11 @@ from geometry import SE2_from_xytheta
 from plotly.graph_objs import Figure
 from scipy import interpolate
 
-from tracks.zoo import Track
+from map.zoo import Track
 
 import plotly.graph_objects as go
-from vehicle import gokart_pool
-from vehicle.structures import GokartName, GokartParams
+from vehicle import vehicles_pool
+from vehicle.structures import PlayerName, CarParams
 from PIL import Image
 from numpy import asarray
 from .utils import get_steering_angles
@@ -21,9 +21,9 @@ class Visualization:
 
     fig: Any
 
-    def __init__(self, track: Track, gokarts: Mapping[GokartName, GokartParams] = frozendict(gokart_pool)):
-        self.track = track
-        self.gokarts = gokarts
+    def __init__(self, map: Track, vehicles: Mapping[PlayerName, CarParams] = frozendict(vehicles_pool)):
+        self.map = map
+        self.gokarts = vehicles
         self._degree = 2
         self.gokart_color = "cornflowerblue"
         self.wheel_color = "lightblue"
@@ -31,16 +31,16 @@ class Visualization:
     def plot_map(self, fig: Optional[Figure] = None) -> Figure:
         if fig is None:
             fig = go.Figure()
-        if self.track.background.shape[-1] == 4:
-            data2 = asarray(self.track.background * 255)
+        if self.map.background.shape[-1] == 4:
+            data2 = asarray(self.map.background * 255)
             img = Image.fromarray(data2.astype(np.uint8), mode='RGBA')
         else:
-            img = Image.fromarray(self.track.background * 255).convert("RGBA")
+            img = Image.fromarray(self.map.background * 255).convert("RGBA")
 
         # Constants
         img_width = img.width
         img_height = img.height
-        scale_factor = self.track.scale_factor
+        scale_factor = self.map.scale_factor
 
         # Add invisible scatter trace.
         # This trace is added to help the autoresize logic work.
@@ -90,7 +90,7 @@ class Visualization:
     def plot_track(self, fig: Optional[Figure] = None) -> Figure:
         if fig is None:
             fig = go.Figure()
-        points = self.track.spline.as_np_array()
+        points = self.map.spline.as_np_array()
 
         tck, _ = interpolate.splprep(points.T, k=self._degree, per=1)
         u = np.linspace(0, 1, 1000, endpoint=True)
@@ -133,7 +133,7 @@ class Visualization:
         # )
         return fig
 
-    def plot_gokart(self, x, y, psi, beta, fig: Figure, gk_name: GokartName) -> Figure:
+    def plot_vehicle(self, x, y, psi, beta, fig: Figure, gk_name: PlayerName) -> Figure:
         pose = SE2_from_xytheta([x, y, psi])
         xys = self.gokarts[gk_name].get_outline()
         points = np.row_stack([xys, np.ones(xys.shape[1])])
@@ -147,8 +147,8 @@ class Visualization:
         wheel_pose_12 = SE2_from_xytheta([wheel_pos_gk[0, 1], wheel_pos_gk[1, 1], psi + delta_12])
         wheel_pose_21 = SE2_from_xytheta([wheel_pos_gk[0, 2], wheel_pos_gk[1, 2], psi])
         wheel_pose_22 = SE2_from_xytheta([wheel_pos_gk[0, 3], wheel_pos_gk[1, 3], psi])
-        front_wheel = self.gokarts[gk_name].front_tires.geometry.get_outline()
-        rear_wheel = self.gokarts[gk_name].rear_tires.geometry.get_outline()
+        front_wheel = self.gokarts[gk_name].front_tires.get_outline()
+        rear_wheel = self.gokarts[gk_name].rear_tires.get_outline()
         fwheel_points = np.row_stack([front_wheel, np.ones(front_wheel.shape[1])])
         rwheel_points = np.row_stack([rear_wheel, np.ones(rear_wheel.shape[1])])
         wheel_11 = wheel_pose_11 @ fwheel_points
@@ -223,7 +223,6 @@ class Visualization:
         return fig
 
     def plot_prediction(self, x, y, psi, ab, fig: Figure) -> Figure:
-        # todo add colors based on acceleration parameters (optionally predicted input)
         def pred_color(x):
             return "lime" if x > 0 else "red"
 

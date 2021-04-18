@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import interpolate
 import matplotlib.pyplot as plt
-from tracks.zoo import winti_001
+from map.zoo import winti_001
 
 
 def test_bspline():
