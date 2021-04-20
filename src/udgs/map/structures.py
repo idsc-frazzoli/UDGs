@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from numbers import Number
-from typing import Sequence, Optional, List
+from typing import Sequence, Optional
 import numpy as np
 
 
 @dataclass
-class SplineTrack:
+class SplineLane:
     x: Sequence[Number]
     y: Sequence[Number]
     radius: Sequence[Number]
@@ -22,39 +22,10 @@ class SplineTrack:
 
 
 @dataclass
-class Track:
+class Lane:
     desc: str
-    spline: SplineTrack
+    spline: SplineLane
     background: Optional[np.ndarray]
     "Background image, usually an occupancy grid"
     scale_factor: Optional[float]
     "Scale factor as meters/pixels of the background"
-
-
-class Lane:
-    def __init__(self, id: str, control_points: List[List[float]]):
-        self.id_ = id
-        self.control_points = self._init_control_points(control_points)
-
-    @property
-    def id(self):
-        return self.id_
-
-    def _init_control_points(self, control_points):
-        ctrl_pnts = np.array(control_points).astype(float)
-        ctrl_pnts[:, -1] *= np.pi / 180  # deg2rad
-        return ctrl_pnts
-
-
-class Scenario:
-    def __init__(self, yaml_dict: dict):
-        self.background_: str = yaml_dict["background"]
-        self.scale_factor: float = yaml_dict["scale_factor"]
-        self.lanes: List[Lane] = self._init_lanes(yaml_dict["lanes"])
-
-    def _init_lanes(self, lanes_yml: dict):
-        lanes = []
-        for key, elements in lanes_yml.items():
-            lanes.append(Lane(id=key, control_points=elements))
-
-        return lanes

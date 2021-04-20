@@ -9,13 +9,13 @@ def _parse_args():
     p = argparse.ArgumentParser()
     p.add_argument(
         "--generate_solver",
-        default=True,
+        default=False,
         help="If set to false does not regenerate the solver but it looks for an existing one",
         type=bool,
     )
     p.add_argument(
         "--to_deploy",
-        default=True,
+        default=False,
         help="If True generates the solver with additional flags for targeting Docker Linux platform (gokart)",
         type=bool,
     )
@@ -49,9 +49,10 @@ def main(generate_solver: bool = True,
     # extract the model for the solution method
     model, solver = forces_models[solution_method]
     # run the "simulation"
-    sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=70)
+    sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=5)
     # visualisation and report of data
-    make_report(sim_data, solution_method)
+    report = make_report(sim_data, solution_method)
+    report.to_html("udgs_report.html")
 
 
 if __name__ == "__main__":

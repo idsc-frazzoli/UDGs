@@ -3,11 +3,11 @@ import yaml
 
 from udgs.bspline import *
 
-from udgs.map import SplineTrack
+from udgs.map import SplineLane
 from udgs.map.structures import Scenario
 
 
-def spline_progress_from_pose(spline_track: SplineTrack, pose: np.ndarray) -> float:
+def spline_progress_from_pose(spline_track: SplineLane, pose: np.ndarray) -> float:
     # parametrize curve
     n_t = 500
     t = np.linspace(0, len(spline_track.x), n_t, endpoint=True)

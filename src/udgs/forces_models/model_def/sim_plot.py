@@ -32,7 +32,6 @@ def get_car_plot(sim_data: Mapping[int, SimPlayer]) -> Figure:
 
     # create background traces
     fig = plotter.plot_map()
-    fig = plotter.plot_track(fig)
     n_background_traces = len(fig["data"])
     steps = []
 
@@ -117,7 +116,7 @@ def get_car_plot(sim_data: Mapping[int, SimPlayer]) -> Figure:
     fig.update_layout(
         dict(
             margin={"l": 0, "r": 0, "t": 0, "b": 0},
-            title="MPCC simulation",
+            title="Simulation",
             hovermode="closest",
             updatemenus=updatemenus,
             sliders=sliders,

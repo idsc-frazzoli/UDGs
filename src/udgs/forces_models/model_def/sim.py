@@ -9,7 +9,7 @@ import numpy as np
 import itertools
 
 from udgs.forces_models.model_def.driver_config import behaviors_zoo
-from udgs.map import Track
+from udgs.map import Lane
 
 from udgs.map import straightLineW2E, straightLineE2W, straightLineN2W
 from udgs.forces_models.model_def.dynamics_car import dynamics_cars
@@ -25,7 +25,7 @@ class SimPlayer:
     u_pred: np.ndarray
     next_spline_points: np.ndarray
     # todo modify this Track
-    lane: Track
+    lane: Lane
 
 
 @dataclass(frozen=True)
@@ -43,11 +43,11 @@ def sim_car_model(model,
                   solution_method: SolutionMethod,
                   sim_length: int = 1,
                   seed: int = 1,
-                  lanes: Tuple[Track] = (straightLineE2W,
-                                         straightLineN2W,
-                                         straightLineW2E,
-                                         straightLineW2E,
-                                         straightLineW2E)) -> SimData:
+                  lanes: Tuple[Lane] = (straightLineE2W,
+                                        straightLineN2W,
+                                        straightLineW2E,
+                                        straightLineW2E,
+                                        straightLineW2E)) -> SimData:
     """
 
     :param seed:

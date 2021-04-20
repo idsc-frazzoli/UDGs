@@ -6,9 +6,7 @@ nose==1.3.7
 matplotlib
 frozendict
 PyGeometry-z6
-reprep-z6
-duckietown-world-daffy==6.2.14
-pandas
+git+https://github.com/alezana/reprep.git@dev-gokart#egg=reprep-z6
 plotly
 kaleido
 Pillow

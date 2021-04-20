@@ -4,9 +4,9 @@ import numpy as np
 from frozendict import frozendict
 from geometry import SE2_from_xytheta
 from plotly.graph_objs import Figure
-from scipy import interpolate
+# from scipy import interpolate
 
-from udgs.map import Track
+from udgs.map import Lane
 
 import plotly.graph_objects as go
 from udgs.vehicle import vehicles_pool
@@ -21,11 +21,11 @@ class Visualization:
 
     fig: Any
 
-    def __init__(self, map: Track, vehicles: Mapping[PlayerName, CarParams] = frozendict(vehicles_pool)):
+    def __init__(self, map: Lane, vehicles: Mapping[PlayerName, CarParams] = frozendict(vehicles_pool)):
         self.map = map
-        self.gokarts = vehicles
+        self.vehicles = vehicles
         self._degree = 2
-        self.gokart_color = "cornflowerblue"
+        self.vehicle_color = "cornflowerblue"
         self.wheel_color = "lightblue"
 
     def plot_map(self, fig: Optional[Figure] = None) -> Figure:
@@ -70,7 +70,7 @@ class Visualization:
                 sizex=img_width * scale_factor,
                 y=img_height * scale_factor,
                 sizey=img_height * scale_factor,
-                name="Track background",
+                name="World",
                 xref="x",
                 yref="y",
                 opacity=1,
@@ -87,68 +87,23 @@ class Visualization:
         )
         return fig
 
-    def plot_track(self, fig: Optional[Figure] = None) -> Figure:
-        if fig is None:
-            fig = go.Figure()
-        points = self.map.spline.as_np_array()
-
-        tck, _ = interpolate.splprep(points.T, k=self._degree, per=1)
-        u = np.linspace(0, 1, 1000, endpoint=True)
-        center_x, center_y, width = interpolate.splev(u, tck)
-        centerline = np.column_stack([center_x, center_y])
-        dx, dy, _ = interpolate.splev(u, tck, der=1, ext=0)
-        normal = np.column_stack([-dy, dx])
-        normal_unit = normal / np.linalg.norm(normal, axis=1)[:, np.newaxis]
-
-        left_bound = centerline - width[:, np.newaxis] * normal_unit
-        right_bound = centerline + width[:, np.newaxis] * normal_unit
-
-        # Constants
-        # fig.add_trace(
-        #     go.Scatter(
-        #         x=centerline[:, 0],
-        #         y=centerline[:, 1],
-        #         line=dict(color="firebrick", width=1, dash="dot"),
-        #         mode="lines",
-        #         name="Centerline",
-        #     )
-        # )
-        # fig.add_trace(
-        #     go.Scatter(
-        #         x=left_bound[:, 0],
-        #         y=left_bound[:, 1],
-        #         line=dict(color="firebrick", width=4),
-        #         mode="lines",
-        #         name="Left bound",
-        #     )
-        # )
-        # fig.add_trace(
-        #     go.Scatter(
-        #         x=right_bound[:, 0],
-        #         y=right_bound[:, 1],
-        #         line=dict(color="firebrick", width=4),
-        #         mode="lines",
-        #         name="Right bound",
-        #     )
-        # )
-        return fig
-
-    def plot_vehicle(self, x, y, psi, beta, fig: Figure, gk_name: PlayerName) -> Figure:
-        pose = SE2_from_xytheta([x, y, psi])
-        xys = self.gokarts[gk_name].get_outline()
+    def plot_vehicle(self, x, y, theta, beta, fig: Figure, vehicle_name: PlayerName) -> Figure:
+        pose = SE2_from_xytheta([x, y, theta])
+        xys = self.vehicles[vehicle_name].get_outline()
         points = np.row_stack([xys, np.ones(xys.shape[1])])
         gk = pose @ points
 
-        wheel_pos = self.gokarts[gk_name].geometry.get_wheel_positions()
+        wheel_pos = self.vehicles[vehicle_name].geometry.get_wheel_positions()
         wheel_pos = np.row_stack([wheel_pos, np.ones(wheel_pos.shape[1])])
         wheel_pos_gk = pose @ wheel_pos
+        # todo check if the model contains an ackerman steering map
         delta_11, delta_12 = get_steering_angles(beta)
-        wheel_pose_11 = SE2_from_xytheta([wheel_pos_gk[0, 0], wheel_pos_gk[1, 0], psi + delta_11])
-        wheel_pose_12 = SE2_from_xytheta([wheel_pos_gk[0, 1], wheel_pos_gk[1, 1], psi + delta_12])
-        wheel_pose_21 = SE2_from_xytheta([wheel_pos_gk[0, 2], wheel_pos_gk[1, 2], psi])
-        wheel_pose_22 = SE2_from_xytheta([wheel_pos_gk[0, 3], wheel_pos_gk[1, 3], psi])
-        front_wheel = self.gokarts[gk_name].front_tires.get_outline()
-        rear_wheel = self.gokarts[gk_name].rear_tires.get_outline()
+        wheel_pose_11 = SE2_from_xytheta([wheel_pos_gk[0, 0], wheel_pos_gk[1, 0], theta + delta_11])
+        wheel_pose_12 = SE2_from_xytheta([wheel_pos_gk[0, 1], wheel_pos_gk[1, 1], theta + delta_12])
+        wheel_pose_21 = SE2_from_xytheta([wheel_pos_gk[0, 2], wheel_pos_gk[1, 2], theta])
+        wheel_pose_22 = SE2_from_xytheta([wheel_pos_gk[0, 3], wheel_pos_gk[1, 3], theta])
+        front_wheel = self.vehicles[vehicle_name].front_tires.get_outline()
+        rear_wheel = self.vehicles[vehicle_name].rear_tires.get_outline()
         fwheel_points = np.row_stack([front_wheel, np.ones(front_wheel.shape[1])])
         rwheel_points = np.row_stack([rear_wheel, np.ones(rear_wheel.shape[1])])
         wheel_11 = wheel_pose_11 @ fwheel_points
@@ -160,12 +115,12 @@ class Visualization:
             go.Scatter(
                 x=gk[0, :],
                 y=gk[1, :],
-                line=dict(color=self.gokart_color, width=1),
+                line=dict(color=self.vehicle_color, width=1),
                 opacity=0.5,
                 fill="toself",
-                fillcolor=self.gokart_color,
+                fillcolor=self.vehicle_color,
                 mode="lines",
-                name="kart",
+                name="Vehicle",
             )
         )
 
@@ -230,10 +185,10 @@ class Visualization:
             go.Scatter(
                 x=x[:],
                 y=y[:],
-                line=dict(color=self.gokart_color, width=1, dash="dot"),
+                line=dict(color=self.vehicle_color, width=1, dash="dot"),
                 marker=dict(color=list(map(pred_color, ab[:]))),
                 mode="lines+markers",
-                name="Mpc plan",
+                name="Plan",
             )
         )
         return fig
@@ -267,7 +222,7 @@ class Visualization:
                 line=dict(color="lime"),
                 fill="toself",
                 fillcolor="lime",
-                name="Mpc plan acc",
+                name="Prediction to accelerate",
             )
         )
 
@@ -279,7 +234,7 @@ class Visualization:
                 line=dict(color="red"),
                 fill="toself",
                 fillcolor="red",
-                name="Mpc plan dec",
+                name="Prediction to decelerate",
             )
         )
 

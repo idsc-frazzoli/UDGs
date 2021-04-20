@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import NewType
+from typing import NewType, Any
 import numpy as np
 
 PlayerName = NewType("PlayerName", str)
@@ -73,3 +73,12 @@ class CarParams:
                 [-y, -y, -y + ytri, y - ytri, y, y, -y],
             ]
         )
+
+
+@dataclass
+class VehicleStateInputs:
+    x: Any
+    y: Any
+    theta: Any
+    beta: Any
+    ab: Any

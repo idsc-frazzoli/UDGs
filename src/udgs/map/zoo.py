@@ -1,13 +1,13 @@
 import os
 
-from udgs.map.structures import Track, SplineTrack
+from udgs.map.structures import Lane, SplineLane
 from matplotlib import pyplot as plt
 
 path = os.path.dirname(__file__)
 
-straightLineW2E = Track(
+straightLineW2E = Lane(
     desc="West to East",
-    spline=SplineTrack(
+    spline=SplineLane(
         x=[70,
            65,
            60,
@@ -74,9 +74,9 @@ straightLineW2E = Track(
     scale_factor=1 / 20
 )
 
-straightLineN2S = Track(
+straightLineN2S = Lane(
     desc="North to South",
-    spline=SplineTrack(
+    spline=SplineLane(
         x=[35,
            35,
            35,
@@ -143,9 +143,9 @@ straightLineN2S = Track(
     scale_factor=1 / 20
 )
 
-straightLineE2W = Track(
+straightLineE2W = Lane(
     desc="East to West",
-    spline=SplineTrack(
+    spline=SplineLane(
         x=[0,
            5,
            10,
@@ -212,9 +212,9 @@ straightLineE2W = Track(
     scale_factor=1 / 20
 )
 
-straightLineN2W = Track(
+straightLineN2W = Lane(
     desc="North to West",
-    spline=SplineTrack(
+    spline=SplineLane(
         x=[35,
            35,
            35,
