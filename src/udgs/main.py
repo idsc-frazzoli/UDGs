@@ -35,7 +35,7 @@ def _parse_args():
     )
     p.add_argument(
         "--solution_method",
-        default="LexicographicPG",
+        default="LexicographicIBR",
         help="PG: potential game solution,"
              "LexicographicPG: Lexicographic potential game"
              "IBR: Iterated best response"

@@ -4,7 +4,7 @@ from typing import Tuple, Mapping
 from scipy.integrate import solve_ivp
 
 from udgs.bspline.bspline import casadiDynamicBSPLINE, atan2, casadiDynamicBSPLINEforward, casadiDynamicBSPLINEsidewards
-from udgs.forces_models.model_def import params, p_idx, SolutionMethod, LexicographicPG, PG, IBR
+from udgs.forces_models.model_def import params, p_idx, SolutionMethod, LexicographicPG, PG, IBR, LexicographicIBR
 import numpy as np
 import itertools
 
@@ -24,7 +24,6 @@ class SimPlayer:
     u: np.ndarray
     u_pred: np.ndarray
     next_spline_points: np.ndarray
-    # todo modify this Track
     lane: Lane
 
 
@@ -198,7 +197,7 @@ def sim_car_model(model,
                 next_spline_points=next_spline_points[range(i * params.n_bspline_points, upd_i_spline), :],
                 lane=lanes[i]))
 
-    else:  # IBR and Lexicographic IBR
+    elif solution_method in (IBR, LexicographicIBR):  # IBR and Lexicographic IBR
         # Variables for storing simulation data
         x = np.zeros((n_players, n_states, sim_length + 1))  # states
         u = np.zeros((n_players, n_inputs, sim_length))  # inputs
@@ -334,6 +333,8 @@ def sim_car_model(model,
                 u_pred=u_pred[i],
                 next_spline_points=next_spline_points[i],
                 lane=lanes[i]))
+    else:
+        raise ValueError(f"{solution_method} is not recognized!")
 
     return SimData(
         players=dict(zip(range(n_players), sim_data_players)),
