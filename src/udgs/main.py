@@ -11,7 +11,7 @@ def _parse_args():
     p = argparse.ArgumentParser()
     p.add_argument(
         "--generate_solver",
-        default=False,
+        default=True,
         help="If set to false does not regenerate the solver but it looks for an existing one",
         type=bool,
     )
@@ -23,7 +23,7 @@ def _parse_args():
     )
     p.add_argument(
         "--num_cars",
-        default=3,
+        default=4,
         help="todo",
         type=int,
     )

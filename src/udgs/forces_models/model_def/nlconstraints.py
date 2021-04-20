@@ -62,8 +62,8 @@ def _nlconst_car(z, p, n):
         v4 = -eucl_dist + minSafetyDistance - slack_coll
         v = np.append(v, np.array([v4]))
     elif n > 2:
-        for kk in range(coll_constraints - 1):
-            for jj in range(kk + 1, coll_constraints):
+        for kk in range(n - 1):
+            for jj in range(kk + 1, n):
                 upd_s_idx1 = kk * params.n_states + (n - 1) * params.n_inputs
                 upd_s_idx2 = jj * params.n_states + (n - 1) * params.n_inputs
                 upd_i_idx = kk * params.n_inputs
@@ -151,8 +151,8 @@ def _nlconst_carN(z, p, n):
         v6 = -eucl_dist + minSafetyDistance - slack_coll
         v = np.append(v, np.array([v6]))
     elif n > 2:
-        for kk in range(coll_constraints - 1):
-            for jj in range(kk + 1, coll_constraints):
+        for kk in range(n - 1):
+            for jj in range(kk + 1, n):
                 upd_s_idx1 = kk * params.n_states + (n - 1) * params.n_inputs
                 upd_s_idx2 = jj * params.n_states + (n - 1) * params.n_inputs
                 upd_i_idx = kk * params.n_inputs
