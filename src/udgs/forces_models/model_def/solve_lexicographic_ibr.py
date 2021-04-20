@@ -1,7 +1,7 @@
 from udgs.forces_models.forces_utils import ForcesException
 import numpy as np
 
-from udgs.forces_models.model_def import params, p_idx, x_idx
+from udgs.forces_models.model_def import params, p_idx, x_idx, SolutionMethod, IBR, LexicographicIBR
 from udgs.forces_models.model_def.car_util import set_p_car_ibr
 
 
@@ -67,7 +67,7 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
     if exitflag < 0:
 
         if exitflag == -7:
-            print(f"Stalled line search at simulation step {k}, agent {currentplayer+1}, iter: {iter},"
+            print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
                   f" lexlevel: {lex_level}")
             solver_it[k, lex_level, currentplayer, iter] = info.it
             solver_time[k, lex_level, currentplayer, iter] = info.solvetime
@@ -84,8 +84,10 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
 
 
 # todo this function iterates best response optimization
-def iterated_best_response(model, solver, order, n_players, problem_list, condition, behavior, behavior_first,
-                           behavior_second, k, max_iter, lexi_iter, next_spline_points, solver_it, solver_time,
+def iterated_best_response(model, solver, order, n_players, problem_list,
+                           solution_method: SolutionMethod, behavior,
+                           behavior_first, behavior_second,
+                           k, max_iter, lexi_iter, next_spline_points, solver_it, solver_time,
                            solver_cost, convergence_iter, playerstrajX, playerstrajY):
     """
         model: model settings
@@ -105,7 +107,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
     """
     iter = 0
     safety_slack = 0.0  # to prevent numerical issues
-    safety_lat = 0.1   # to prevent numerical issues
+    safety_lat = 0.1  # to prevent numerical issues
     output = {}
     outputNew = np.zeros((n_players, model.nvar, model.N))
     p_vector = np.zeros((n_players, model.npar))
@@ -114,8 +116,8 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
     eucl_dist = np.zeros(n_players)
     while iter < max_iter:
         for case in range(len(order)):
-            if condition == 2:  # normal ibr
-                output[order[case]], problem_list[order[case]], p_vector[order[case], :] =\
+            if solution_method == IBR:  # normal ibr
+                output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
                     solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
                                           behavior, behavior[p_idx.OptCost1],
                                           behavior[p_idx.OptCost2], k, 0, next_spline_points[order[case]],
@@ -123,15 +125,15 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                 outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N, order='F')
                 playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
                 playerstrajY[order[case]] = outputNew[order[case], x_idx.Y, :]
-                problem_list[order[case]]["x0"][0: model.nvar * model.N] =\
+                problem_list[order[case]]["x0"][0: model.nvar * model.N] = \
                     output[order[case]]["all_var"][0: model.nvar * model.N]
-            else:  # lexi ibr
+            elif solution_method == LexicographicIBR:  # lexi ibr
                 for lex_level in range(lexi_iter):
                     if lex_level == 0:
                         output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
                             solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
                                                   behavior_first, behavior_first[p_idx.OptCost1],
-                                                  behavior_first[p_idx.OptCost2], k,  lex_level,
+                                                  behavior_first[p_idx.OptCost2], k, lex_level,
                                                   next_spline_points[order[case]], solver_it, solver_time, solver_cost,
                                                   playerstrajX, playerstrajY, iter)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,
@@ -165,14 +167,16 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
                         playerstrajY[order[case]] = outputNew[order[case], x_idx.Y, :]
                         problem_list[order[case]]["x0"][0: model.nvar * model.N] = \
                             output[order[case]]["all_var"][0: model.nvar * model.N]
+            else:
+                raise ValueError(f"{solution_method} is not supported")
 
         # verify convergence
         for i in range(n_players):
-                eucl_dist[i] = np.sum(np.sqrt(np.square(playerstrajX[i] - playerstrajX_old[i]) +
-                                      np.square(playerstrajY[i] - playerstrajY_old[i])))
+            eucl_dist[i] = np.sum(np.sqrt(np.square(playerstrajX[i] - playerstrajX_old[i]) +
+                                          np.square(playerstrajY[i] - playerstrajY_old[i])))
 
         if all(i <= 0.05 for i in eucl_dist):
-            print(f"iterations required for convergence: {iter}")
+            print(f"IBR: iterations required for convergence: {iter}")
             convergence_iter[k] = iter
             return output, problem_list, p_vector
         else:
@@ -180,6 +184,6 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
             playerstrajY_old = np.copy(playerstrajY)
 
         iter += 1
-    print(f"convergence not reached after {iter} iterations")
-    convergence_iter[k] = iter+1
+    print(f"IBR - convergence not reached after {iter} iterations of players' updates")
+    convergence_iter[k] = iter + 1
     return output, problem_list, p_vector

@@ -9,12 +9,12 @@ import numpy as np
 import itertools
 
 from udgs.forces_models.model_def.driver_config import behaviors_zoo
-from udgs.map import Lane
+from udgs.map import Lane, AvailableLanes
 
-from udgs.map import straightLineW2E, straightLineE2W, straightLineN2W
 from udgs.forces_models.model_def.dynamics_car import dynamics_cars
 from udgs.forces_models.model_def.solve_lexicographic_ibr import solve_optimization_br, iterated_best_response
 from udgs.forces_models.model_def.solve_lexicographic_pg import solve_lexicographic, solve_optimization
+from udgs.vehicle.structures import PlayerName
 
 
 @dataclass(frozen=True)
@@ -29,11 +29,23 @@ class SimPlayer:
 
 @dataclass(frozen=True)
 class SimData:
-    players: Mapping[int, SimPlayer]
+    players: Mapping[PlayerName, SimPlayer]
     solver_it: np.ndarray
     solver_time: np.ndarray
     solver_cost: np.ndarray
     convergence_iter: np.ndarray
+
+
+@dataclass(frozen=True)
+class SimParameters:
+    """This contains all the parameters relative to the simulation setup"""
+    offset_from_road_center: float = 1.75
+    init_vx: float = 8.3
+    init_progress: float = 0.01
+    """initial progress along the reference lane"""
+    max_n_iter_ibr: int = 10
+    lexi_iter: int = 3
+    chosen_permutation = 5  # IBR only
 
 
 def sim_car_model(model,
@@ -42,11 +54,7 @@ def sim_car_model(model,
                   solution_method: SolutionMethod,
                   sim_length: int = 1,
                   seed: int = 1,
-                  lanes: Tuple[Lane] = (straightLineE2W,
-                                        straightLineN2W,
-                                        straightLineW2E,
-                                        straightLineW2E,
-                                        straightLineW2E)) -> SimData:
+                  lanes: Mapping[str, Lane] = AvailableLanes) -> SimData:
     """
 
     :param seed:
@@ -57,15 +65,12 @@ def sim_car_model(model,
     :return:
     """
     # Load some parameters
-    offset_from_road_center = 1.75
-    init_vx = 8.3
-    init_progress = 0.01
+    sim_params = SimParameters()
     playerorderlist = list(itertools.permutations(range(0, n_players)))
-    chosen_permutation = 5  # IBR only
-    max_n_iter_ibr = 10
-    lexi_iter = 3
-    assert (1 <= lexi_iter <= 3)
-    assert (0 <= chosen_permutation <= len(playerorderlist))
+
+    assert (1 <= n_players <= 4)
+    assert (1 <= sim_params.lexi_iter <= 3)
+    assert (0 <= sim_params.chosen_permutation <= len(playerorderlist))
 
     behavior_init = behaviors_zoo["initConfig"].config
     behavior_first = behaviors_zoo["firstOptim"].config
@@ -93,9 +98,9 @@ def sim_car_model(model,
             solver_time = np.zeros((sim_length, 1))
             solver_cost = np.zeros((sim_length, 1))
         else:
-            solver_it = np.zeros((sim_length, lexi_iter))
-            solver_time = np.zeros((sim_length, lexi_iter))
-            solver_cost = np.zeros((sim_length, lexi_iter))
+            solver_it = np.zeros((sim_length, sim_params.lexi_iter))
+            solver_time = np.zeros((sim_length, sim_params.lexi_iter))
+            solver_cost = np.zeros((sim_length, sim_params.lexi_iter))
         # Set initial condition
 
         x_pos = np.zeros(n_players)
@@ -108,21 +113,23 @@ def sim_car_model(model,
         xinit = np.zeros(n_states * n_players)
 
         for i in range(n_players):
-            x_pos[i], y_pos[i] = casadiDynamicBSPLINE(init_progress, lanes[i].spline.as_np_array())
-            dx[i], dy[i] = casadiDynamicBSPLINEforward(init_progress, lanes[i].spline.as_np_array())
-            dx_s[i], dy_s[i] = casadiDynamicBSPLINEsidewards(init_progress, lanes[i].spline.as_np_array())
+            ref_lane: Lane = list(lanes.values())[i]
+
+            x_pos[i], y_pos[i] = casadiDynamicBSPLINE(sim_params.init_progress, ref_lane.spline.as_np_array())
+            dx[i], dy[i] = casadiDynamicBSPLINEforward(sim_params.init_progress, ref_lane.spline.as_np_array())
+            dx_s[i], dy_s[i] = casadiDynamicBSPLINEsidewards(sim_params.init_progress, ref_lane.spline.as_np_array())
             theta_pos[i] = atan2(dy[i], dx[i])
-            x_pos[i] += offset_from_road_center * dx_s[i]
-            y_pos[i] += offset_from_road_center * dy_s[i]
+            x_pos[i] += sim_params.offset_from_road_center * dx_s[i]
+            y_pos[i] += sim_params.offset_from_road_center * dy_s[i]
             upd_s_idx = - n_inputs + i * n_states
             xinit[x_idx.X + upd_s_idx] = x_pos[i]
             xinit[x_idx.Y + upd_s_idx] = y_pos[i]
             xinit[x_idx.Theta + upd_s_idx] = theta_pos[i]
-            xinit[x_idx.Vx + upd_s_idx] = init_vx
+            xinit[x_idx.Vx + upd_s_idx] = sim_params.init_vx
 
             # totally arbitrary
             xinit[x_idx.Delta + upd_s_idx] = 0  # totally arbitrary
-            xinit[x_idx.S + upd_s_idx] = init_progress
+            xinit[x_idx.S + upd_s_idx] = sim_params.init_progress
 
         x[:, 0] = xinit
         problem = {}
@@ -134,13 +141,14 @@ def sim_car_model(model,
             # find bspline
             # while x[x_idx.s - n_inputs, k] >= 1:
             for i in range(n_players):
+                ref_lane: Lane = list(lanes.values())[i]
                 upd_s_idx = - n_inputs + i * n_states
                 while x[x_idx.S + upd_s_idx, k] >= 1:
                     # spline step forward
                     spline_start_idx[i] += 1
                     x[x_idx.S + upd_s_idx, k] -= 1
                 for j in range(params.n_bspline_points):
-                    next_point = lanes[i].spline.get_control_point(spline_start_idx[i].astype(int) + j)
+                    next_point = ref_lane.spline.get_control_point(spline_start_idx[i].astype(int) + j)
                     next_spline_points[j + i * params.n_bspline_points, :, k] = next_point
                 # Limit acceleration
                 x[x_idx.Acc + upd_s_idx, k] = min(2, x[x_idx.Acc + upd_s_idx, k])
@@ -166,10 +174,12 @@ def sim_car_model(model,
                 u[:, k] = u_pred[:, 0, k]
 
             elif solution_method == LexicographicPG:
-                temp, problem, p_vector = solve_lexicographic(model, solver, n_players, problem, behavior_init,
-                                                              behavior_first, behavior_second, behavior_third, k,
-                                                              lexi_iter, next_spline_points, solver_it, solver_time,
-                                                              solver_cost)
+                temp, problem, p_vector = solve_lexicographic(
+                    model, solver, n_players, problem, behavior_init,
+                    behavior_first, behavior_second, behavior_third, k,
+                    sim_params.lexi_iter, next_spline_points, solver_it,
+                    solver_time,
+                    solver_cost)
 
                 u_pred[:, :, k] = temp[0:n_inputs * n_players, :]  # predicted inputs
                 x_pred[:, :, k] = temp[n_inputs * n_players: params.n_var * n_players, :]  # predicted states
@@ -195,7 +205,7 @@ def sim_car_model(model,
                 u=u[range(i * params.n_inputs, upd_i_idx), :],
                 u_pred=u_pred[range(i * params.n_inputs, upd_i_idx), :],
                 next_spline_points=next_spline_points[range(i * params.n_bspline_points, upd_i_spline), :],
-                lane=lanes[i]))
+                lane=list(lanes.values())[i]))
 
     elif solution_method in (IBR, LexicographicIBR):  # IBR and Lexicographic IBR
         # Variables for storing simulation data
@@ -206,15 +216,15 @@ def sim_car_model(model,
         next_spline_points = np.zeros((n_players, params.n_bspline_points, 3, sim_length))
 
         if solution_method == IBR:
-            solver_it = np.zeros((sim_length, 1, n_players, max_n_iter_ibr))
-            solver_time = np.zeros((sim_length, 1, n_players, max_n_iter_ibr))
-            solver_cost = np.zeros((sim_length, 1, n_players, max_n_iter_ibr))
-        else:
-            solver_it = np.zeros((sim_length, lexi_iter, n_players, max_n_iter_ibr))
-            solver_time = np.zeros((sim_length, lexi_iter, n_players, max_n_iter_ibr))
-            solver_cost = np.zeros((sim_length, lexi_iter, n_players, max_n_iter_ibr))
-        # Set initial condition
+            solver_it = np.zeros((sim_length, 1, n_players, sim_params.max_n_iter_ibr))
+            solver_time = np.zeros((sim_length, 1, n_players, sim_params.max_n_iter_ibr))
+            solver_cost = np.zeros((sim_length, 1, n_players, sim_params.max_n_iter_ibr))
+        else:  # lexicographic IBR
+            solver_it = np.zeros((sim_length, sim_params.lexi_iter, n_players, sim_params.max_n_iter_ibr))
+            solver_time = np.zeros((sim_length, sim_params.lexi_iter, n_players, sim_params.max_n_iter_ibr))
+            solver_cost = np.zeros((sim_length, sim_params.lexi_iter, n_players, sim_params.max_n_iter_ibr))
 
+        # Set initial condition
         x_pos = np.zeros(n_players)
         y_pos = np.zeros(n_players)
         dx = np.zeros(n_players)
@@ -230,22 +240,24 @@ def sim_car_model(model,
         output = {}
         p_vector = np.zeros((n_players, model.npar))
         for i in range(n_players):
-            x_pos[i], y_pos[i] = casadiDynamicBSPLINE(init_progress, lanes[i].spline.as_np_array())
-            dx[i], dy[i] = casadiDynamicBSPLINEforward(init_progress, lanes[i].spline.as_np_array())
-            dx_s[i], dy_s[i] = casadiDynamicBSPLINEsidewards(init_progress, lanes[i].spline.as_np_array())
+            ref_lane: Lane = list(lanes.values())[i]
+
+            x_pos[i], y_pos[i] = casadiDynamicBSPLINE(sim_params.init_progress, ref_lane.spline.as_np_array())
+            dx[i], dy[i] = casadiDynamicBSPLINEforward(sim_params.init_progress, ref_lane.spline.as_np_array())
+            dx_s[i], dy_s[i] = casadiDynamicBSPLINEsidewards(sim_params.init_progress, ref_lane.spline.as_np_array())
             theta_pos[i] = atan2(dy[i], dx[i])
 
             theta_pos[i] = atan2(dy[i], dx[i])
-            x_pos[i] += offset_from_road_center * dx_s[i]  # move player to the right lane
-            y_pos[i] += offset_from_road_center * dy_s[i]  # move player to the right lane
+            x_pos[i] += sim_params.offset_from_road_center * dx_s[i]  # move player to the right lane
+            y_pos[i] += sim_params.offset_from_road_center * dy_s[i]  # move player to the right lane
             xinit[i, x_idx.X - n_inputs] = x_pos[i]
             xinit[i, x_idx.Y - n_inputs] = y_pos[i]
             xinit[i, x_idx.Theta - n_inputs] = theta_pos[i]
-            xinit[i, x_idx.Vx - n_inputs] = init_vx
+            xinit[i, x_idx.Vx - n_inputs] = sim_params.init_vx
 
             # totally arbitrary
             xinit[i, x_idx.Delta - n_inputs] = 0  # totally arbitrary
-            xinit[i, x_idx.S - n_inputs] = init_progress
+            xinit[i, x_idx.S - n_inputs] = sim_params.init_progress
 
         for i in range(n_players):
             x[i, :, 0] = xinit[i]
@@ -267,13 +279,14 @@ def sim_car_model(model,
             # find bspline
             # while x[x_idx.s - n_inputs, k] >= 1:
             for i in range(n_players):
+                ref_lane: Lane = list(lanes.values())[i]
                 upd_s_idx = - n_inputs
                 while x[i, x_idx.S + upd_s_idx, k] >= 1:
                     # spline step forward
                     spline_start_idx[i] += 1
                     x[i, x_idx.S + upd_s_idx, k] -= 1
                 for j in range(params.n_bspline_points):
-                    next_point = lanes[i].spline.get_control_point(spline_start_idx[i].astype(int) + j)
+                    next_point = ref_lane.spline.get_control_point(spline_start_idx[i].astype(int) + j)
                     next_spline_points[i, j, :, k] = next_point
                 # Limit acceleration
                 x[i, x_idx.Acc + upd_s_idx, k] = min(2, x[i, x_idx.Acc + upd_s_idx, k])
@@ -296,12 +309,14 @@ def sim_car_model(model,
                                                                                               model.nvar * (model.N - 1)
                                                                                               :model.nvar * model.N]
 
-            output, problem, p_vector = \
-                iterated_best_response(model, solver, playerorderlist[chosen_permutation], n_players, problem_list,
-                                       solution_method, behavior_ibr, behavior_first, behavior_second, k, max_n_iter_ibr,
-                                       lexi_iter,
-                                       next_spline_points, solver_it, solver_time, solver_cost, convergence_iter,
-                                       playerstrajX, playerstrajY)
+            output, problem, p_vector = iterated_best_response(
+                model, solver,
+                playerorderlist[sim_params.chosen_permutation], n_players, problem_list,
+                solution_method, behavior_ibr, behavior_first, behavior_second, k,
+                sim_params.max_n_iter_ibr,
+                sim_params.lexi_iter,
+                next_spline_points, solver_it, solver_time, solver_cost, convergence_iter,
+                playerstrajX, playerstrajY)
             # Extract output and initialize next iteration with current solution shifted by one stage
 
             for i in range(n_players):
@@ -332,7 +347,7 @@ def sim_car_model(model,
                 u=u[i],
                 u_pred=u_pred[i],
                 next_spline_points=next_spline_points[i],
-                lane=lanes[i]))
+                lane=list(lanes.values())[i]))
     else:
         raise ValueError(f"{solution_method} is not recognized!")
 

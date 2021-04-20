@@ -26,7 +26,7 @@ run:
 	mkdir -p $(out-docker)
 	docker run -it --user $$(id -u) \
 		-v $(PWD)/$(out-docker):/$(out-docker) $(tag) \
-		python src/udgs/main.py
+		python src/udgs/main.py --output_dir $(out-docker)
 #-v $(forcespro-path):/forces/pro:ro \
 
 black:

@@ -1,11 +1,11 @@
 from reprep import Report, MIME_HTML
 
-from udgs.forces_models.model_def import PG, LexicographicPG
+from udgs.forces_models.model_def import PG, LexicographicPG, SolutionMethod
 from udgs.forces_models.model_def.sim import SimData
 from udgs.forces_models.model_def.sim_plot import get_car_plot, get_solver_stats, get_state_plots, get_input_plots
 
 
-def make_report(sim_data: SimData, solution_method) -> Report:
+def make_report(sim_data: SimData, solution_method: SolutionMethod) -> Report:
     report = Report("UDGsExperiment")
     n_players = len(sim_data.players)
 

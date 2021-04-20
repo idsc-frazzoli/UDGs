@@ -25,7 +25,7 @@ class Visualization:
         self.map = map
         self.vehicles = vehicles
         self._degree = 2
-        self.vehicle_color = "cornflowerblue"
+        self.vehicle_color = "cornflowerblue" # todo fix based on players color
         self.wheel_color = "lightblue"
 
     def plot_map(self, fig: Optional[Figure] = None) -> Figure:
@@ -95,13 +95,13 @@ class Visualization:
 
         wheel_pos = self.vehicles[vehicle_name].geometry.get_wheel_positions()
         wheel_pos = np.row_stack([wheel_pos, np.ones(wheel_pos.shape[1])])
-        wheel_pos_gk = pose @ wheel_pos
+        wheel_pos_vehicle = pose @ wheel_pos
         # todo check if the model contains an ackerman steering map
         delta_11, delta_12 = get_steering_angles(beta)
-        wheel_pose_11 = SE2_from_xytheta([wheel_pos_gk[0, 0], wheel_pos_gk[1, 0], theta + delta_11])
-        wheel_pose_12 = SE2_from_xytheta([wheel_pos_gk[0, 1], wheel_pos_gk[1, 1], theta + delta_12])
-        wheel_pose_21 = SE2_from_xytheta([wheel_pos_gk[0, 2], wheel_pos_gk[1, 2], theta])
-        wheel_pose_22 = SE2_from_xytheta([wheel_pos_gk[0, 3], wheel_pos_gk[1, 3], theta])
+        wheel_pose_11 = SE2_from_xytheta([wheel_pos_vehicle[0, 0], wheel_pos_vehicle[1, 0], theta + delta_11])
+        wheel_pose_12 = SE2_from_xytheta([wheel_pos_vehicle[0, 1], wheel_pos_vehicle[1, 1], theta + delta_12])
+        wheel_pose_21 = SE2_from_xytheta([wheel_pos_vehicle[0, 2], wheel_pos_vehicle[1, 2], theta])
+        wheel_pose_22 = SE2_from_xytheta([wheel_pos_vehicle[0, 3], wheel_pos_vehicle[1, 3], theta])
         front_wheel = self.vehicles[vehicle_name].front_tires.get_outline()
         rear_wheel = self.vehicles[vehicle_name].rear_tires.get_outline()
         fwheel_points = np.row_stack([front_wheel, np.ones(front_wheel.shape[1])])

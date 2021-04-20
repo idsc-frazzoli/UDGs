@@ -1,9 +1,14 @@
 import os
+from typing import Mapping
+
+from frozendict import frozendict
 
 from udgs.map.structures import Lane, SplineLane
 from matplotlib import pyplot as plt
 
 path = os.path.dirname(__file__)
+
+# todo load lanes from yaml file
 
 straightLineW2E = Lane(
     desc="West to East",
@@ -280,3 +285,12 @@ straightLineN2W = Lane(
     background=plt.imread(os.path.join(path, "road06.png")),
     scale_factor=1 / 20
 )
+
+AvailableLanes: Mapping[str, Lane] = frozendict({"straightLineE2W": straightLineE2W,
+                                                 "straightLineN2W": straightLineN2W,
+                                                 "straightLineW2E": straightLineW2E,
+                                                 "straightLineN2S": straightLineN2S, })
+
+if __name__ == '__main__':
+    test = list(AvailableLanes.values())
+    print(test)

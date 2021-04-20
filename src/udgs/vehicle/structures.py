@@ -55,6 +55,7 @@ class CarParams:
     geometry: CarGeometry
     front_tires: WheelGeometry
     rear_tires: WheelGeometry
+    color: str
 
     def get_outline(self):
         """
