@@ -14,7 +14,6 @@ from udgs.map import Lane, AvailableLanes
 from udgs.models.forces_def.dynamics_car import dynamics_cars
 from udgs.models.solve_lexicographic_ibr import solve_optimization_br, iterated_best_response
 from udgs.models.solve_lexicographic_pg import solve_lexicographic, solve_optimization
-from udgs.vehicle.structures import PlayerName
 
 
 @dataclass(frozen=True)
@@ -29,7 +28,7 @@ class SimPlayer:
 
 @dataclass(frozen=True)
 class SimData:
-    players: Mapping[PlayerName, SimPlayer]
+    players: Mapping[int, SimPlayer]
     solver_it: np.ndarray
     solver_time: np.ndarray
     solver_cost: np.ndarray

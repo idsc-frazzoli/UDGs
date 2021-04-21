@@ -1,19 +1,22 @@
 from typing import Any, Mapping, Optional
 
 import numpy as np
+import plotly
 from frozendict import frozendict
 from geometry import SE2_from_xytheta
+from matplotlib import colors, cm
+from matplotlib.colors import rgb2hex
 from plotly.graph_objs import Figure
-# from scipy import interpolate
 
 from udgs.map import Lane
 
 import plotly.graph_objects as go
-from udgs.vehicle import vehicles_pool
-from udgs.vehicle.structures import PlayerName, CarParams
+from udgs.vehicle import vehicles_pool, VehicleType
+from udgs.vehicle.structures import VehicleParams
 from PIL import Image
 from numpy import asarray
-from .utils import get_steering_angles
+
+from udgs.visualisation.utils import id2colors
 
 
 class Visualization:
@@ -21,12 +24,24 @@ class Visualization:
 
     fig: Any
 
-    def __init__(self, map: Lane, vehicles: Mapping[PlayerName, CarParams] = frozendict(vehicles_pool)):
+    def __init__(self, map: Lane, vehicles: Mapping[VehicleType, VehicleParams] = frozendict(vehicles_pool)):
         self.map = map
         self.vehicles = vehicles
         self._degree = 2
-        self.vehicle_color = "cornflowerblue" # todo fix based on players color
         self.wheel_color = "lightblue"
+        self.ab_cmap = cm.get_cmap('RdYlGn')
+        self.ab_colors_norm = colors.TwoSlopeNorm(0, -4, 3)
+        self.id2colors = id2colors
+
+    @staticmethod
+    def triangle_outline():
+        return np.array(
+            [
+                [0, 0.4, 0, 0],
+                [-0.15, 0, 0.15, -0.15],
+                [1, 1, 1, 1]
+            ]
+        )
 
     def plot_map(self, fig: Optional[Figure] = None) -> Figure:
         if fig is None:
@@ -87,23 +102,21 @@ class Visualization:
         )
         return fig
 
-    def plot_vehicle(self, x, y, theta, beta, fig: Figure, vehicle_name: PlayerName) -> Figure:
+    def plot_vehicle(self, x, y, theta, delta, fig: Figure, vehicle_type: VehicleType, player_id: int) -> Figure:
         pose = SE2_from_xytheta([x, y, theta])
-        xys = self.vehicles[vehicle_name].get_outline()
+        xys = self.vehicles[vehicle_type].get_outline()
         points = np.row_stack([xys, np.ones(xys.shape[1])])
         gk = pose @ points
 
-        wheel_pos = self.vehicles[vehicle_name].geometry.get_wheel_positions()
+        wheel_pos = self.vehicles[vehicle_type].geometry.get_wheel_positions()
         wheel_pos = np.row_stack([wheel_pos, np.ones(wheel_pos.shape[1])])
         wheel_pos_vehicle = pose @ wheel_pos
-        # todo check if the model contains an ackerman steering map
-        delta_11, delta_12 = get_steering_angles(beta)
-        wheel_pose_11 = SE2_from_xytheta([wheel_pos_vehicle[0, 0], wheel_pos_vehicle[1, 0], theta + delta_11])
-        wheel_pose_12 = SE2_from_xytheta([wheel_pos_vehicle[0, 1], wheel_pos_vehicle[1, 1], theta + delta_12])
+        wheel_pose_11 = SE2_from_xytheta([wheel_pos_vehicle[0, 0], wheel_pos_vehicle[1, 0], theta + delta])
+        wheel_pose_12 = SE2_from_xytheta([wheel_pos_vehicle[0, 1], wheel_pos_vehicle[1, 1], theta + delta])
         wheel_pose_21 = SE2_from_xytheta([wheel_pos_vehicle[0, 2], wheel_pos_vehicle[1, 2], theta])
         wheel_pose_22 = SE2_from_xytheta([wheel_pos_vehicle[0, 3], wheel_pos_vehicle[1, 3], theta])
-        front_wheel = self.vehicles[vehicle_name].front_tires.get_outline()
-        rear_wheel = self.vehicles[vehicle_name].rear_tires.get_outline()
+        front_wheel = self.vehicles[vehicle_type].front_tires.get_outline()
+        rear_wheel = self.vehicles[vehicle_type].rear_tires.get_outline()
         fwheel_points = np.row_stack([front_wheel, np.ones(front_wheel.shape[1])])
         rwheel_points = np.row_stack([rear_wheel, np.ones(rear_wheel.shape[1])])
         wheel_11 = wheel_pose_11 @ fwheel_points
@@ -115,10 +128,10 @@ class Visualization:
             go.Scatter(
                 x=gk[0, :],
                 y=gk[1, :],
-                line=dict(color=self.vehicle_color, width=1),
+                line=dict(color=self.id2colors[player_id], width=1),
                 opacity=0.5,
                 fill="toself",
-                fillcolor=self.vehicle_color,
+                fillcolor=self.id2colors[player_id],
                 mode="lines",
                 name="Vehicle",
             )
@@ -177,65 +190,20 @@ class Visualization:
         )
         return fig
 
-    def plot_prediction(self, x, y, psi, ab, fig: Figure) -> Figure:
-        def pred_color(x):
-            return "lime" if x > 0 else "red"
-
-        fig.add_trace(
-            go.Scatter(
-                x=x[:],
-                y=y[:],
-                line=dict(color=self.vehicle_color, width=1, dash="dot"),
-                marker=dict(color=list(map(pred_color, ab[:]))),
-                mode="lines+markers",
-                name="Plan",
-            )
-        )
-        return fig
-
-    def plot_prediction_triangle(self, x, y, psi, ab, fig: Figure) -> Figure:
-        triangle = np.array(
-            [
-                [0, 0.4, 0],
-                [-0.2, 0, 0.2],
-                [1, 1, 1]
-            ]
-        )
-
-        prediction_acc = np.array([[None], [None], [None]])
-        prediction_dec = np.array([[None], [None], [None]])
-
+    def plot_prediction(self, x, y, theta, ab, fig: Figure) -> Figure:
         for i in range(len(x)):
-            pose = SE2_from_xytheta([x[i], y[i], psi[i]])
-            pred = pose @ triangle
-
-            if ab[i] > 0:
-                prediction_acc = np.hstack((prediction_acc, pred, np.array([[None], [None], [None]])))
-            else:
-                prediction_dec = np.hstack((prediction_dec, pred, np.array([[None], [None], [None]])))
-
-        fig.add_trace(
-            go.Scatter(
-                x=prediction_acc[0, :],
-                y=prediction_acc[1, :],
-                mode="lines",
-                line=dict(color="lime"),
-                fill="toself",
-                fillcolor="lime",
-                name="Prediction to accelerate",
+            pose = SE2_from_xytheta([x[i], y[i], theta[i]])
+            pred = pose @ self.triangle_outline()
+            color = rgb2hex(self.ab_cmap(self.ab_colors_norm(ab[i])))
+            fig.add_trace(
+                go.Scatter(
+                    x=pred[0, :],
+                    y=pred[1, :],
+                    mode="lines",
+                    line=dict(color=color),
+                    fill="toself",
+                    name="Prediction",
+                    showlegend=False
+                )
             )
-        )
-
-        fig.add_trace(
-            go.Scatter(
-                x=prediction_dec[0, :],
-                y=prediction_dec[1, :],
-                mode="lines",
-                line=dict(color="red"),
-                fill="toself",
-                fillcolor="red",
-                name="Prediction to decelerate",
-            )
-        )
-
         return fig

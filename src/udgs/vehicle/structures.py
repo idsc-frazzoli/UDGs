@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
-from typing import NewType, Any
+from typing import Any
 import numpy as np
-
-PlayerName = NewType("PlayerName", str)
 
 
 @dataclass(unsafe_hash=True)
@@ -51,27 +49,25 @@ class WheelGeometry:
 
 
 @dataclass(frozen=True)
-class CarParams:
+class VehicleParams:
     geometry: CarGeometry
     front_tires: WheelGeometry
     rear_tires: WheelGeometry
-    color: str
 
     def get_outline(self):
         """
+        Needs to be become abstract if new vehicles were to be introduced
         Current shape:
-        p6-----p5\
-        |         p4
-        |         p3
-        p1-----p2/
+        p4-----p3
+        |       |
+        p1-----p2
         """
-        xtri, ytri = (0.35, 0.45)  # x and y for the front triangle
         xback, xfront = -self.geometry.l2 - self.geometry.back2wheel, self.geometry.l1 + self.geometry.wheel2front
         y = self.geometry.w2 / 2 + self.geometry.wheel2border
         return np.array(
             [
-                [xback, xfront - xtri, xfront, xfront, xfront - xtri, xback, xback],
-                [-y, -y, -y + ytri, y - ytri, y, y, -y],
+                [xback, xfront, xfront, xback, xback],
+                [-y, -y, y, y, -y],
             ]
         )
 

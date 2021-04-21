@@ -2,15 +2,15 @@ from reprep import Report, MIME_HTML
 
 from udgs.models.forces_def import PG, LexicographicPG, SolutionMethod
 from udgs.models.sim import SimData
-from udgs.models.sim_plot import get_car_plot, get_solver_stats, get_state_plots, get_input_plots
+from udgs.models.sim_plot import get_scene_vis, get_solver_stats, get_state_plots, get_input_plots
 
 
 def make_report(sim_data: SimData, solution_method: SolutionMethod) -> Report:
     report = Report("UDGsExperiment")
     n_players = len(sim_data.players)
 
-    cars_viz = get_car_plot(sim_data.players)
-    report.text(nid="Animation", text=cars_viz.to_html(), mime=MIME_HTML)
+    vehicles_vis = get_scene_vis(sim_data.players)
+    report.text(nid="Animation", text=vehicles_vis.to_html(), mime=MIME_HTML)
 
     if solution_method in (PG, LexicographicPG):
         solver_stats = get_solver_stats(sim_data.solver_it, sim_data.solver_time, sim_data.solver_cost)

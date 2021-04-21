@@ -10,7 +10,7 @@ def _parse_args():
     p = argparse.ArgumentParser()
     p.add_argument(
         "--generate_solver",
-        default=True,
+        default=False,
         help="If set to false does not regenerate the solver but it looks for an existing one",
         type=bool,
     )
@@ -34,7 +34,7 @@ def _parse_args():
     )
     p.add_argument(
         "--solution_method",
-        default="LexicographicPG",
+        default="PG",
         help="PG: potential game solution,"
              "LexicographicPG: Lexicographic potential game"
              "IBR: Iterated best response"

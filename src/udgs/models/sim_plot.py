@@ -6,25 +6,25 @@ from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
 
 from udgs.models.forces_def import params
-from udgs.vehicle import vehicles_pool, VEHICLE1
+from udgs.vehicle import vehicles_pool, CAR
 from udgs.visualisation.vis import Visualization
 from udgs.models.forces_def.indices import var_descriptions
 from udgs.models.sim import SimPlayer
 
 
-def get_car_plot(sim_data: Mapping[int, SimPlayer]) -> Figure:
+def get_scene_vis(players_data: Mapping[int, SimPlayer]) -> Figure:
     """
 
-    :param sim_data:
+    :param players_data:
     :return:
     """
 
     # some parameters
-    n_players = len(sim_data)
-    sim_steps = sim_data[0].x.shape[-1]
-    N = sim_data[0].x_pred.shape[1]
-    # todo sim data needs a better structuring, it should not be map=sim_data[0].lane
-    plotter = Visualization(map=sim_data[0].lane, vehicles=vehicles_pool)
+    n_players = len(players_data)
+    sim_steps = players_data[0].x.shape[-1]
+    N = players_data[0].x_pred.shape[1]
+    # todo sim data needs a better structuring, it should not be map=sim_data[0].lane (fine for now)
+    plotter = Visualization(map=players_data[0].lane, vehicles=vehicles_pool)
     n_inputs = params.n_inputs
     n_states = params.n_states
     x_idx = params.x_idx
@@ -35,25 +35,25 @@ def get_car_plot(sim_data: Mapping[int, SimPlayer]) -> Figure:
     n_background_traces = len(fig["data"])
     steps = []
 
-    # add traces that change during simulation steps (gokart and predictions)
+    # add traces that change during simulation steps (predictions)
     for k in range(sim_steps):  # sim_steps:
-        for jj in range(n_players):
+        for i in range(n_players):
             upd_s_idx = - n_inputs
             state_k = (
-                sim_data[jj].x[x_idx.X + upd_s_idx, k],
-                sim_data[jj].x[x_idx.Y + upd_s_idx, k],
-                sim_data[jj].x[x_idx.Theta + upd_s_idx, k],
-                sim_data[jj].x[x_idx.Delta + upd_s_idx, k])
+                players_data[i].x[x_idx.X + upd_s_idx, k],
+                players_data[i].x[x_idx.Y + upd_s_idx, k],
+                players_data[i].x[x_idx.Theta + upd_s_idx, k],
+                players_data[i].x[x_idx.Delta + upd_s_idx, k])
 
-            fig = plotter.plot_prediction_triangle(
-                x=sim_data[jj].x_pred[x_idx.X + upd_s_idx, :, k],
-                y=sim_data[jj].x_pred[x_idx.Y + upd_s_idx, :, k],
-                psi=sim_data[jj].x_pred[x_idx.Theta + upd_s_idx, :, k],
-                ab=sim_data[jj].x_pred[x_idx.Acc + upd_s_idx, :, k],
+            fig = plotter.plot_prediction(
+                x=players_data[i].x_pred[x_idx.X + upd_s_idx, :, k],
+                y=players_data[i].x_pred[x_idx.Y + upd_s_idx, :, k],
+                theta=players_data[i].x_pred[x_idx.Theta + upd_s_idx, :, k],
+                ab=players_data[i].x_pred[x_idx.Acc + upd_s_idx, :, k],
                 fig=fig,
             )
-            fig = plotter.plot_vehicle(state_k[0], state_k[1], state_k[2], state_k[3], fig, VEHICLE1)
-            fig = plotter.plot_vehicle(50, 37, 0, 0, fig, VEHICLE1)
+            fig = plotter.plot_vehicle(state_k[0], state_k[1], state_k[2], state_k[3], fig, CAR,i)
+            fig = plotter.plot_vehicle(50, 37, 0, 0, fig, CAR,i)
 
     n_step_traces = int((len(fig["data"]) - n_background_traces) / sim_steps)
     for k in range(sim_steps):
@@ -318,3 +318,12 @@ def get_input_plots(inputs) -> Figure:
     fig.update_layout(title_text="Inputs")
 
     return fig
+
+
+def generate_animation():
+    #todo
+    pass
+
+
+
+

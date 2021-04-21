@@ -2,6 +2,7 @@ from numbers import Real
 from typing import Tuple, Sequence
 
 import numpy as np
+from frozendict import frozendict
 
 
 def get_transformed_xy(q: np.array, points: Sequence[Tuple[Real, Real]]) -> Tuple[np.array, np.array]:
@@ -17,3 +18,10 @@ def get_steering_angles(alpha):
     left_angle = -0.63 * alpha * alpha * alpha - 0.31 * alpha * alpha + 0.94 * alpha
     right_angle = -0.63 * alpha * alpha * alpha + 0.31 * alpha * alpha + 0.94 * alpha
     return left_angle, right_angle
+
+
+id2colors = frozendict({-1: "black",
+                        0: "forestgreen",
+                        1: "firebrick",
+                        2: "dodgerblue",
+                        3: "orchid"})
