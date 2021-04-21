@@ -1,19 +1,19 @@
 from dataclasses import dataclass
-from typing import Tuple, Mapping
+from typing import Mapping
 
 from scipy.integrate import solve_ivp
 
 from udgs.bspline.bspline import casadiDynamicBSPLINE, atan2, casadiDynamicBSPLINEforward, casadiDynamicBSPLINEsidewards
-from udgs.forces_models.model_def import params, p_idx, SolutionMethod, LexicographicPG, PG, IBR, LexicographicIBR
+from udgs.models.forces_def import params, p_idx, SolutionMethod, LexicographicPG, PG, IBR, LexicographicIBR
 import numpy as np
 import itertools
 
-from udgs.forces_models.model_def.driver_config import behaviors_zoo
+from udgs.models.forces_def.opt_config import behaviors_zoo
 from udgs.map import Lane, AvailableLanes
 
-from udgs.forces_models.model_def.dynamics_car import dynamics_cars
-from udgs.forces_models.model_def.solve_lexicographic_ibr import solve_optimization_br, iterated_best_response
-from udgs.forces_models.model_def.solve_lexicographic_pg import solve_lexicographic, solve_optimization
+from udgs.models.forces_def.dynamics_car import dynamics_cars
+from udgs.models.solve_lexicographic_ibr import solve_optimization_br, iterated_best_response
+from udgs.models.solve_lexicographic_pg import solve_lexicographic, solve_optimization
 from udgs.vehicle.structures import PlayerName
 
 

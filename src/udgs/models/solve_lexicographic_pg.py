@@ -1,8 +1,8 @@
-from udgs.forces_models.forces_utils import ForcesException
+from udgs.models.forces_utils import ForcesException
 import numpy as np
 
-from udgs.forces_models.model_def import params, p_idx
-from udgs.forces_models.model_def.car_util import set_p_car
+from udgs.models.forces_def import params, p_idx
+from udgs.models.forces_def.car_util import set_p_car
 
 
 def solve_optimization(model, solver, n_players, problem, behavior, k, lex_level, next_spline_points, solver_it,

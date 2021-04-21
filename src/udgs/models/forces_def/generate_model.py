@@ -1,10 +1,10 @@
-from typing import MutableMapping
-
-from udgs.forces_models.model_def.dynamics_car import dynamics_cars
-
+from typing import MutableMapping, Tuple
 import numpy as np
 
-from . import *
+from udgs.models.forces_def.dynamics_car import dynamics_cars
+
+from .constants import *
+from .parameters import params
 from .indices import input_constraints, state_constraints
 from .objective import objective_car
 from .nlconstraints import nlconst_car, nlconst_carN, nlconst_car_ibr, nlconst_car_ibrN

@@ -2,7 +2,7 @@ from functools import partial
 
 from .car_util import *
 from udgs.bspline.bspline import *
-from udgs.forces_models.model_def import params
+from udgs.models.forces_def import params
 from casadi import *
 
 import numpy as np
@@ -49,8 +49,8 @@ def _dynamics_car(x, u, p, n):
         wantedpos = vertcat(splx, sply)
         error = centerPos - wantedpos
         laterror = mtimes(sidewards.T, error)
-        speedcostM = speedPunisherA(x[params.x_idx.Vx + upd_s_idx], speed_limit) * kAboveSpeedLimit
-        leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
+        speedcostM = speedPunisherMax(x[params.x_idx.Vx + upd_s_idx], speed_limit) * kAboveSpeedLimit
+        leftLaneCost = pLeftLane * latErrorPunisher(laterror, 0)
         lagerror = mtimes(forward.T, error)
         lagcost = kLag * lagerror ** 2
 

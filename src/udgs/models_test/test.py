@@ -1,4 +1,4 @@
-from udgs.forces_models.model_def import IdxParams
+from udgs.models.forces_def import IdxParams
 
 
 def test_indices_struct():

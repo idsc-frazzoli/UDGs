@@ -4,7 +4,7 @@ from udgs.bspline.bspline import *
 from .car_util import *
 from casadi import *
 
-from udgs.forces_models import x_idx, u_idx
+from udgs.models import x_idx, u_idx
 
 
 def _objective_car(z, p, n):
@@ -57,14 +57,14 @@ def _objective_car(z, p, n):
         lagerror = mtimes(forward.T, error)
         laterror = mtimes(sidewards.T, error)
         laterror_CL = mtimes(sidewards.T, error_CL)
-        speedcostA = speedPunisherA(z[x_idx.Vx + upd_x_idx], target_speed) * kAboveTargetSpeedCost
-        speedcostB = speedPunisherB(z[x_idx.Vx + upd_x_idx], target_speed) * kBelowTargetSpeedCost
-        speedcostM = speedPunisherA(z[x_idx.Vx + upd_x_idx], speed_limit) * kAboveSpeedLimit
+        speedcostA = speedPunisherMax(z[x_idx.Vx + upd_x_idx], target_speed) * kAboveTargetSpeedCost
+        speedcostB = speedPunisherMin(z[x_idx.Vx + upd_x_idx], target_speed) * kBelowTargetSpeedCost
+        speedcostM = speedPunisherMax(z[x_idx.Vx + upd_x_idx], speed_limit) * kAboveSpeedLimit
         slack = z[u_idx.Slack_Lat + upd_u_idx]
         slackcoll = z[u_idx.Slack_Coll + upd_u_idx]
         slackobs = z[u_idx.Slack_Obs + upd_u_idx]
         lagcost = kLag * lagerror ** 2
-        leftLaneCost = pLeftLane * laterrorPunisher(laterror, 0)
+        leftLaneCost = pLeftLane * latErrorPunisher(laterror, 0)
         latcostCL = kLat * laterror_CL ** 2
         regAB = z[u_idx.dAcc + upd_u_idx] ** 2 * kReg_dAb
         regBeta = z[u_idx.dDelta + upd_u_idx] ** 2 * kReg_dDelta

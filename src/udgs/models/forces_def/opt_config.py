@@ -5,7 +5,7 @@ from frozendict import frozendict
 
 __all__ = ["BehaviorSpec", "behaviors_zoo"]
 
-from udgs.forces_models.model_def import IdxParams
+from udgs.models.forces_def import IdxParams
 
 
 @dataclass(frozen=True, unsafe_hash=True)

@@ -1,8 +1,8 @@
-from udgs.forces_models.forces_utils import ForcesException
+from udgs.models.forces_utils import ForcesException
 import numpy as np
 
-from udgs.forces_models.model_def import params, p_idx, x_idx, SolutionMethod, IBR, LexicographicIBR
-from udgs.forces_models.model_def.car_util import set_p_car_ibr
+from udgs.models.forces_def import params, p_idx, x_idx, SolutionMethod, IBR, LexicographicIBR
+from udgs.models.forces_def.car_util import set_p_car_ibr
 
 
 def solve_optimization_br(model, solver, currentplayer, n_players, problem, behavior, optCost1, optCost2, k,

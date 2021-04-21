@@ -5,11 +5,11 @@ import numpy as np
 from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
 
-from udgs.forces_models.model_def import params
+from udgs.models.forces_def import params
 from udgs.vehicle import vehicles_pool, VEHICLE1
 from udgs.visualisation.vis import Visualization
-from .indices import var_descriptions
-from .sim import  SimPlayer
+from udgs.models.forces_def.indices import var_descriptions
+from udgs.models.sim import SimPlayer
 
 
 def get_car_plot(sim_data: Mapping[int, SimPlayer]) -> Figure:

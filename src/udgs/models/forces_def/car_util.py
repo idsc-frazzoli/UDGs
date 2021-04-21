@@ -1,7 +1,7 @@
 from casadi import *
 import numpy as np
 
-from udgs.forces_models import params, p_idx
+from udgs.models import params, p_idx
 
 
 def getPointsFromParameters(p, pointsO, pointsN):
@@ -27,7 +27,7 @@ def getRadiiFromParameters(p, pointsO, pointsN):
     return p[pointsO + pointsN * 2: pointsO + pointsN * 3]
 
 
-def speedPunisherA(v, vmax):
+def speedPunisherMax(v, vmax):
     """
 
     :param v:
@@ -38,7 +38,7 @@ def speedPunisherA(v, vmax):
     return x ** 2
 
 
-def speedPunisherB(v, vmin):
+def speedPunisherMin(v, vmin):
     """
 
     :param v:
@@ -49,7 +49,7 @@ def speedPunisherB(v, vmin):
     return x ** 2
 
 
-def laterrorPunisher(laterror, cc):
+def latErrorPunisher(laterror, cc):
     """
 
     :param laterror:

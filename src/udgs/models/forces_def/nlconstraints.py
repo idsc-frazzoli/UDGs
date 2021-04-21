@@ -5,7 +5,7 @@ from udgs.bspline.bspline import *
 from casadi import *
 import numpy as np
 
-from udgs.forces_models import x_idx, u_idx
+from udgs.models import x_idx, u_idx
 
 
 def _nlconst_car(z, p, n):
