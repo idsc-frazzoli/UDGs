@@ -10,7 +10,7 @@ def _parse_args():
     p = argparse.ArgumentParser()
     p.add_argument(
         "--generate_solver",
-        default=False,
+        default=True,
         help="If set to false does not regenerate the solver but it looks for an existing one",
         type=bool,
     )
@@ -59,15 +59,17 @@ def main(generate_solver: bool,
          output_dir: str):
     # generate forces models definition and solvers
     forces_models = generate_forces_models(generate_solver, to_deploy, n_players)
-    # extract the model for the solution method
-    model, solver = forces_models[solution_method]
-    # run the "simulation"
-    sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=5)
-    # visualisation and report of data
-    report = make_report(sim_data, solution_method)
-    # save report
-    report_file = os.path.join(output_dir, f"udgs_{n_players}_{solution_method}.html")
-    report.to_html(report_file)
+    for n_players in range(1,5):
+        for solution_method in AVAILABLE_METHODS:
+            # extract the model for the solution method
+            model, solver = forces_models[solution_method]
+            # run the "simulation"
+            sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=5)
+            # visualisation and report of data
+            report = make_report(sim_data, solution_method)
+            # save report
+            report_file = os.path.join(output_dir, f"udgs_{n_players}_{solution_method}.html")
+            report.to_html(report_file)
 
 
 if __name__ == "__main__":
