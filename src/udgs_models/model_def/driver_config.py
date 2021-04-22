@@ -17,12 +17,12 @@ class BehaviorSpec:
 
 _default = dict.fromkeys(IdxParams)
 _default[IdxParams.SpeedLimit] = 9
-_default[IdxParams.TargetSpeed] = 7
+_default[IdxParams.TargetSpeed] = 8.3
 _default[IdxParams.OptCost1] = 100000
 _default[IdxParams.OptCost2] = 100000
 _default[IdxParams.Xobstacle] = 50
 _default[IdxParams.Yobstacle] = 37
-_default[IdxParams.TargetProg] = 6  # 7
+_default[IdxParams.TargetProg] = 5  # 7
 _default[IdxParams.kAboveTargetSpeedCost] = 2
 _default[IdxParams.kBelowTargetSpeedCost] = 0.4
 _default[IdxParams.kAboveSpeedLimit] = 4
@@ -32,7 +32,7 @@ _default[IdxParams.pLeftLane] = 2
 _default[IdxParams.kReg_dAb] = 0.004
 _default[IdxParams.kReg_dDelta] = 2
 _default[IdxParams.kSlack] = 1000
-_default[IdxParams.minSafetyDistance] = 4  # 3
+_default[IdxParams.minSafetyDistance] = 3  # 3
 _default[IdxParams.carLength] = 2.5
 
 cautious_spec = BehaviorSpec(desc="PG", config=_default)
