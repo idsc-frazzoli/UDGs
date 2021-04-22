@@ -11,7 +11,7 @@ def _parse_args():
     p = argparse.ArgumentParser()
     p.add_argument(
         "--generate_solver",
-        default=True,
+        default=False,
         help="If set to false does not regenerate the solver but it looks for an existing one",
         type=bool,
     )
@@ -29,7 +29,7 @@ def _parse_args():
     )
     p.add_argument(
         "--solution_method",
-        default="PG",
+        default="LexicographicIBR",
         help="PG, LexicographicPG,IBR,LexicographicIBR",
         type=str,
     )
@@ -44,7 +44,7 @@ def main(generate_solver: bool = True,
     forces_models = generate_forces_models(generate_solver, to_deploy, n_players)
     # extract the model for the solution method
     model, solver = forces_models[solution_method]
-    sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=70)
+    sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=50)
     make_report(sim_data, solution_method)
 
 

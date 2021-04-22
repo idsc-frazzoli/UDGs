@@ -1,7 +1,7 @@
 from udgs_models.forces_utils import ForcesException
 import numpy as np
 
-from udgs_models.model_def import params, p_idx, x_idx
+from udgs_models.model_def import params, p_idx, x_idx, IBR
 from udgs_models.model_def.car_util import set_p_car_ibr
 
 
@@ -84,7 +84,7 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
 
 
 # todo this function iterates best response optimization
-def iterated_best_response(model, solver, order, n_players, problem_list, condition, behavior, behavior_first,
+def iterated_best_response(model, solver, order, n_players, problem_list, solution_method, behavior, behavior_first,
                            behavior_second, k, max_iter, lexi_iter, next_spline_points, solver_it, solver_time,
                            solver_cost, convergence_iter, playerstrajX, playerstrajY):
     """
@@ -114,7 +114,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, condit
     eucl_dist = np.zeros(n_players)
     while iter < max_iter:
         for case in range(len(order)):
-            if condition == 2:  # normal ibr
+            if solution_method == IBR:  # normal ibr
                 output[order[case]], problem_list[order[case]], p_vector[order[case], :] =\
                     solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
                                           behavior, behavior[p_idx.OptCost1],
