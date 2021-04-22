@@ -44,7 +44,7 @@ class SimParameters:
     """initial progress along the reference lane"""
     max_n_iter_ibr: int = 10
     lexi_iter: int = 3
-    chosen_permutation = 5  # IBR only
+    chosen_permutation = 0  # IBR only
 
 
 def sim_car_model(model,
@@ -63,6 +63,7 @@ def sim_car_model(model,
     :param sim_length:
     :return:
     """
+    print(f"Scenario with {n_players} players and solving method: {solution_method}")
     # Load some parameters
     sim_params = SimParameters()
     playerorderlist = list(itertools.permutations(range(0, n_players)))
@@ -83,6 +84,13 @@ def sim_car_model(model,
     n_inputs = params.n_inputs
     x_idx = params.x_idx
     sim_data_players = []
+
+    # Variables for storing simulation data
+    x = np.zeros((n_players, n_states, sim_length + 1))  # states
+    u = np.zeros((n_players, n_inputs, sim_length))  # inputs
+    x_pred = np.zeros((n_players, n_states, params.N, sim_length + 1))  # states
+    u_pred = np.zeros((n_players, n_inputs, params.N, sim_length))  # inputs
+    next_spline_points = np.zeros((n_players, params.n_bspline_points, 3, sim_length))
 
     if solution_method in (PG, LexicographicPG):
         # Variables for storing simulation data
@@ -207,13 +215,6 @@ def sim_car_model(model,
                 lane=list(lanes.values())[i]))
 
     elif solution_method in (IBR, LexicographicIBR):  # IBR and Lexicographic IBR
-        # Variables for storing simulation data
-        x = np.zeros((n_players, n_states, sim_length + 1))  # states
-        u = np.zeros((n_players, n_inputs, sim_length))  # inputs
-        x_pred = np.zeros((n_players, n_states, model.N, sim_length + 1))  # states
-        u_pred = np.zeros((n_players, n_inputs, model.N, sim_length))  # inputs
-        next_spline_points = np.zeros((n_players, params.n_bspline_points, 3, sim_length))
-
         if solution_method == IBR:
             solver_it = np.zeros((sim_length, 1, n_players, sim_params.max_n_iter_ibr))
             solver_time = np.zeros((sim_length, 1, n_players, sim_params.max_n_iter_ibr))

@@ -57,9 +57,9 @@ def main(generate_solver: bool,
          n_players: int,
          solution_method: SolutionMethod,
          output_dir: str):
-    # generate forces models definition and solvers
-    forces_models = generate_forces_models(generate_solver, to_deploy, n_players)
-    for n_players in range(1,5):
+    for n_players in range(2,5):
+        # generate forces models definition and solvers
+        forces_models = generate_forces_models(generate_solver, to_deploy, n_players)
         for solution_method in AVAILABLE_METHODS:
             # extract the model for the solution method
             model, solver = forces_models[solution_method]

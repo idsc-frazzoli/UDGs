@@ -12,7 +12,7 @@ from udgs.models.forces_def.indices import var_descriptions
 from udgs.models.sim import SimPlayer
 
 
-def get_scene_vis(players_data: Mapping[int, SimPlayer]) -> Figure:
+def get_interactive_scene(players_data: Mapping[int, SimPlayer]) -> Figure:
     """
 
     :param players_data:
@@ -52,8 +52,8 @@ def get_scene_vis(players_data: Mapping[int, SimPlayer]) -> Figure:
                 ab=players_data[i].x_pred[x_idx.Acc + upd_s_idx, :, k],
                 fig=fig,
             )
-            fig = plotter.plot_vehicle(state_k[0], state_k[1], state_k[2], state_k[3], fig, CAR,i)
-            fig = plotter.plot_vehicle(50, 37, 0, 0, fig, CAR,i)
+            fig = plotter.plot_vehicle(state_k[0], state_k[1], state_k[2], state_k[3], fig, CAR, i)
+            fig = plotter.plot_vehicle(50, 37, 0, 0, fig, CAR, i)
 
     n_step_traces = int((len(fig["data"]) - n_background_traces) / sim_steps)
     for k in range(sim_steps):
@@ -320,10 +320,6 @@ def get_input_plots(inputs) -> Figure:
     return fig
 
 
-def generate_animation():
-    #todo
+def generate_animation(players_data: Mapping[int, SimPlayer]):
+    # todo
     pass
-
-
-
-

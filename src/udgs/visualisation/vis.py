@@ -29,8 +29,9 @@ class Visualization:
         self.vehicles = vehicles
         self._degree = 2
         self.wheel_color = "lightblue"
-        self.ab_cmap = cm.get_cmap('RdYlGn')
-        self.ab_colors_norm = colors.TwoSlopeNorm(0, -4, 3)
+        self.colorscale: str = "RdYlGn"
+        self.ab_cmap = cm.get_cmap(self.colorscale)
+        self.ab_colors_norm = colors.TwoSlopeNorm(0, -5, 3)
         self.id2colors = id2colors
 
     @staticmethod
@@ -206,4 +207,25 @@ class Visualization:
                     showlegend=False
                 )
             )
+        # add acceleration colorbar
+        fig.add_trace(go.Scatter(
+            x=[None],
+            y=[None],
+            mode='markers',
+            marker=dict(
+                colorscale=self.colorscale,
+                showscale=True,
+                cmin=self.ab_colors_norm.vmin,
+                cmid=(self.ab_colors_norm.vmax - self.ab_colors_norm.vmin) / 2,
+                cmax=self.ab_colors_norm.vmax,
+                colorbar=dict(thickness=15,
+                              title='Acc [m/s^2]',
+                              tickvals=[self.ab_colors_norm.vmin, 0, self.ab_colors_norm.vmax],
+                              ticktext=[str(self.ab_colors_norm.vmin),
+                                        str(0),
+                                        str(self.ab_colors_norm.vmax)]),
+            ),
+            hoverinfo='none'
+        )
+        )
         return fig
