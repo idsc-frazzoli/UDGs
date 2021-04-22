@@ -2,7 +2,8 @@ from reprep import Report, MIME_HTML
 
 from udgs.models.forces_def import PG, LexicographicPG, SolutionMethod
 from udgs.models.sim import SimData
-from udgs.models.sim_plot import get_interactive_scene, get_solver_stats, get_state_plots, get_input_plots
+from udgs.models.sim_plot import get_interactive_scene, get_solver_stats, get_state_plots, get_input_plots, \
+    get_open_loop_animation
 from udgs.visualisation.utils import id2colors
 
 
@@ -27,4 +28,5 @@ def make_report(sim_data: SimData, solution_method: SolutionMethod) -> Report:
 
         inputs = get_input_plots(sim_data.players[i].u)
         report.text(nid=f"InputsPlayer-{id2colors[i]}", text=inputs.to_html(), mime=MIME_HTML)
+    get_open_loop_animation(sim_data.players, 2)
     return report

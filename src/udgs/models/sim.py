@@ -27,15 +27,6 @@ class SimPlayer:
 
 
 @dataclass(frozen=True)
-class SimData:
-    players: Mapping[int, SimPlayer]
-    solver_it: np.ndarray
-    solver_time: np.ndarray
-    solver_cost: np.ndarray
-    convergence_iter: np.ndarray
-
-
-@dataclass(frozen=True)
 class SimParameters:
     """This contains all the parameters relative to the simulation setup"""
     offset_from_road_center: float = 1.75
@@ -45,6 +36,16 @@ class SimParameters:
     max_n_iter_ibr: int = 10
     lexi_iter: int = 3
     chosen_permutation = 0  # IBR only
+
+
+@dataclass(frozen=True)
+class SimData:
+    players: Mapping[int, SimPlayer]
+    solver_it: np.ndarray
+    solver_time: np.ndarray
+    solver_cost: np.ndarray
+    convergence_iter: np.ndarray
+    sim_parameters: SimParameters
 
 
 def sim_car_model(model,
@@ -357,4 +358,6 @@ def sim_car_model(model,
         solver_time=solver_time,
         solver_cost=solver_cost,
         convergence_iter=convergence_iter,
+        sim_parameters=sim_params,
+
     )

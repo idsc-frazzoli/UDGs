@@ -1,3 +1,4 @@
+import os
 from typing import Mapping
 
 import plotly.graph_objects as go
@@ -5,10 +6,12 @@ import numpy as np
 from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
 
+from udgs.models import x_idx
 from udgs.models.forces_def import params
+from udgs.models.forces_def.opt_config import behaviors_zoo
 from udgs.vehicle import vehicles_pool, CAR
 from udgs.visualisation.vis import Visualization
-from udgs.models.forces_def.indices import var_descriptions
+from udgs.models.forces_def.indices import var_descriptions, IdxParams
 from udgs.models.sim import SimPlayer
 
 
@@ -22,13 +25,9 @@ def get_interactive_scene(players_data: Mapping[int, SimPlayer]) -> Figure:
     # some parameters
     n_players = len(players_data)
     sim_steps = players_data[0].x.shape[-1]
-    N = players_data[0].x_pred.shape[1]
     # todo sim data needs a better structuring, it should not be map=sim_data[0].lane (fine for now)
     plotter = Visualization(map=players_data[0].lane, vehicles=vehicles_pool)
     n_inputs = params.n_inputs
-    n_states = params.n_states
-    x_idx = params.x_idx
-    u_idx = params.u_idx
 
     # create background traces
     fig = plotter.plot_map()
@@ -37,6 +36,10 @@ def get_interactive_scene(players_data: Mapping[int, SimPlayer]) -> Figure:
 
     # add traces that change during simulation steps (predictions)
     for k in range(sim_steps):  # sim_steps:
+        # plot stalled vehicle
+        x = behaviors_zoo["initConfig"].config[IdxParams.Xobstacle]
+        y = behaviors_zoo["initConfig"].config[IdxParams.Yobstacle]
+        fig = plotter.plot_vehicle(x, y, 0, 0, fig, CAR, -1)
         for i in range(n_players):
             upd_s_idx = - n_inputs
             state_k = (
@@ -53,7 +56,6 @@ def get_interactive_scene(players_data: Mapping[int, SimPlayer]) -> Figure:
                 fig=fig,
             )
             fig = plotter.plot_vehicle(state_k[0], state_k[1], state_k[2], state_k[3], fig, CAR, i)
-            fig = plotter.plot_vehicle(50, 37, 0, 0, fig, CAR, i)
 
     n_step_traces = int((len(fig["data"]) - n_background_traces) / sim_steps)
     for k in range(sim_steps):
@@ -320,6 +322,37 @@ def get_input_plots(inputs) -> Figure:
     return fig
 
 
-def generate_animation(players_data: Mapping[int, SimPlayer]):
-    # todo
-    pass
+def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int):
+    """
+
+    :param players_data:
+    :param sim_step: the integer from which to create teh open loop animation
+    :return:
+    """
+    n_players = len(players_data)
+    sim_steps = players_data[0].u.shape[-1]
+    sim_step = np.clip(sim_step, 1, sim_steps)
+    n_inputs = params.n_inputs
+    plotter = Visualization(map=players_data[0].lane, vehicles=vehicles_pool)
+
+    if not os.path.exists("images"):
+        os.mkdir("images")
+
+    for k_pred in range(params.N):
+        fig = plotter.plot_map()
+        # plot stalled vehicle
+        x = behaviors_zoo["initConfig"].config[IdxParams.Xobstacle]
+        y = behaviors_zoo["initConfig"].config[IdxParams.Yobstacle]
+        fig = plotter.plot_vehicle(x, y, 0, 0, fig, CAR, -1)
+
+        for i in range(n_players):
+            upd_s_idx = - n_inputs
+            x = players_data[i].x_pred[x_idx.X + upd_s_idx, k_pred, sim_step]
+            y = players_data[i].x_pred[x_idx.Y + upd_s_idx, k_pred, sim_step]
+            theta = players_data[i].x_pred[x_idx.Theta + upd_s_idx, k_pred, sim_step]
+            delta = players_data[i].x_pred[x_idx.Delta + upd_s_idx, k_pred, sim_step]
+
+            fig = plotter.plot_vehicle(x=x, y=y, theta=theta, delta=delta, fig=fig, vehicle_type=CAR, player_id=i)
+
+        fig.write_image(f"images/fig{k_pred}.png")
+
