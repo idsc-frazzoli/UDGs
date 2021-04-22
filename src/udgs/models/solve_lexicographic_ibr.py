@@ -5,9 +5,11 @@ from udgs.models.forces_def import params, p_idx, x_idx, SolutionMethod, IBR, Le
 from udgs.models.forces_def.car_util import set_p_car_ibr
 
 
-def solve_optimization_br(model, solver, currentplayer, n_players, problem, behavior, optCost1, optCost2, k,
-                          lex_level, next_spline_points, solver_it, solver_time, solver_cost, playerstrajX,
-                          playerstrajY, iter):
+def solve_optimization_br(model, solver, currentplayer, n_players, problem, behavior, optCost1, optCost2, k:int,
+                          lex_level, next_spline_points, solver_it, solver_time, solver_cost,
+                          playerstrajX,
+                          playerstrajY,
+                          max_iter: int):
     """
         model: model settings
         solver: compiled solver
@@ -67,26 +69,28 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
     if exitflag < 0:
 
         if exitflag == -7:
-            print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
+            print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {max_iter},"
                   f" lexlevel: {lex_level}")
-            solver_it[k, lex_level, currentplayer, iter] = info.it
-            solver_time[k, lex_level, currentplayer, iter] = info.solvetime
-            solver_cost[k, lex_level, currentplayer, iter] = info.pobj
+            solver_it[k, lex_level, currentplayer, max_iter] = info.it
+            solver_time[k, lex_level, currentplayer, max_iter] = info.solvetime
+            solver_cost[k, lex_level, currentplayer, max_iter] = info.pobj
         else:
             print(f"At simulation step {k}")
             raise ForcesException(exitflag)
     else:
-        solver_it[k, lex_level, currentplayer, iter] = info.it
-        solver_time[k, lex_level, currentplayer, iter] = info.solvetime
-        solver_cost[k, lex_level, currentplayer, iter] = info.pobj
+        solver_it[k, lex_level, currentplayer, max_iter] = info.it
+        solver_time[k, lex_level, currentplayer, max_iter] = info.solvetime
+        solver_cost[k, lex_level, currentplayer, max_iter] = info.pobj
 
     return output, problem, p_vector
 
 
 # todo this function iterates best response optimization
 def iterated_best_response(model, solver, order, n_players, problem_list,
-                           solution_method: SolutionMethod, behavior,
-                           behavior_first, behavior_second,
+                           solution_method: SolutionMethod,
+                           behavior,
+                           behavior_first,
+                           behavior_second,
                            k, max_iter, lexi_iter, next_spline_points, solver_it, solver_time,
                            solver_cost, convergence_iter, playerstrajX, playerstrajY):
     """
@@ -175,7 +179,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list,
             eucl_dist[i] = np.sum(np.sqrt(np.square(playerstrajX[i] - playerstrajX_old[i]) +
                                           np.square(playerstrajY[i] - playerstrajY_old[i])))
 
-        if all(i <= 0.05 for i in eucl_dist):
+        if all(i <= sim_params.ibr_convergence_thresh for i in eucl_dist):
             print(f"IBR: iterations required for convergence: {iter}")
             convergence_iter[k] = iter
             return output, problem_list, p_vector

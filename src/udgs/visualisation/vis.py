@@ -134,7 +134,7 @@ class Visualization:
                 fill="toself",
                 fillcolor=self.id2colors[player_id],
                 mode="lines",
-                name="Vehicle",
+                name=f"{self.id2colors[player_id]}",
             )
         )
 

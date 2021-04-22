@@ -7,6 +7,7 @@ import numpy as np
 from PIL import Image
 from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
+from reprep import Report, MIME_GIF
 
 from udgs.models import x_idx
 from udgs.models.forces_def import params
@@ -324,7 +325,7 @@ def get_input_plots(inputs) -> Figure:
     return fig
 
 
-def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int) -> Sequence[Image.Image]:
+def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int, r: Report) -> Sequence[Image.Image]:
     """
 
     :param players_data:
@@ -356,9 +357,21 @@ def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int
             delta = players_data[i].x_pred[x_idx.Delta + upd_s_idx, k_pred, sim_step]
 
             fig = plotter.plot_vehicle(x=x, y=y, theta=theta, delta=delta, fig=fig, vehicle_type=CAR, player_id=i)
-
+    with r.data_file('animation.gif', MIME_GIF) as f:
+        img.save(f,
+                 save_all=True,
+                 append_images=imgs,
+                 optimize=False,
+                 duration=100,
+                 loop=0)
         fig.write_image(f"images/fig{k_pred:05d}.png")
     images = [Image.open(f) for f in sorted(glob.glob(tmp_folder + "/*.png"))]
+    # clean up
+    # for filePath in glob.glob(tmp_folder + "/*.png"):
+    #     try:
+    #         os.remove(filePath)
+    #     except OSError:
+    #         print("Error while deleting file")
     try:
         os.rmdir(tmp_folder)
     except OSError as e:

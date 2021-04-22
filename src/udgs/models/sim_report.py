@@ -13,14 +13,8 @@ def make_report(sim_data: SimData, solution_method: SolutionMethod) -> Report:
 
     vehicles_vis = get_interactive_scene(sim_data.players)
     report.text(nid="Animation", text=vehicles_vis.to_html(), mime=MIME_HTML)
-    with report.data_file('animation.gif', MIME_GIF) as f:
-        img, *imgs = get_open_loop_animation(sim_data.players, 2)
-        img.save(f,
-                 save_all=True,
-                 append_images=imgs,
-                 optimize=False,
-                 duration=100,
-                 loop=0)
+    get_open_loop_animation(sim_data.players, 2, report)
+
 
     if solution_method in (PG, LexicographicPG):
         solver_stats = get_solver_stats(sim_data.solver_it, sim_data.solver_time, sim_data.solver_cost)
