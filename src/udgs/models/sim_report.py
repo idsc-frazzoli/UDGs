@@ -1,4 +1,4 @@
-from reprep import Report, MIME_HTML
+from reprep import Report, MIME_HTML, MIME_GIF
 
 from udgs.models.forces_def import PG, LexicographicPG, SolutionMethod
 from udgs.models.sim import SimData
@@ -13,6 +13,14 @@ def make_report(sim_data: SimData, solution_method: SolutionMethod) -> Report:
 
     vehicles_vis = get_interactive_scene(sim_data.players)
     report.text(nid="Animation", text=vehicles_vis.to_html(), mime=MIME_HTML)
+    with report.data_file('animation.gif', MIME_GIF) as f:
+        img, *imgs = get_open_loop_animation(sim_data.players, 2)
+        img.save(f,
+                 save_all=True,
+                 append_images=imgs,
+                 optimize=False,
+                 duration=100,
+                 loop=0)
 
     if solution_method in (PG, LexicographicPG):
         solver_stats = get_solver_stats(sim_data.solver_it, sim_data.solver_time, sim_data.solver_cost)
@@ -28,5 +36,5 @@ def make_report(sim_data: SimData, solution_method: SolutionMethod) -> Report:
 
         inputs = get_input_plots(sim_data.players[i].u)
         report.text(nid=f"InputsPlayer-{id2colors[i]}", text=inputs.to_html(), mime=MIME_HTML)
-    get_open_loop_animation(sim_data.players, 2)
+
     return report

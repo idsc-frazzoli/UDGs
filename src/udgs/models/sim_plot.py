@@ -1,8 +1,10 @@
+import glob
 import os
-from typing import Mapping
+from typing import Mapping, Sequence
 
 import plotly.graph_objects as go
 import numpy as np
+from PIL import Image
 from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
 
@@ -322,7 +324,7 @@ def get_input_plots(inputs) -> Figure:
     return fig
 
 
-def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int):
+def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int) -> Sequence[Image.Image]:
     """
 
     :param players_data:
@@ -335,8 +337,9 @@ def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int
     n_inputs = params.n_inputs
     plotter = Visualization(map=players_data[0].lane, vehicles=vehicles_pool)
 
-    if not os.path.exists("images"):
-        os.mkdir("images")
+    tmp_folder = "images"
+    if not os.path.exists(tmp_folder):
+        os.mkdir(tmp_folder)
 
     for k_pred in range(params.N):
         fig = plotter.plot_map()
@@ -354,5 +357,10 @@ def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int
 
             fig = plotter.plot_vehicle(x=x, y=y, theta=theta, delta=delta, fig=fig, vehicle_type=CAR, player_id=i)
 
-        fig.write_image(f"images/fig{k_pred}.png")
-
+        fig.write_image(f"images/fig{k_pred:05d}.png")
+    images = [Image.open(f) for f in sorted(glob.glob(tmp_folder + "/*.png"))]
+    try:
+        os.rmdir(tmp_folder)
+    except OSError as e:
+        print(f"Error: Unable to remove {tmp_folder}: {e.strerror}")
+    return images
