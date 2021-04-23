@@ -1,3 +1,4 @@
+from udgs.models import IdxParams
 from udgs.models.forces_utils import ForcesException
 import numpy as np
 
@@ -65,15 +66,69 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
 
     # Time to solve the NLP!
     output, exitflag, info = solver.solve(problem)
-    # Make sure the solver has exited properly.
+    # Make sure the solver has exited properly. In event of "stalled line search", that is due to a bad initialization
+    # of the solver, the procedure reinitialize the solver with some checks. The bad initialization is due to the hard
+    # nonlinear constraints implemented.
     if exitflag < 0:
-
         if exitflag == -7:
-            print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {max_iter},"
-                  f" lexlevel: {lex_level}")
-            solver_it[k, lex_level, currentplayer, max_iter] = info.it
-            solver_time[k, lex_level, currentplayer, max_iter] = info.solvetime
-            solver_cost[k, lex_level, currentplayer, max_iter] = info.pobj
+            if lex_level == 0:
+                problem['x0'][-3] = behavior[IdxParams.TargetProg] + 1
+                if problem['x0'][-2] <= 0:
+                    problem['x0'][-2] = 0.000001
+                if problem['x0'][-1] <= 0:
+                    problem['x0'][-1] = 0.000001
+                output, exitflag, info = solver.solve(problem)
+                if exitflag == -7:
+                    problem['x0'][-3] = behavior[IdxParams.TargetProg] + 2
+                    problem['x0'][-2] = 0
+                    problem['x0'][-1] = 0
+                    output, exitflag, info = solver.solve(problem)
+                    if exitflag == -7:
+                        print(
+                            f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
+                            f" lexlevel: {lex_level}, check solver initialization")
+            elif lex_level == 1:
+                problem['x0'][-3] = behavior[IdxParams.TargetProg] + 1
+                if problem['x0'][-2] >= optCost1:
+                    problem['x0'][-2] = optCost1
+                elif problem['x0'][-2] < 0:
+                    problem['x0'][-2] = 0
+                if problem['x0'][-1] < 0:
+                    problem['x0'][-1] = 0
+
+                output, exitflag, info = solver.solve(problem)
+                if exitflag == -7:
+                    problem['x0'][-3] = behavior[IdxParams.TargetProg] + 2
+                    problem['x0'][-2] = 0
+                    problem['x0'][-1] = 0
+                    output, exitflag, info = solver.solve(problem)
+                    if exitflag == -7:
+                        print(
+                            f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
+                            f" lexlevel: {lex_level}, check solver initialization")
+            elif lex_level == 2:
+                problem['x0'][-3] = behavior[IdxParams.TargetProg] + 1
+                if problem['x0'][-2] > optCost1:
+                    problem['x0'][-2] = optCost1
+                elif problem['x0'][-2] < 0:
+                    problem['x0'][-2] = 0
+                if problem['x0'][-1] > optCost2:
+                    problem['x0'][-1] = optCost2
+                elif problem['x0'][-1] < 0:
+                    problem['x0'][-1] = 0
+                output, exitflag, info = solver.solve(problem)
+                if exitflag == -7:
+                    problem['x0'][-3] = behavior[IdxParams.TargetProg] + 2
+                    problem['x0'][-2] = 0
+                    problem['x0'][-1] = 0
+                    output, exitflag, info = solver.solve(problem)
+                    if exitflag == -7:
+                        print(
+                            f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
+                            f" lexlevel: {lex_level}, check solver initialization")
+            solver_it[k, lex_level, currentplayer, iter] = info.it
+            solver_time[k, lex_level, currentplayer, iter] = info.solvetime
+            solver_cost[k, lex_level, currentplayer, iter] = info.pobj
         else:
             print(f"At simulation step {k}")
             raise ForcesException(exitflag)
@@ -110,8 +165,8 @@ def iterated_best_response(model, solver, order, n_players, problem_list,
         playerstrajY: trajectories on Y axis of each player
     """
     iter = 0
-    safety_slack = 0.0  # to prevent numerical issues
-    safety_lat = 0.1  # to prevent numerical issues
+    safety_slack = 0.0001  # to prevent numerical issues
+    safety_lat = 0.0001  # to prevent numerical issues
     output = {}
     outputNew = np.zeros((n_players, model.nvar, model.N))
     p_vector = np.zeros((n_players, model.npar))
