@@ -5,7 +5,7 @@ from .indices import IdxState, IdxInput, IdxParams
 
 @dataclass(frozen=True)
 class CarParams:
-    N: int = 60
+    N: int = 75
     """The mpc horizon """
     dt_integrator_step: float = 0.1
     x_idx: IntEnum = IdxState

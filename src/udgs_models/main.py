@@ -44,7 +44,7 @@ def main(generate_solver: bool = True,
     forces_models = generate_forces_models(generate_solver, to_deploy, n_players)
     # extract the model for the solution method
     model, solver = forces_models[solution_method]
-    sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=30)
+    sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=5)
     make_report(sim_data, solution_method)
 
 
