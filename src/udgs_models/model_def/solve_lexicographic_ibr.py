@@ -70,40 +70,47 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
         if exitflag == -7:
 
             if lex_level == 0:
-                if (problem['x0'][-3]-behavior[IdxParams.TargetProg]) < 0:
-                    problem['x0'][-3] += -(problem['x0'][-3]-behavior[IdxParams.TargetProg]) + 0.1
+                if problem['x0'][-3] <= behavior[IdxParams.TargetProg]:
+                    problem['x0'][-3] += (-problem['x0'][-3]+behavior[IdxParams.TargetProg]) + 0.1
                 else:
                     problem['x0'][-3] += 0.1
+                if problem['x0'][-2] <= 0:
+                    problem['x0'][-2] = 0.000001
+                if problem['x0'][-1] <= 0:
+                    problem['x0'][-1] = 0.000001
                 output, exitflag, info = solver.solve(problem)
                 if exitflag == -7:
                     print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
                         f" lexlevel: {lex_level}")
             elif lex_level == 1:
-                if (problem['x0'][-3] - behavior[IdxParams.TargetProg]) < 0:
-                    problem['x0'][-3] += -(problem['x0'][-3] - behavior[IdxParams.TargetProg]) + 0.1
+                if problem['x0'][-3] <= behavior[IdxParams.TargetProg]:
+                    problem['x0'][-3] += (-problem['x0'][-3] + behavior[IdxParams.TargetProg]) + 0.1
                 else:
                     problem['x0'][-3] += 0.1
-                if (problem['x0'][-2] - optCost1) < 0:
-                    problem['x0'][-2] += -(problem['x0'][-2] - optCost1) + 0.000001
+                if problem['x0'][-2] >= optCost1:
+                    problem['x0'][-2] += (problem['x0'][-2] - optCost1)
                 else:
-                    problem['x0'][-2] += 0.001
+                    problem['x0'][-2] = 0
+                if problem['x0'][-1] <= 0:
+                    problem['x0'][-1] = 0
+
                 output, exitflag, info = solver.solve(problem)
                 if exitflag == -7:
                     print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
                           f" lexlevel: {lex_level}")
             elif lex_level == 2:
-                if (problem['x0'][-3] - behavior[IdxParams.TargetProg]) < 0:
-                    problem['x0'][-3] += -(problem['x0'][-3] - behavior[IdxParams.TargetProg]) + 0.1
+                if problem['x0'][-3] <= behavior[IdxParams.TargetProg]:
+                    problem['x0'][-3] += (-problem['x0'][-3] + behavior[IdxParams.TargetProg]) + 0.1
                 else:
                     problem['x0'][-3] += 0.1
-                if (problem['x0'][-2] - optCost1) < 0:
-                    problem['x0'][-2] += -(problem['x0'][-2] - optCost1) + 0.000001
+                if problem['x0'][-2] >= optCost1:
+                    problem['x0'][-2] += (problem['x0'][-2] - optCost1)
                 else:
-                    problem['x0'][-2] += 0.01
-                if (problem['x0'][-1] - optCost2) < 0:
-                    problem['x0'][-1] += -(problem['x0'][-1] - optCost2) + 0.01
+                    problem['x0'][-2] = 0
+                if problem['x0'][-1] >= optCost2:
+                    problem['x0'][-1] += (problem['x0'][-1] - optCost2)
                 else:
-                    problem['x0'][-1] += 0.01
+                    problem['x0'][-1] = 0
                 output, exitflag, info = solver.solve(problem)
                 if exitflag == -7:
                     print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
@@ -143,8 +150,8 @@ def iterated_best_response(model, solver, order, n_players, problem_list, soluti
         playerstrajY: trajectories on Y axis of each player
     """
     iter = 0
-    safety_slack = 0.0  # to prevent numerical issues
-    safety_lat = 0.0   # to prevent numerical issues
+    safety_slack = 0.0001  # to prevent numerical issues
+    safety_lat = 0.0001   # to prevent numerical issues
     output = {}
     outputNew = np.zeros((n_players, model.nvar, model.N))
     p_vector = np.zeros((n_players, model.npar))
