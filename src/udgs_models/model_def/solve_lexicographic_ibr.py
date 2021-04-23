@@ -83,7 +83,7 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
                     output, exitflag, info = solver.solve(problem)
                     if exitflag == -7:
                         print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
-                              f" lexlevel: {lex_level}")
+                              f" lexlevel: {lex_level}, check solver initialization ")
             elif lex_level == 1:
                 problem['x0'][-3] = behavior[IdxParams.TargetProg] + 1
                 if problem['x0'][-2] >= optCost1:
@@ -101,7 +101,7 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
                     output, exitflag, info = solver.solve(problem)
                     if exitflag == -7:
                         print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
-                              f" lexlevel: {lex_level}")
+                              f" lexlevel: {lex_level}, check solver initialization")
             elif lex_level == 2:
                 problem['x0'][-3] = behavior[IdxParams.TargetProg] + 1
                 if problem['x0'][-2] > optCost1:
@@ -120,7 +120,7 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
                     output, exitflag, info = solver.solve(problem)
                     if exitflag == -7:
                         print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
-                              f" lexlevel: {lex_level}")
+                              f" lexlevel: {lex_level}, check solver initialization")
             solver_it[k, lex_level, currentplayer, iter] = info.it
             solver_time[k, lex_level, currentplayer, iter] = info.solvetime
             solver_cost[k, lex_level, currentplayer, iter] = info.pobj

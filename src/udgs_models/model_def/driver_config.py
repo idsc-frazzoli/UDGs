@@ -17,7 +17,7 @@ class BehaviorSpec:
 
 _default = dict.fromkeys(IdxParams)
 _default[IdxParams.SpeedLimit] = 9
-_default[IdxParams.TargetSpeed] = 8.3
+_default[IdxParams.TargetSpeed] = 7
 _default[IdxParams.OptCost1] = 100000
 _default[IdxParams.OptCost2] = 100000
 _default[IdxParams.Xobstacle] = 50
