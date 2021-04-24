@@ -1,9 +1,8 @@
 from udgs_models.forces_utils import ForcesException
 import numpy as np
 
-from udgs_models.model_def import params, p_idx, x_idx, IBR
+from udgs_models.model_def import params, p_idx, x_idx
 from udgs_models.model_def.car_util import set_p_car_ibr
-from udgs_models.model_def.indices import IdxParams
 
 
 def solve_optimization_br(model, solver, currentplayer, n_players, problem, behavior, optCost1, optCost2, k,
@@ -68,59 +67,8 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
     if exitflag < 0:
 
         if exitflag == -7:
-
-            if lex_level == 0:
-                problem['x0'][-3] = behavior[IdxParams.TargetProg] + 1
-                if problem['x0'][-2] <= 0:
-                    problem['x0'][-2] = 0.000001
-                if problem['x0'][-1] <= 0:
-                    problem['x0'][-1] = 0.000001
-                output, exitflag, info = solver.solve(problem)
-                if exitflag == -7:
-                    problem['x0'][-3] = behavior[IdxParams.TargetProg] + 2
-                    problem['x0'][-2] = 0
-                    problem['x0'][-1] = 0
-                    output, exitflag, info = solver.solve(problem)
-                    if exitflag == -7:
-                        print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
-                              f" lexlevel: {lex_level}, check solver initialization ")
-            elif lex_level == 1:
-                problem['x0'][-3] = behavior[IdxParams.TargetProg] + 1
-                if problem['x0'][-2] >= optCost1:
-                    problem['x0'][-2] = optCost1
-                elif problem['x0'][-2] < 0:
-                    problem['x0'][-2] = 0
-                if problem['x0'][-1] < 0:
-                    problem['x0'][-1] = 0
-
-                output, exitflag, info = solver.solve(problem)
-                if exitflag == -7:
-                    problem['x0'][-3] = behavior[IdxParams.TargetProg] + 5
-                    problem['x0'][-2] = 0
-                    problem['x0'][-1] = 0
-                    output, exitflag, info = solver.solve(problem)
-                    if exitflag == -7:
-                        print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
-                              f" lexlevel: {lex_level}, check solver initialization")
-            elif lex_level == 2:
-                problem['x0'][-3] = behavior[IdxParams.TargetProg] + 1
-                if problem['x0'][-2] > optCost1:
-                    problem['x0'][-2] = optCost1
-                elif problem['x0'][-2] < 0:
-                    problem['x0'][-2] = 0
-                if problem['x0'][-1] > optCost2:
-                    problem['x0'][-1] = optCost2
-                elif problem['x0'][-1] < 0:
-                    problem['x0'][-1] = 0
-                output, exitflag, info = solver.solve(problem)
-                if exitflag == -7:
-                    problem['x0'][-3] = behavior[IdxParams.TargetProg] + 2
-                    problem['x0'][-2] = 0
-                    problem['x0'][-1] = 0
-                    output, exitflag, info = solver.solve(problem)
-                    if exitflag == -7:
-                        print(f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {iter},"
-                              f" lexlevel: {lex_level}, check solver initialization")
+            print(f"Stalled line search at simulation step {k}, agent {currentplayer+1}, iter: {iter},"
+                  f" lexlevel: {lex_level}")
             solver_it[k, lex_level, currentplayer, iter] = info.it
             solver_time[k, lex_level, currentplayer, iter] = info.solvetime
             solver_cost[k, lex_level, currentplayer, iter] = info.pobj
@@ -136,7 +84,7 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
 
 
 # todo this function iterates best response optimization
-def iterated_best_response(model, solver, order, n_players, problem_list, solution_method, behavior, behavior_first,
+def iterated_best_response(model, solver, order, n_players, problem_list, condition, behavior, behavior_first,
                            behavior_second, k, max_iter, lexi_iter, next_spline_points, solver_it, solver_time,
                            solver_cost, convergence_iter, playerstrajX, playerstrajY):
     """
@@ -156,8 +104,8 @@ def iterated_best_response(model, solver, order, n_players, problem_list, soluti
         playerstrajY: trajectories on Y axis of each player
     """
     iter = 0
-    safety_slack = 0.0001  # to prevent numerical issues
-    safety_lat = 0.0001   # to prevent numerical issues
+    safety_slack = 0.0  # to prevent numerical issues
+    safety_lat = 0.1   # to prevent numerical issues
     output = {}
     outputNew = np.zeros((n_players, model.nvar, model.N))
     p_vector = np.zeros((n_players, model.npar))
@@ -166,7 +114,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, soluti
     eucl_dist = np.zeros(n_players)
     while iter < max_iter:
         for case in range(len(order)):
-            if solution_method == IBR:  # normal ibr
+            if condition == 2:  # normal ibr
                 output[order[case]], problem_list[order[case]], p_vector[order[case], :] =\
                     solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
                                           behavior, behavior[p_idx.OptCost1],
@@ -223,7 +171,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list, soluti
                 eucl_dist[i] = np.sum(np.sqrt(np.square(playerstrajX[i] - playerstrajX_old[i]) +
                                       np.square(playerstrajY[i] - playerstrajY_old[i])))
 
-        if all(i <= 6 for i in eucl_dist):
+        if all(i <= 0.05 for i in eucl_dist):
             print(f"iterations required for convergence: {iter}")
             convergence_iter[k] = iter
             return output, problem_list, p_vector

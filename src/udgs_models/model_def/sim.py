@@ -300,8 +300,8 @@ def sim_car_model(model,
 
             output, problem, p_vector = \
                 iterated_best_response(model, solver, playerorderlist[chosen_permutation], n_players, problem_list,
-                                       solution_method, behavior_ibr, behavior_first, behavior_second, k,
-                                       max_n_iter_ibr, lexi_iter,
+                                       solution_method, behavior_ibr, behavior_first, behavior_second, k, max_n_iter_ibr,
+                                       lexi_iter,
                                        next_spline_points, solver_it, solver_time, solver_cost, convergence_iter,
                                        playerstrajX, playerstrajY)
             # Extract output and initialize next iteration with current solution shifted by one stage
