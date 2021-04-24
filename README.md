@@ -16,6 +16,7 @@ This repository provides the code associated to the following publication:
     keywords = {Autonomous Agents, Motion and Path Planning, Optimization and Optimal Control, Game Theory}
 }
 ```
+![udgs-OpenLoopAnimation-udg](https://user-images.githubusercontent.com/18750753/115951950-ca177b00-a4e3-11eb-8470-84e107817c1f.gif)
 
 The original code was in matlab, we ported it to python for future works. Minor differences might be present (mainly
 plotting and visualisation, nothing substantial).
