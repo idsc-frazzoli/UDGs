@@ -1,5 +1,7 @@
 # Urban driving games (UDGs) :red_car: :blue_car:
 
+![udgs-OpenLoopAnimation-udg](https://user-images.githubusercontent.com/18750753/115951950-ca177b00-a4e3-11eb-8470-84e107817c1f.gif)
+
 This repository provides the code associated to the following publication:
 
 ```
