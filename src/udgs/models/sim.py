@@ -37,7 +37,9 @@ class SimParameters:
     max_n_iter_ibr: int = 10
     lexi_iter: int = 3
     chosen_permutation: int = 0  # IBR only
-    ibr_convergence_thresh: float = 0.05
+    ibr_convergence_thresh: float = 4
+    safety_slack: float = 0.0001  # to prevent numerical issues
+    safety_lat: float = 0.0001  # to prevent numerical issues
 
 
 @dataclass(frozen=True)

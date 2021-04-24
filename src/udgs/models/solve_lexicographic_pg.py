@@ -49,7 +49,24 @@ def solve_optimization(model, solver, n_players, problem, behavior, k, lex_level
     # Make sure the solver has exited properly.
     if exitflag < 0:
         if exitflag == -7:
-            print(f"Stalled line search at simulation step {k}")
+            problem['x0'][-3] = behavior[p_idx.TargetProg] + 1
+            if problem['x0'][-2] > optCost1:
+                problem['x0'][-2] = optCost1
+            elif problem['x0'][-2] < 0:
+                problem['x0'][-2] = 0
+            if problem['x0'][-1] > optCost2:
+                problem['x0'][-1] = optCost2
+            elif problem['x0'][-1] < 0:
+                problem['x0'][-1] = 0
+            output, exitflag, info = solver.solve(problem)
+            if exitflag == -7:
+                problem['x0'][-3] = behavior[p_idx.TargetProg] + 2
+                problem['x0'][-2] = 0
+                problem['x0'][-1] = 0
+                output, exitflag, info = solver.solve(problem)
+                if exitflag == -7:
+                    print(
+                        f"Stalled line search at simulation step {k}, check solver initialization")
             solver_it[k, lex_level] = info.it
             solver_time[k, lex_level] = info.solvetime
             solver_cost[k, lex_level] = info.pobj

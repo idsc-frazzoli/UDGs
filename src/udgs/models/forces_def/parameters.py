@@ -5,7 +5,7 @@ from .indices import IdxState, IdxInput, IdxParams
 
 @dataclass(frozen=True)
 class CarParams:
-    N: int = 75
+    N: int = 60
     """ # of steps in the prediction horizon """
     dt_integrator_step: float = 0.1
     """ step length in seconds """
