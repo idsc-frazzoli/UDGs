@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import numpy as np
 from PIL import Image
 from plotly.subplots import make_subplots
-from reprep import Report, MIME_GIF, MIME_HTML, MIME_PNG
+from reprep import Report, MIME_GIF, MIME_HTML
 
 from udgs.models import x_idx
 from udgs.models.forces_def import params
@@ -82,40 +82,40 @@ def get_interactive_scene(players_data: Mapping[int, SimPlayer]) -> Report:
         )
     ]
     # play and pause buttons
-    updatemenus = [
-        dict(
-            buttons=[
-                {
-                    "args": [
-                        None,
-                        {
-                            "frame": {"duration": 500},
-                            "fromcurrent": True,
-                            "transition": {"duration": 300, "easing": "quadratic-in-out"},
-                        },
-                    ],
-                    "label": "Play",
-                    "method": "animate",
-                },
-                {
-                    "args": [
-                        [None],
-                        {"frame": {"duration": 0}, "mode": "immediate", "transition": {"duration": 0}},
-                    ],
-                    "label": "Pause",
-                    "method": "animate",
-                },
-            ],
-            direction="left",
-            pad={"r": 40, "t": 45},
-            showactive=False,
-            type="buttons",
-            x=0.1,
-            xanchor="right",
-            y=0,
-            yanchor="top",
-        )
-    ]
+    # updatemenus = [
+    #     dict(
+    #         buttons=[
+    #             {
+    #                 "args": [
+    #                     None,
+    #                     {
+    #                         "frame": {"duration": 500},
+    #                         "fromcurrent": True,
+    #                         "transition": {"duration": 300, "easing": "quadratic-in-out"},
+    #                     },
+    #                 ],
+    #                 "label": "Play",
+    #                 "method": "animate",
+    #             },
+    #             {
+    #                 "args": [
+    #                     [None],
+    #                     {"frame": {"duration": 0}, "mode": "immediate", "transition": {"duration": 0}},
+    #                 ],
+    #                 "label": "Pause",
+    #                 "method": "animate",
+    #             },
+    #         ],
+    #         direction="left",
+    #         pad={"r": 40, "t": 45},
+    #         showactive=False,
+    #         type="buttons",
+    #         x=0.1,
+    #         xanchor="right",
+    #         y=0,
+    #         yanchor="top",
+    #     )
+    # ]
 
     # update some layout (not working yet)
     fig.update_layout(
@@ -123,7 +123,7 @@ def get_interactive_scene(players_data: Mapping[int, SimPlayer]) -> Report:
             margin={"l": 0, "r": 0, "t": 0, "b": 0},
             title="Simulation",
             hovermode="closest",
-            updatemenus=updatemenus,
+            #updatemenus=updatemenus,
             sliders=sliders,
         )
     )
@@ -375,11 +375,12 @@ def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int
     img, *imgs = [Image.open(f) for f in sorted(glob.glob(tmp_folder + "/*.png"))]
     r = Report("OpenLoopAnimation")
     with r.data_file(f"udgsgif", MIME_GIF) as f:
+        duration = int(params.dt_integrator_step * 1e3)
         img.save(f,
                  save_all=True,
                  append_images=imgs,
                  optimize=False,
-                 duration=params.dt_integrator_step * 1e3,
+                 duration=duration,
                  loop=0)
 
     # clean up
