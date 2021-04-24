@@ -355,6 +355,8 @@ def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int
     plotter = Visualization(map=players_data[0].lane, vehicles=vehicles_pool)
 
     tmp_folder = "images"
+    if not os.path.exists(tmp_folder):
+        os.mkdir(tmp_folder)
     for k_pred in range(params.N):
         fig = plotter.plot_map()
         # plot stalled vehicle
