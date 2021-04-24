@@ -1,24 +1,24 @@
 import glob
 import os
-from typing import Mapping, Sequence
+from typing import Mapping, Optional
 
 import plotly.graph_objects as go
 import numpy as np
 from PIL import Image
-from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
-from reprep import Report, MIME_GIF
+from reprep import Report, MIME_GIF, MIME_HTML, MIME_PNG
 
 from udgs.models import x_idx
 from udgs.models.forces_def import params
 from udgs.models.forces_def.opt_config import behaviors_zoo
 from udgs.vehicle import vehicles_pool, CAR
+from udgs.visualisation.utils import id2colors
 from udgs.visualisation.vis import Visualization
 from udgs.models.forces_def.indices import var_descriptions, IdxParams
-from udgs.models.sim import SimPlayer
+from udgs.models.sim import SimPlayer, SimData
 
 
-def get_interactive_scene(players_data: Mapping[int, SimPlayer]) -> Figure:
+def get_interactive_scene(players_data: Mapping[int, SimPlayer]) -> Report:
     """
 
     :param players_data:
@@ -128,13 +128,21 @@ def get_interactive_scene(players_data: Mapping[int, SimPlayer]) -> Figure:
         )
     )
     fig.update_xaxes(showticklabels=False).update_yaxes(showticklabels=False)
-    return fig
+    nid = "Animation"
+    r = Report(nid=nid)
+    # r.text(nid=nid, text="Game played in a receding horizon fashion.")
+    r.text(nid=nid, text=fig.to_html(), mime=MIME_HTML)
+    return r
 
 
-def get_solver_stats(solver_it, solver_time, solver_cost) -> Figure:
-    n_sim_steps = solver_time.shape[0]
-    n_lexi_calls = solver_time.shape[1]
+def get_solver_stats(sim_data: SimData) -> Report:
+    n_sim_steps = sim_data.solver_time.shape[0]
+    n_lexi_calls = sim_data.solver_time.shape[1]
     sim_steps = np.arange(0, n_sim_steps)
+
+    solver_it = sim_data.solver_it
+    solver_time = sim_data.solver_time
+    solver_cost = sim_data.solver_cost
 
     fig = make_subplots(
         rows=3 * n_lexi_calls, cols=2, column_widths=[0.7, 0.3],
@@ -188,10 +196,13 @@ def get_solver_stats(solver_it, solver_time, solver_cost) -> Figure:
         fig.add_trace(go.Histogram(y=solver_cost[:, jj], marker_color=time_color, opacity=0.75), row=3 + jj * 3, col=2)
     # general layout
     fig.update_layout(title_text="Solver stats")
-    return fig
+    nid = f"SolverStats-{sim_data.solution_method}"
+    r = Report(nid=nid)
+    r.text(nid=nid, text=fig.to_html(), mime=MIME_HTML)
+    return r
 
 
-def get_solver_stats_ibr(solver_it, solver_time, solver_cost, convergence_iter) -> Figure:
+def get_solver_stats_ibr(solver_it, solver_time, solver_cost, convergence_iter) -> Report:
     n_sim_steps = solver_time.shape[0]
     n_lexi_calls = solver_time.shape[1]
     n_players = solver_time.shape[2]
@@ -253,7 +264,7 @@ def get_solver_stats_ibr(solver_it, solver_time, solver_cost, convergence_iter) 
     return fig
 
 
-def get_state_plots(states) -> Figure:
+def get_state_plots(states, pid: Optional[int] = None) -> Report:
     n_sim_steps = states.shape[1]
     sim_steps = np.arange(0, n_sim_steps)
     n_states = params.n_states
@@ -286,10 +297,13 @@ def get_state_plots(states) -> Figure:
 
     fig.update_layout(title_text="States")
 
-    return fig
+    nid = f"States-P{pid}-{id2colors[pid]}"
+    r = Report(nid=nid)
+    r.text(nid=nid, text=fig.to_html(), mime=MIME_HTML)
+    return r
 
 
-def get_input_plots(inputs) -> Figure:
+def get_input_plots(inputs, pid: Optional[int] = None) -> Report:
     n_sim_steps = inputs.shape[1]
     sim_steps = np.arange(0, n_sim_steps)
     n_inputs = params.n_inputs
@@ -321,11 +335,13 @@ def get_input_plots(inputs) -> Figure:
         fig.update_yaxes(title_text=units[i], row=row, col=col)
 
     fig.update_layout(title_text="Inputs")
+    nid = f"Inputs-P{pid}-{id2colors[pid]}"
+    r = Report(nid=nid)
+    r.text(nid=nid, text=fig.to_html(), mime=MIME_HTML)
+    return r
 
-    return fig
 
-
-def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int, r: Report) -> Sequence[Image.Image]:
+def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int) -> Report:
     """
 
     :param players_data:
@@ -339,9 +355,6 @@ def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int
     plotter = Visualization(map=players_data[0].lane, vehicles=vehicles_pool)
 
     tmp_folder = "images"
-    if not os.path.exists(tmp_folder):
-        os.mkdir(tmp_folder)
-
     for k_pred in range(params.N):
         fig = plotter.plot_map()
         # plot stalled vehicle
@@ -357,23 +370,22 @@ def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int
             delta = players_data[i].x_pred[x_idx.Delta + upd_s_idx, k_pred, sim_step]
 
             fig = plotter.plot_vehicle(x=x, y=y, theta=theta, delta=delta, fig=fig, vehicle_type=CAR, player_id=i)
-    with r.data_file('animation.gif', MIME_GIF) as f:
+            fig.write_image(os.path.join(tmp_folder, f"fig{k_pred:05d}.png"))
+
+    img, *imgs = [Image.open(f) for f in sorted(glob.glob(tmp_folder + "/*.png"))]
+    r = Report("OpenLoopAnimation")
+    with r.data_file(f"udgsgif", MIME_GIF) as f:
         img.save(f,
                  save_all=True,
                  append_images=imgs,
                  optimize=False,
-                 duration=100,
+                 duration=params.dt_integrator_step * 1e3,
                  loop=0)
-        fig.write_image(f"images/fig{k_pred:05d}.png")
-    images = [Image.open(f) for f in sorted(glob.glob(tmp_folder + "/*.png"))]
+
     # clean up
-    # for filePath in glob.glob(tmp_folder + "/*.png"):
-    #     try:
-    #         os.remove(filePath)
-    #     except OSError:
-    #         print("Error while deleting file")
-    try:
-        os.rmdir(tmp_folder)
-    except OSError as e:
-        print(f"Error: Unable to remove {tmp_folder}: {e.strerror}")
-    return images
+    for filePath in glob.glob(tmp_folder + "/*.png"):
+        try:
+            os.remove(filePath)
+        except OSError:
+            print("Error while deleting file")
+    return r

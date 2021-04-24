@@ -28,7 +28,7 @@ def _parse_args():
     )
     p.add_argument(
         "--output_dir",
-        default="out-docker",
+        default="out",
         help="Output folder where the experiment report is placed",
         type=str,
     )
@@ -66,7 +66,7 @@ def main(generate_solver: bool,
             # run the "simulation"
             sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=5)
             # visualisation and report of data
-            report = make_report(sim_data, solution_method)
+            report = make_report(sim_data)
             # save report
             report_file = os.path.join(output_dir, f"udgs_{n_players}_{solution_method}.html")
             report.to_html(report_file)

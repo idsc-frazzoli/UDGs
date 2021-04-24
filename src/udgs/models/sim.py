@@ -48,6 +48,7 @@ class SimData:
     solver_cost: np.ndarray
     convergence_iter: np.ndarray
     sim_parameters: SimParameters
+    solution_method: SolutionMethod
 
 
 def sim_car_model(model,
@@ -360,5 +361,5 @@ def sim_car_model(model,
         solver_cost=solver_cost,
         convergence_iter=convergence_iter,
         sim_parameters=sim_params,
-
+        solution_method=solution_method
     )
