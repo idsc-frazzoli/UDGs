@@ -7,13 +7,13 @@ This repository provides the code associated to the following publication:
 ```
 @article{zanardi2021udgs,
     title = {Urban Driving Games with Lexicographic Preferences and Socially Efficient Nash Equilibria},
-    year = {2021},
     journal = {IEEE Robotics and Automation Letters},
     author = {Alessandro Zanardi; Enrico Mion; Mattia Bruschetta; Saverio Bolognani; Andrea Censi; Emilio Frazzoli},
-    number = {-},
-    pages = {-},
-    volume = {-},
-    url = {http://ieeexplore.ieee.org/document/4444573/},
+    year={2021},
+    volume={6},
+    number={3},
+    pages={4978-4985},
+    url = {https://ieeexplore.ieee.org/document/9385938},
     doi = {10.1109/LRA.2021.3068657},
     keywords = {Autonomous Agents, Motion and Path Planning, Optimization and Optimal Control, Game Theory}
 }
