@@ -10,7 +10,7 @@ def _parse_args():
     p = argparse.ArgumentParser()
     p.add_argument(
         "--generate_solver",
-        default=True,
+        default=False,
         help="If set to false does not regenerate the solver but it looks for an existing one",
         type=bool,
     )
@@ -57,7 +57,7 @@ def main(generate_solver: bool,
          n_players: int,
          solution_method: SolutionMethod,
          output_dir: str):
-    for n_players in range(3, 5):
+    for n_players in range(4, 5):
         # generate forces models definition and solvers
         forces_models = generate_forces_models(generate_solver, to_deploy, n_players)
         for solution_method in AVAILABLE_METHODS:
