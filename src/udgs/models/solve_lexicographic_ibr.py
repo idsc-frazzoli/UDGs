@@ -217,7 +217,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list,
                     else:
                         output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
                             solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
-                                                  behavior_second, slackcost, cumlatcost, k, lex_level,
+                                                  behavior, slackcost, cumlatcost, k, lex_level,
                                                   next_spline_points[order[case]], solver_it, solver_time, solver_cost,
                                                   playerstrajX, playerstrajY, iter)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,

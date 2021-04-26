@@ -16,7 +16,7 @@ class CarParams:
     n_inputs: int = len([u.value for u in IdxInput])
     n_var: int = n_states + n_inputs
     n_opt_param: int = len([u.value for u in IdxParams])
-    n_bspline_points: int = 10
+    n_bspline_points: int = 18
     n_all_param: int = n_opt_param + n_bspline_points * 3
 
 params = CarParams()

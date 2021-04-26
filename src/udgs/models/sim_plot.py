@@ -349,7 +349,7 @@ def get_open_loop_animation(players_data: Mapping[int, SimPlayer], sim_step: int
     :return:
     """
     n_players = len(players_data)
-    sim_steps = players_data[0].u.shape[-1]
+    sim_steps = players_data[0].u.shape[-1] - 1
     sim_step = np.clip(sim_step, 1, sim_steps)
     n_inputs = params.n_inputs
     plotter = Visualization(map=players_data[0].lane, vehicles=vehicles_pool)

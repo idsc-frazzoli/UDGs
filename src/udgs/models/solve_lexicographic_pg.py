@@ -43,26 +43,27 @@ def solve_optimization(model, solver, n_players, problem, behavior, k, lex_level
         n_players=n_players
     )
     problem["all_parameters"] = np.tile(p_vector, (model.N,))
-
+    n_states = params.n_states
+    n_inputs = params.n_inputs
     # Time to solve the NLP!
     output, exitflag, info = solver.solve(problem)
     # Make sure the solver has exited properly.
     if exitflag < 0:
         if exitflag == -7:
-            problem['x0'][-3] = behavior[p_idx.TargetProg] + 1
-            if problem['x0'][-2] > optCost1:
-                problem['x0'][-2] = optCost1
-            elif problem['x0'][-2] < 0:
-                problem['x0'][-2] = 0
-            if problem['x0'][-1] > optCost2:
-                problem['x0'][-1] = optCost2
-            elif problem['x0'][-1] < 0:
-                problem['x0'][-1] = 0
+            for player in range(n_players):
+                problem['x0'][-3 - n_states * player] = behavior[p_idx.TargetProg] + 1
+                if problem['x0'][-2 - n_states * player] < 0:
+                    problem['x0'][-2] = 0
+                if problem['x0'][-1 - n_states * player] < 0:
+                    problem['x0'][-1] = 0
             output, exitflag, info = solver.solve(problem)
             if exitflag == -7:
-                problem['x0'][-3] = behavior[p_idx.TargetProg] + 2
-                problem['x0'][-2] = 0
-                problem['x0'][-1] = 0
+                # for player in range(n_players):
+                #     problem['x0'][-2 - n_states * player] = 0
+                #     problem['x0'][-1 - n_states * player] = 0
+                xinit = problem['xinit']
+                initialization = np.tile(np.append(np.zeros(n_inputs * n_players), xinit), model.N)
+                problem["x0"] = initialization
                 output, exitflag, info = solver.solve(problem)
                 if exitflag == -7:
                     print(
@@ -84,9 +85,8 @@ def solve_optimization(model, solver, n_players, problem, behavior, k, lex_level
 def solve_lexicographic(model, solver, num_players, problem, behavior_init, behavior_first, behavior_second,
                         behavior_third, k, lexi_iter, next_spline_points, solver_it_lexi, solver_time_lexi,
                         solver_cost_lexi):
-
-    safety_slack = 0.01
-    safety_lat = 1
+    from udgs.models.sim import SimParameters
+    sim_params = SimParameters()
     if k == 0:
         output, problem, p_vector = solve_optimization(
             model, solver, num_players, problem, behavior_init, k, 0,
@@ -116,7 +116,7 @@ def solve_lexicographic(model, solver, num_players, problem, behavior_init, beha
                 model, solver, num_players, problem, behavior_second,
                 k, lex_level, next_spline_points, solver_it_lexi,
                 solver_time_lexi, solver_cost_lexi,
-                slackcost + safety_slack,
+                slackcost + sim_params.safety_slack,
                 behavior_second[p_idx.OptCost2])
             problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
             temp = output["all_var"].reshape(model.nvar, model.N, order='F')
@@ -134,7 +134,7 @@ def solve_lexicographic(model, solver, num_players, problem, behavior_init, beha
                 model, solver, num_players, problem, behavior_third,
                 k, lex_level, next_spline_points, solver_it_lexi,
                 solver_time_lexi, solver_cost_lexi,
-                slackcost + safety_slack, cumlatcost + safety_lat)
+                slackcost + sim_params.safety_slack, cumlatcost + sim_params.safety_lat)
 
     # Extract output and initialize next iteration with current solution shifted by one stage
     problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]

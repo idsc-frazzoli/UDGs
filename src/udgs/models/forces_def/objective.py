@@ -60,9 +60,9 @@ def _objective_car(z, p, n):
         speedcostA = speedPunisherMax(z[x_idx.Vx + upd_x_idx], target_speed) * kAboveTargetSpeedCost
         speedcostB = speedPunisherMin(z[x_idx.Vx + upd_x_idx], target_speed) * kBelowTargetSpeedCost
         speedcostM = speedPunisherMax(z[x_idx.Vx + upd_x_idx], speed_limit) * kAboveSpeedLimit
-        slack = z[u_idx.Slack_Lat + upd_u_idx]
-        slackcoll = z[u_idx.Slack_Coll + upd_u_idx]
-        slackobs = z[u_idx.Slack_Obs + upd_u_idx]
+        slack = z[u_idx.Slack_Lat + upd_u_idx] ** 2
+        slackcoll = z[u_idx.Slack_Coll + upd_u_idx] ** 2
+        slackobs = z[u_idx.Slack_Obs + upd_u_idx] ** 2
         lagcost = kLag * lagerror ** 2
         leftLaneCost = pLeftLane * latErrorPunisher(laterror, 0)
         latcostCL = kLat * laterror_CL ** 2
