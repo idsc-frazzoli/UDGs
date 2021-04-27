@@ -53,23 +53,22 @@ def solve_optimization(model, solver, n_players, problem, behavior,
     if exitflag < 0:
         if exitflag == -7:
             for player in range(n_players):
+                # It makes sure that progress is correctly initialized (i.e. bigger than TargetProgress)
                 problem['x0'][-3 - n_states * player] = behavior[p_idx.TargetProg] + 1
+                # It makes sure that cumulative costs are not < 0
                 if problem['x0'][-2 - n_states * player] < 0:
                     problem['x0'][-2] = 0
                 if problem['x0'][-1 - n_states * player] < 0:
                     problem['x0'][-1] = 0
             output, exitflag, info = solver.solve(problem)
             if exitflag == -7:
-                # for player in range(n_players):
-                #     problem['x0'][-2 - n_states * player] = 0
-                #     problem['x0'][-1 - n_states * player] = 0
+                # reinitialize the problem
                 xinit = problem['xinit']
                 initialization = np.tile(np.append(np.zeros(n_inputs * n_players), xinit), model.N)
                 problem["x0"] = initialization
                 output, exitflag, info = solver.solve(problem)
                 if exitflag == -7:
-                    print(
-                        f"Stalled line search at simulation step {k}, check solver initialization")
+                    print(f"Stalled line search at simulation step {k}, check solver initialization")
             solver_it[k, lex_level] = info.it
             solver_time[k, lex_level] = info.solvetime
             solver_cost[k, lex_level] = info.pobj
