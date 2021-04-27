@@ -24,7 +24,7 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
         solver_it, solver_time, solver_cost: array for keep track of info
         playerstrajX : trajectories on X axis of each player
         playerstrajY: trajectories on Y axis of each player
-        iter: number of iterations
+        max_iter: number of iterations of IBR reached
     """
     # Set runtime parameters (the only really changing between stages are the next control points of the spline +
     # trajectories of each player)
@@ -71,14 +71,16 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
     if exitflag < 0:
         if exitflag == -7:
             if lex_level == 0:
-                problem['x0'][-3] = behavior[p_idx.TargetProg] + 1
-                if problem['x0'][-2] <= 0:
-                    problem['x0'][-2] = 0.000001
-                if problem['x0'][-1] <= 0:
-                    problem['x0'][-1] = 0.000001
+                problem['x0'][-3] = behavior[p_idx.TargetProg] + 1  # It makes sure that progress is correctly
+                # initialized (i.e. bigger than TargetProgress)
+                # It makes sure that cumulative costs are not < 0
+                if problem['x0'][-2] < 0:
+                    problem['x0'][-2] = 0
+                if problem['x0'][-1] < 0:
+                    problem['x0'][-1] = 0
                 output, exitflag, info = solver.solve(problem)
                 if exitflag == -7:
-                    problem['x0'][-3] = behavior[p_idx.TargetProg] + 2
+                    # Initialize cumulative costs at 0
                     problem['x0'][-2] = 0
                     problem['x0'][-1] = 0
                     output, exitflag, info = solver.solve(problem)
@@ -87,7 +89,10 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
                             f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {max_iter},"
                             f" lexlevel: {lex_level}, check solver initialization")
             elif lex_level == 1:
+                # It initialize the progress bigger than TargetProgress
                 problem['x0'][-3] = behavior[p_idx.TargetProg] + 1
+
+                # It makes sure that slack cumulative cost is not initialized with values < 0 or bigger than optCost1
                 if problem['x0'][-2] >= optCost1:
                     problem['x0'][-2] = optCost1
                 elif problem['x0'][-2] < 0:
@@ -97,7 +102,7 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
 
                 output, exitflag, info = solver.solve(problem)
                 if exitflag == -7:
-                    problem['x0'][-3] = behavior[p_idx.TargetProg] + 2
+                    # Initialize cumulative costs at 0
                     problem['x0'][-2] = 0
                     problem['x0'][-1] = 0
                     output, exitflag, info = solver.solve(problem)
@@ -106,18 +111,21 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
                             f"Stalled line search at simulation step {k}, agent {currentplayer + 1}, iter: {max_iter},"
                             f" lexlevel: {lex_level}, check solver initialization")
             elif lex_level == 2:
+                # It initialize the progress bigger than TargetProgress
                 problem['x0'][-3] = behavior[p_idx.TargetProg] + 1
+                # It makes sure that slack cumulative cost is not initialized with values < 0 or bigger than optCost1
                 if problem['x0'][-2] > optCost1:
                     problem['x0'][-2] = optCost1
                 elif problem['x0'][-2] < 0:
                     problem['x0'][-2] = 0
+                # It makes sure that slack cumulative cost is not initialized with values < 0 or bigger than optCost2
                 if problem['x0'][-1] > optCost2:
                     problem['x0'][-1] = optCost2
                 elif problem['x0'][-1] < 0:
                     problem['x0'][-1] = 0
                 output, exitflag, info = solver.solve(problem)
                 if exitflag == -7:
-                    problem['x0'][-3] = behavior[p_idx.TargetProg] + 2
+                    # Initialize cumulative costs at 0
                     problem['x0'][-2] = 0
                     problem['x0'][-1] = 0
                     output, exitflag, info = solver.solve(problem)
@@ -142,11 +150,11 @@ def solve_optimization_br(model, solver, currentplayer, n_players, problem, beha
 # todo this function iterates best response optimization
 def iterated_best_response(model, solver, order, n_players, problem_list,
                            solution_method: SolutionMethod,
-                           behavior,
                            behavior_first,
                            behavior_second,
+                           behaviour_third,
                            k, max_iter, lexi_iter, next_spline_points, solver_it, solver_time,
-                           solver_cost, convergence_iter, playerstrajX, playerstrajY):
+                           solver_cost, convergence_iter, playerstrajX, playerstrajY, sim_params):
     """
         model: model settings
         solver: compiled solver
@@ -163,8 +171,6 @@ def iterated_best_response(model, solver, order, n_players, problem_list,
         playerstrajX : trajectories on X axis of each player
         playerstrajY: trajectories on Y axis of each player
     """
-    from udgs.models.sim import SimParameters
-    sim_params = SimParameters()
     iter = 0
 
     output = {}
@@ -178,8 +184,8 @@ def iterated_best_response(model, solver, order, n_players, problem_list,
             if solution_method == IBR:  # normal ibr
                 output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
                     solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
-                                          behavior, behavior[p_idx.OptCost1],
-                                          behavior[p_idx.OptCost2], k, 0, next_spline_points[order[case]],
+                                          behaviour_third, behaviour_third[p_idx.OptCost1],
+                                          behaviour_third[p_idx.OptCost2], k, 0, next_spline_points[order[case]],
                                           solver_it, solver_time, solver_cost, playerstrajX, playerstrajY, iter)
                 outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N, order='F')
                 playerstrajX[order[case]] = outputNew[order[case], x_idx.X, :]
@@ -217,7 +223,7 @@ def iterated_best_response(model, solver, order, n_players, problem_list,
                     else:
                         output[order[case]], problem_list[order[case]], p_vector[order[case], :] = \
                             solve_optimization_br(model, solver, order[case], n_players, problem_list[order[case]],
-                                                  behavior, slackcost, cumlatcost, k, lex_level,
+                                                  behaviour_third, slackcost, cumlatcost, k, lex_level,
                                                   next_spline_points[order[case]], solver_it, solver_time, solver_cost,
                                                   playerstrajX, playerstrajY, iter)
                         outputNew[order[case], :, :] = output[order[case]]["all_var"].reshape(model.nvar, model.N,

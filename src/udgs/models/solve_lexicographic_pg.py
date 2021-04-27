@@ -5,8 +5,10 @@ from udgs.models.forces_def import params, p_idx
 from udgs.models.forces_def.car_util import set_p_car
 
 
-def solve_optimization(model, solver, n_players, problem, behavior, k, lex_level, next_spline_points, solver_it,
-                       solver_time, solver_cost, optCost1, optCost2):
+def solve_optimization(model, solver, n_players, problem, behavior,
+                       k: int, lex_level, next_spline_points,
+                       solver_it, solver_time, solver_cost,
+                       opt_cost1, opt_cost2):
     """
         model: model settings
         solver: compiled solver
@@ -23,8 +25,8 @@ def solve_optimization(model, solver, n_players, problem, behavior, k, lex_level
     p_vector = set_p_car(
         SpeedLimit=behavior[p_idx.SpeedLimit],
         TargetSpeed=behavior[p_idx.TargetSpeed],
-        OptCost1=optCost1,
-        OptCost2=optCost2,
+        OptCost1=opt_cost1,
+        OptCost2=opt_cost2,
         Xobstacle=behavior[p_idx.Xobstacle],
         Yobstacle=behavior[p_idx.Yobstacle],
         TargetProg=behavior[p_idx.TargetProg],
@@ -82,11 +84,26 @@ def solve_optimization(model, solver, n_players, problem, behavior, k, lex_level
     return output, problem, p_vector
 
 
-def solve_lexicographic(model, solver, num_players, problem, behavior_init, behavior_first, behavior_second,
-                        behavior_third, k, lexi_iter, next_spline_points, solver_it_lexi, solver_time_lexi,
-                        solver_cost_lexi):
-    from udgs.models.sim import SimParameters
-    sim_params = SimParameters()
+def solve_lexicographic(model, solver, num_players, problem,
+                        behavior_init, behavior_first, behavior_second, behavior_third,
+                        k: int, lexi_iter, next_spline_points,
+                        solver_it_lexi, solver_time_lexi, solver_cost_lexi,
+                        sim_params):
+
+    """
+            model: model settings
+            solver: compiled solver
+            n_players: number of players involved in the game
+            problem: problem definition contains xinit, x0, all_params for the solver
+            behavior_init, behavior_first, behavior_second, behavior_third: parameters for cost function
+            k: current index in simulation
+            lex_level: lexicographic level
+            next_spline_points: spline points for the player
+            solver_it_lexi, solver_time_lexi, solver_cost_lexi: array for keeping track of info
+            sim_params: simulation parameters
+        """
+
+    # initialization
     if k == 0:
         output, problem, p_vector = solve_optimization(
             model, solver, num_players, problem, behavior_init, k, 0,
@@ -95,6 +112,7 @@ def solve_lexicographic(model, solver, num_players, problem, behavior_init, beha
             behavior_init[p_idx.OptCost2])
         problem["x0"][0: model.nvar * (model.N - 1)] = output["all_var"][model.nvar:model.nvar * model.N]
 
+    # Lexicographic simulation
     for lex_level in range(lexi_iter):
         if lex_level == 0:
             output, problem, p_vector = solve_optimization(

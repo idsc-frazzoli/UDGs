@@ -185,7 +185,7 @@ def sim_car_model(model,
                     behavior_first, behavior_second, behavior_third, k,
                     sim_params.lexi_iter, next_spline_points, solver_it,
                     solver_time,
-                    solver_cost)
+                    solver_cost, SimParameters())
 
                 u_pred[:, :, k] = temp[0:n_inputs * n_players, :]  # predicted inputs
                 x_pred[:, :, k] = temp[n_inputs * n_players: params.n_var * n_players, :]  # predicted states
@@ -317,11 +317,11 @@ def sim_car_model(model,
             output, problem, p_vector = iterated_best_response(
                 model, solver,
                 playerorderlist[sim_params.chosen_permutation], n_players, problem_list,
-                solution_method, behavior_ibr, behavior_first, behavior_second, k,
+                solution_method, behavior_first, behavior_second, behavior_ibr, k,
                 sim_params.max_n_iter_ibr,
                 sim_params.lexi_iter,
                 next_spline_points, solver_it, solver_time, solver_cost, convergence_iter,
-                playerstrajX, playerstrajY)
+                playerstrajX, playerstrajY, SimParameters())
             # Extract output and initialize next iteration with current solution shifted by one stage
 
             for i in range(n_players):
