@@ -57,19 +57,18 @@ def main(generate_solver: bool,
          n_players: int,
          solution_method: SolutionMethod,
          output_dir: str):
-    for n_players in range(3, 5):
-        # generate forces models definition and solvers
-        forces_models = generate_forces_models(generate_solver, to_deploy, n_players)
-        for solution_method in AVAILABLE_METHODS:
-            # extract the model for the solution method
-            model, solver = forces_models[solution_method]
-            # run the "simulation"
-            sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=2)
-            # visualisation and report of data
-            report = make_report(sim_data)
-            # save report
-            report_file = os.path.join(output_dir, f"udgs_{n_players}_{solution_method}.html")
-            report.to_html(report_file)
+    # generate forces models definition and solvers
+    forces_models = generate_forces_models(generate_solver, to_deploy, n_players)
+    for solution_method in AVAILABLE_METHODS:
+        # extract the model for the solution method
+        model, solver = forces_models[solution_method]
+        # run the "simulation"
+        sim_data = sim_car_model(model, solver, n_players, solution_method, sim_length=30)
+        # visualisation and report of data
+        report = make_report(sim_data)
+        # save report
+        report_file = os.path.join(output_dir, f"udgs_{n_players}_{solution_method}.html")
+        report.to_html(report_file)
 
 
 if __name__ == "__main__":

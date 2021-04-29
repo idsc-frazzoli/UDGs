@@ -9,7 +9,8 @@ from udgs.models.sim_plot import get_interactive_scene, get_solver_stats, get_st
 def make_report(sim_data: SimData) -> Report:
     report = Report(nid="udgs", caption="Urban Driving Game Experiment report")
     report.add_child(get_interactive_scene(sim_data.players))
-    report.add_child(get_open_loop_animation(sim_data.players, 15))
+    from_step: int = 15
+    report.add_child(get_open_loop_animation(sim_data.players, from_step))
 
     if sim_data.solution_method in (PG, LexicographicPG):
         report.add_child(get_solver_stats(sim_data))

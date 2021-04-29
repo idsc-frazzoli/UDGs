@@ -124,7 +124,7 @@ var_descriptions = {  # todo check units
     IdxState.Y: VarDesc('y-position', 'm'),
     IdxState.Theta: VarDesc('Orientation', 'rad'),
     IdxState.Vx: VarDesc('Forward velocity', 'm/s'),
-    IdxState.Acc: VarDesc('Combined acceleration', 'm/s^2'),
+    IdxState.Acc: VarDesc('Acceleration', 'm/s^2'),
     IdxState.Delta: VarDesc('Steering angle', 'rad'),
     IdxState.S: VarDesc('Progress', '-'),
     IdxState.CumSlackCost: VarDesc('Cumulative Slack', '-'),
