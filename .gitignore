@@ -2,12 +2,12 @@
 __pycache__
 test_objects
 test-results/
-out
-out-docker
-out-target
+out/
+out-docker/
+out-target/
 # pycharm +venv
 .idea
-venv
+venv/
 # forces generated
 Forces_udgs_solver/
 Forces_udgs_solver_IBR/
@@ -16,4 +16,3 @@ solver_ForcesIBR/
 *.forces
 *.c
 *.h
-src/udgs_models/Forces_udgs_solver_IBR.mat

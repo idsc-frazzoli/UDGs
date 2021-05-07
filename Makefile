@@ -1,8 +1,9 @@
-tag=gokart-mpc
+tag=alezana/udgs
 out-docker=out-docker
 forcespro-path=""
 
 
+# todo probably to be removed
 solver_dir = src/gokartmpcc/MPCCgokart
 generated=\
 	$(PWD)/$(solver_dir)/include \
@@ -18,11 +19,14 @@ build:
 build-no-cache:
 	docker build --no-cache -t $(tag) .
 
+docker-push:
+	docker push $(tag)
+
 run:
 	mkdir -p $(out-docker)
 	docker run -it --user $$(id -u) \
 		-v $(PWD)/$(out-docker):/$(out-docker) $(tag) \
-		python srcpy/gokart-mpc/model.py
+		python src/udgs/main.py --output_dir $(out-docker)
 #-v $(forcespro-path):/forces/pro:ro \
 
 black:
